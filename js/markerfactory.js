@@ -67,16 +67,16 @@ function createHighlightStyle(feature, layer) {
 }
 
 function createLayerStyle(feature, layer, highlight) {
-	var type = feature.get("type");
+	var watertype = feature.get("watertype");
 	var coords = feature.getGeometry().getCoordinates();
 	var latitude = ol.proj.toLonLat(coords)[1];
 	
 	var shape;
 	var styleCache;
-	if(type === "lake_reservoir") {
+	if(watertype === "lake_reservoir") {
 		shape = shapes.circle;
 		styleCache = styleCacheCircle;
-	} else if(type === "coast") {
+	} else if(watertype === "coast") {
 		shape = shapes.triangle;
 		styleCache = styleCacheTriangle;
 	} else {

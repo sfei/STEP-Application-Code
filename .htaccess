@@ -1,0 +1,13 @@
+# Access parameters
+<Files .htaccess> 
+	order allow,deny 
+	deny from all 
+</Files> 
+
+# Default page
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin http://mapservices.sfei.org
+	Header set Access-Control-Allow-Origin http://icons.opengeo.org
+</IfModule>
