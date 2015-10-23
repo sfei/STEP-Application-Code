@@ -1,31 +1,37 @@
 
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
 
-// map variables
-var map, 
+var map,							// openlayers map object
 	mapProjection = 'EPSG:3857';	// web mercator wgs84
-var dragging = false;	// necessary for grab cursor animations
+var dragging = false;				// necessary for grab cursor animations
 
-// data & layer variables
-var baseLayerArray;
-var stations, 
-	stationLayer;
-// station hover interactions stored globally so it can be removed and reapplied when layer is reloaded
-var stationInteraction;
+var baseLayerArray;					// array of loaded baselayers (stored this way for base layers switching)
+
+var stations,						// stations data as ol.Collection instance
+	stationLayer, 
+	stationInteraction;				// hover interactions stored globally so it can be removed/reapplied
+	
+var thresholds;
+var markerFactory;
+
 var //countiesGeoserverURL = "http://mapservices.sfei.org/geoserver/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
-	// due to cross-origin request we'll use locally stored file for now
-	countiesGeoserverURL = "data/counties.kml", 
+	countiesGeoserverURL = "data/counties.kml", // due to cross-origin request being denied we'll use locally stored file for now
 	countiesLayer;
 
 var defaultQuery = {
 		species: 'highest', 
 		parameter: 'Mercury',
-		startYear: 2007,
-		endYear: 2014
+		// query will automatically adjust years to min/max year
+		startYear: 1900,
+		endYear: new Date().getFullYear()
 	}, 
 	lastQuery;
 
-// check browser type - from http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
+
+//************************************************************************************************************
+// Pre-init functions
+//************************************************************************************************************
+// check browser type - adapted from http://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
 var browserType = {
 	isOpera: !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0, 
 	isFirefox: typeof InstallTrigger !== 'undefined', 
@@ -36,22 +42,16 @@ var browserType = {
 // only chrome seems to handle hover interactions smoothly for OpenLayers-3
 var enableHoverInteractions = browserType.isChrome;
 
+
+//************************************************************************************************************
+// Init functions (mostly to do with setting up the map object
+//************************************************************************************************************
 window.onload = init;
 
 function init() {
 	// initalize tooltip and dialog
 	$("#station-tooltip").hide();
-	$("#reset-controls").click(function() {
-		updateQuery({query: defaultQuery});
-	});
-	
-	// start by cloning the default query values to the lastQuery
-	resetDefaultQuery();
-	// populate query options but added parameter so as to skip double loading stations
-	updateQuery({
-		query: defaultQuery, 
-		firstRun: true
-	});
+	$("#legend-container").draggable({containment: "parent"});
 	
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
@@ -122,26 +122,33 @@ function init() {
 	$("#base-layer-control").val(2);
 	map.setLayerGroup(baseLayerGroup);
 	
-	// load stations from server, on success, add style/functionality
-	$.ajax({
-		data: defaultQuery, 
-		url: "lib/getStations.php",
-		dataType: "json",
-		success: function(data) {
-			loadStationsLayer(data);
-			// click interaction (adding this way instead of oi.interaction object means we only need to do once)
-			$(map.getViewport()).on('click', function(evt) {
-				var pixel = map.getEventPixel(evt.originalEvent);
-				map.forEachFeatureAtPixel(pixel, function(feature) {
-					if(feature.get("type") === "station") {
-						return openStationDetails(feature);
-					}
-				});
-			});
-		}, 
-		error: function(e) {
-			alert(defaultErrorMessage + "(Error Stations)");
+	// create marker factory
+	markerFactory = new MarkerFactory({
+		shapeFunction: function(feature) {
+			var watertype = feature.get("waterType");
+			if(watertype === "lake_reservoir") {
+				return 0;
+			} else if(watertype === "coast") {
+				return 1;
+			} else {
+				return 2;
+			}
 		}
+	});
+	// start by cloning the default query values to the lastQuery
+	resetDefaultQuery();
+	// populate query options and load stations but firing an initial query
+	updateQuery({
+		query: defaultQuery, 
+		firstRun: true	// special option, this will add the click-interaction to features (so just done once)
+	});
+	// add controls
+	$("#species-control").change(function() { updateQuery({firedBy: "species"}); });
+	$("#parameter-control").change(function() { updateQuery({firedBy: "parameter"}); });
+	$("#start-year-control").change(function() { updateQuery({firedBy: "startYear"}); });
+	$("#end-year-control").change(function() { updateQuery({firedBy: "endYear"}); });
+	$("#reset-controls").click(function() {
+		updateQuery({query: defaultQuery});
 	});
 	
 	// load counties layer
@@ -163,16 +170,14 @@ function init() {
 		})
 	});
 	countiesLayer.setZIndex(1);
+	// default to just show for now
 	map.addLayer(countiesLayer);
 }
 
-function resetDefaultQuery() {
-	lastQuery = new Array();
-	for(var i in defaultQuery) {
-		lastQuery[i] = defaultQuery[i];
-	}
-}
 
+//************************************************************************************************************
+// Map controls and functionalities
+//************************************************************************************************************
 /** Base layers are changed just by comparing to the given index in the base layer group
  * @param {Number} baseLayerIndex */
 function changeBaseLayer(baseLayerIndex) {
@@ -203,81 +208,8 @@ function openStationDetails(feature) {
 	return true;
 }
 
-
-function updateQuery(options) {
-	if(!options.query) {
-		// if no query supplied, use from inputs
-		options.query = {
-			parameter: $("#parameter-control").val(), 
-			species: $("#species-control").val(), 
-			startYear: $("#start-year-control").val(), 
-			endYear: $("#end-year-control").val()
-		};
-	}
-	if(options.firedBy) {
-		// add the change that fired it, if applicable
-		options.query.firedBy = options.firedBy;
-	}
-	// lock interface
-	$("#loading-box-container-outer").show();
-	
-	$.ajax({
-		url: "lib/getQuerySelections.php", 
-		data: options.query, 
-		dataType: "json", 
-		success: function(data) {
-			console.log(data);
-			// update last successful query
-			lastQuery = data.query;
-			// if first go, populate list but don't load stations (done separately in init)
-			if(!options.firstRun) {
-				// update stations to match query
-				updateStations();
-			}
-			// change inputs options down hierarchy as necessary depending on what select fired the query
-			if(options.firedBy === 'species') {
-				updateParametersSelect(data['parameters']);
-				updateYearsSelect(data['years']);
-			} else if(options.firedBy === 'parameters') {
-				updateYearsSelect(data['years']);
-			} else {
-				// if unknown or undefined firing event, just update everything
-				updateSpeciesList();
-				updateParametersSelect(data['parameters']);
-				updateYearsSelect(data['years']);
-			}
-		}, 
-		error: function(e) {
-			console.log(e);
-			alert(defaultErrorMessage + "(Error QueryList)");
-		}, 
-		complete: function() {
-			// unlock interface
-			$("#species-control").prop('disabled', false);
-			$("#parameter-control").prop('disabled', false);
-			$("#start-year-control").prop('disabled', false);
-			$("#end-year-control").prop('disabled', false);
-			$("#loading-box-container-outer").hide();
-		}
-	});
-}
-
-function updateStations() {
-	$.ajax({
-		data: lastQuery, 
-		url: "lib/getStations.php",
-		dataType: "json",
-		success: function(data) {
-			loadStationsLayer(data);
-		}, 
-		error: function(e) {
-			alert(defaultErrorMessage + "(Error Stations)");
-		}
-	});
-}
-
 /** (Re)load stations layers onto the map
- * @param {Array} data - array of the query results */
+ * @param {Array} data Array of the query results */
 function loadStationsLayer(data) {
 	// remove existing (if applicable)
 	if(stationLayer !== null) {
@@ -297,7 +229,7 @@ function loadStationsLayer(data) {
 				),
 				type: "station", // necessary due to way highlighted features come from "null" layer
 				name: data[i].name, 
-				watertype: data[i].waterType, 
+				waterType: data[i].waterType, 
 				value: data[i].value, 
 				advisoryName: data[i].advisoryName, 
 				advisoryUrl: data[i].advisoryUrl
@@ -311,7 +243,9 @@ function loadStationsLayer(data) {
 		source: new ol.source.Vector({
 			features: stations
 		}), 
-		style: createLayerStyle
+		style: function(feature) {
+			return markerFactory.createLayerStyle(feature);
+		}
 	});
 	stationLayer.setZIndex(2);
 	map.addLayer(stationLayer);
@@ -321,7 +255,9 @@ function loadStationsLayer(data) {
 			condition: ol.events.condition.pointerMove, 
 			layers: [stationLayer], 
 			// hover highlight feature
-			style: createHighlightStyle
+			style: function(feature) {
+				return markerFactory.createHighlightStyle(feature);
+			}
 		});
 		// hover tooltip
 		stationInteraction.on("select", function(evt) {
@@ -341,6 +277,13 @@ function loadStationsLayer(data) {
 			}
 		});
 		map.addInteraction(stationInteraction);
+	}
+}
+
+function zoomToStationsExtent() {
+	var extent = stationLayer.getSource().getExtent();
+	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
+		map.getView().fit(extent, map.getSize());
 	}
 }
 
@@ -364,5 +307,237 @@ function moveAllPoints(layer, deltax, deltay) {
 			features[i].getGeometry().translate(deltax, deltay);
 			features[i].setStyle(createLayerStyle(features[i])[0]);
 		}
+	}
+}
+
+
+//************************************************************************************************************
+// Query and data update functions
+//************************************************************************************************************
+function resetDefaultQuery() {
+	lastQuery = new Array();
+	for(var i in defaultQuery) {
+		lastQuery[i] = defaultQuery[i];
+	}
+}
+
+function updateQuery(options) {
+	if(!options.query) {
+		// if no query supplied, use from inputs
+		options.query = {
+			parameter: $("#parameter-control").val(), 
+			species: $("#species-control").val(), 
+			startYear: $("#start-year-control").val(), 
+			endYear: $("#end-year-control").val()
+		};
+	}
+	// lock interface
+	$("#loading-box-container-outer").show();
+	
+	$.ajax({
+		url: "lib/getQuery.php", 
+		data: options.query, 
+		dataType: "json", 
+		success: function(data) {
+			console.log(options.query);
+			console.log(data);
+			// update last successful query
+			lastQuery = data.query;
+			// update thresholds
+			updateThresholds(data.thresholds);
+			// update stations to match query
+			loadStationsLayer(data.stations);
+			if(options.firstRun) {
+				// click interaction 
+				// (adding this way instead of oi.interaction object means we only need to do once)
+				$(map.getViewport()).on('click', function(evt) {
+					var pixel = map.getEventPixel(evt.originalEvent);
+					map.forEachFeatureAtPixel(pixel, function(feature) {
+						if(feature.get("type") === "station") {
+							return openStationDetails(feature);
+						}
+					});
+				});
+			}
+			// change inputs options down hierarchy as necessary depending on what select fired the query
+			if(options.firedBy === 'species') {
+				updateParametersSelect(data.parameters);
+				updateYearsSelect(data.years);
+			} else if(options.firedBy === 'parameters') {
+				updateYearsSelect(data.years);
+			} else {
+				// if unknown or undefined firing event, just update everything
+				updateSpeciesList();
+				updateParametersSelect(data.parameters);
+				updateYearsSelect(data.years);
+			}
+			zoomToStationsExtent();
+		}, 
+		error: function(e) {
+			alert(defaultErrorMessage + "(Error Query)");
+		}, 
+		complete: function() {
+			// unlock interface
+			$("#species-control").prop('disabled', false);
+			$("#parameter-control").prop('disabled', false);
+			$("#start-year-control").prop('disabled', false);
+			$("#end-year-control").prop('disabled', false);
+			$("#loading-box-container-outer").hide();
+		}
+	});
+}
+
+
+function updateSpeciesList() {
+	$.ajax({
+		url: "lib/getAllSpecies.php", 
+		dataType: "json", 
+		success: function(data) {
+			updateSpeciesSelect(data);
+		}, 
+		error: function(e) {
+			alert(defaultErrorMessage + "(Error SpeciesList)");
+		}
+	});
+}
+
+function updateSpeciesSelect(data) {
+	var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
+		+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
+	for(var i = 0; i < data.length; i++) {
+		optionsHtml += "<option value=\"" + data[i][0].toLowerCase() + "\">" + data[i][0] + "</option>";
+	}
+	$("#species-control")
+		.html(optionsHtml)
+		.val(lastQuery.species.toLowerCase());
+}
+
+function updateParametersSelect(data) {
+	var optionsHtml = "";
+	for(var i = 0; i < data.length; i++) {
+		optionsHtml += "<option value=\"" + data[i][0] + "\">" + data[i][0] + "</option>";
+	}
+	$("#parameter-control")
+		.html(optionsHtml)
+		.val(lastQuery.parameter);
+	// check value, if null, just select first available
+	if(!$("#parameter-control").val()) {
+		$("#parameter-control").val(data[0][0]);
+	}
+}
+
+function updateYearsSelect(data) {
+	var optionsHtml = "";
+	for(var i = parseInt(data['min']); i <= parseInt(data['max']); i++) {
+		optionsHtml += "<option value=\"" + i + "\">" + i + "</option>";
+	}
+	$("#start-year-control")
+		.html(optionsHtml)
+		.val(lastQuery.startYear);
+	if(!$("#start-year-control").val()) {
+		$("#start-year-control").val(data['min']);
+	}
+	$("#end-year-control")
+		.html(optionsHtml)
+		.val(lastQuery.endYear);
+	if(!$("#end-year-control").val()) {
+		$("#end-year-control").val(data['max']);
+	}
+}
+
+function updateStationsSelect() {
+	// right now just gets list of stations
+	var optionsHtml = "<option value=\"-1\" disabled>Select location</option>";
+	for(var i = 0; i < stations.getLength(); i++) {
+		var stationName = stations.item(i).get("name");
+		optionsHtml += "<option value= + i + >" + stationName + "</option>";
+	}
+	// TODO create stations control
+}
+
+
+//************************************************************************************************************
+// Legend and marker style functions (part of them, core of is is in marketFactory.js)
+//************************************************************************************************************
+
+function updateThresholds(data, validate) {
+	thresholds = data;
+	// while it should be encoded properly, ensure proper type conversion
+	for(var i = 0; i < thresholds.length; i++) {
+		thresholds[i].value = parseFloat(thresholds[i].value);
+	}
+	// for user inputs thresholds need to validate
+	if(validate) {
+		var uniqueValues = [];
+		thresholds = thresholds
+			.filter(function(item) {
+				// values must be positive, non-zero
+				if(item.value <= 0) { return false; }
+				// no duplicate values
+				if(uniqueValues.hasOwnProperty(item.value)) { return false; }
+				uniqueValues[item.value] = true;
+				return;})
+			.sort(function(a,b) {
+				// ensure ascending order
+				return b.value - a.value;
+			});
+		// remove any comments
+		for(var i = 0; i < thresholds.length; i++) {
+			thresholds[i].comments = "";
+		}
+	}
+	updateThresholdStyles();
+	updateLegend();
+}
+	
+function updateThresholdStyles() {
+	var numThresholds = thresholds.length;
+	var stretchFactor = 3; // for a nice gradient instead of just solid colors
+	// set the style function (see MarkerFactory.js)
+	markerFactory.setStyle({
+		resolution: numThresholds*stretchFactor,
+		valueFunction: function(feature) {
+			// calculate color index
+			var iColor = 0;
+			var value = feature.get("value");
+			if(value > thresholds[0].value) {
+				for(var i = 0; i < numThresholds; i++) {
+					iColor += i;
+					if(value > thresholds[i].value) {
+						iColor += (value - thresholds[i].value)/thresholds[i].value;
+						break;
+					}
+				}
+			}
+			iColor /= numThresholds;
+			return iColor;
+		}
+	});
+	// get the color values for each threshold
+	for(var i = 0; i < numThresholds; i++) {
+		thresholds[i].color = markerFactory.hexMap[(1+i)*stretchFactor];
+	}
+}
+
+function updateLegend() {
+	var title = lastQuery.parameter;
+	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
+	if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
+		title += " in Species with " + capitalizeSpecies + " Avg Concentration"; 
+	} else {
+		title += " Concentrations in " + capitalizeSpecies;
+	}
+	title += " (" + thresholds[0].units + ")";
+	var table = $("#legend-table");
+	table.html("<div class='legend-table-row' style='text-align:center;font-size:16px;font-weight:bolder;margin:4px 0px;'>" + title + "</div>");
+	// do legend in descending order
+	for(var i = thresholds.length-1; i >= -1; i--) {
+		var row = "<div class='legend-table-row'>";
+		var threshold = (i >= 0) ? thresholds[i] : { color:markerFactory.hexMap[0], value:0, units:thresholds[0].units, comments:"None" };
+		row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
+		row += "<div class='legend-table-cell' style='width:60px;margin-right:10px;text-align:right;'>" + threshold.value + " " + threshold.units + "</div>";
+		row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
+		row += "</div>";
+		table.append(row);
 	}
 }

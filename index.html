@@ -4,15 +4,16 @@
 		<title>STEP Portal Dev/Test</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- jQuery -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+		<!-- OpenLayers-3 -->
 		<link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css">
 		<script src="http://openlayers.org/en/v3.10.1/build/ol-debug.js"></script>
-		
-		<script src="js/colormap.js"></script>
-		<script src="js/markerfactory.js"></script>
-		<script src="js/query.js"></script>
+		<!-- local scripts -->
+		<script src="js/ColorMap.js"></script>
+		<script src="js/MarkerFactory.js"></script>
 		<script src="js/map.js"></script>
 		<style>
 			#map-container {
@@ -79,18 +80,73 @@
 			}
 			#loading-box {
 				position: relative;
-				width: 250px;
-				height: 40px;
+				width: 220px;
+				height: 35px;
 				margin: 0 auto;
 				padding-top: 20px;
 				background-color: #fff;
+				background-color: rgba(255, 255, 255, 0.9);
 				border: 2px #777 solid;
+				border-radius: 6px;
 				text-align: center;
+				font-weight: bolder;
 				z-index: 99;
 			}
-			
+			#legend-container {
+				position: absolute;
+				bottom: 60px;
+				left: 40px;
+				padding: 2px;
+				background-color: #777;
+				border: 1px solid #555;
+				border-radius: 4px;
+			}
+			#legend-table {
+				min-width: 200px;
+				background-color: #fff;
+				border: 1px solid #555;
+				border-radius: 2px;
+				padding: 4px;
+				font-size: 12px;
+				overflow: auto;
+			}
+			.legent-table-row {
+				display: block;
+				height: 30px;
+				padding: 2px;
+				overflow: auto;
+			}
+			.legend-table-cell {
+				display: inline;
+				float: left;
+				clear: none;
+				height: 25px;
+				line-height: 25px;
+				vertical-align: middle;
+				margin: 2px;
+				overflow: hidden;
+			}
 			.ol-attribution {
 				bottom: 30px;
+			}
+			.button {
+				background-color: #5070aa;
+				background-color: rgba(80, 112, 170, 0.6);
+				padding: 2px 4px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-size: 14px;
+				color: #fff;
+				transition:.5s;
+				-o-transition:.5s;
+				-ms-transition:.5s;
+				-moz-transition:.5s;
+				-webkit-transition:.5s;
+			}
+			.button:hover {
+				background-color: #003C88;
+				background-color: rgba(0, 60, 136, 0.6);
+				cursor: pointer;
 			}
 		</style>
 	</head>
@@ -129,11 +185,18 @@
 				<a onclick="hideRandomFeatures(stationLayer)">Hide Random Features</a>
 				<span id="lat-long-display"></span>
 			</div>
+			<!-- legend -->
+			<div id="legend-container">
+				<div id="legend-title-bar">
+					<span id="legend-title"></span>
+				</div>
+				<div id="legend-table"></div>
+			</div>
 			<!-- a loading dealy -->
 			<div id="loading-box-container-outer">
 				<div id="loading-box-container-inner">
 					<div id="loading-box">
-						<img src="images/ajax-loader.gif" alt="loading" /> Loading content..
+						<img src="images/ajax-loader.gif" alt="loading" /> Loading stations..
 					</div>
 				</div>
 			</div>
