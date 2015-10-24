@@ -35,24 +35,45 @@
 	
 	// if there's no min/max years for species-parameter combination, there's no row resulting
 	if(!$result['years']['min']) {
-		// get parameters available for this species, pick first valid one
-		$availableParams =	$instance->getAvailableParameters(array(
-								'isASpecies' => (!$query['species'] == "highest" && !$query['species'] == "lowest"), 
-								'species' => $query['species']
-							));
-		$query['parameter'] = $availableParams[0]['result'];
+		// if parameter doesn't exist in list of parameters, pick first available one
+		$query['parameter'] = $result['parameters'][0]['result'];
 		// update years - way code runs it will try to keep the initial year values, but adjust as necessary
 		$result['years'] = $instance->getAvailableYearSpan($query);
 	}
+	
 	// adjust years not to exceed min-max values, since they may be off
 	validateYears($query, $result['years']);
+	// at this point we know parameter is valid so add thresholds
+	$result['thresholds'] = $instance->getThresholds($query);
 	
-	// update query to match valid query
-	$result['query'] = $query;
 	// now that we have a valid query, grab the stations data
 	$result['stations'] = $instance->getStations($query);
-	// also add thresholds
-	$result['thresholds'] = $instance->getThresholds($query);
+	// One final check to ensure we have at least one station. What often happens is there's one data point 
+	// at, say, 2005, another at 2010, so searching for 2007-2008 is technically valid but returns no result.
+	if(count($result['stations']) == 0) {
+		$years = $instance->getDistinctYears($params);
+		// find the minimum distance
+		$minDist = array( 'dist'=>9999, 'change'=>'startYear', 'to'=>1900 );
+		forEach($years as $y) {
+			$dist = abs($query['startYear'] - $y['result']);
+			if($dist < $minDist['dist']) {
+				$minDist['dist'] = $dist;
+				$minDist['change'] = 'startYear';
+				$minDist['to'] = $y['result'];
+			}
+			$dist = abs($query['endYear'] - $y['result']);
+			if($dist < $minDist['dist']) {
+				$minDist['dist'] = $dist;
+				$minDist['change'] = 'endYear';
+				$minDist['to'] = $y['result'];
+			}
+		}
+		// update stations
+		$result['stations'] = $instance->getStations($query);
+	}
+	
+	// update query to match valid query after all that checking
+	$result['query'] = $query;
 	
 	echo json_encode($result, JSON_NUMERIC_CHECK);
 

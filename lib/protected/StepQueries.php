@@ -15,6 +15,7 @@
 		$parameter		= filter_input(INPUT_GET, 'parameter', FILTER_SANITIZE_STRING);
 		$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
 		$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
+		$station		= strtolower(filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING));
 		
 		if($startYear && $endYear) {
 			if($startYear > $endYear) {
@@ -35,7 +36,8 @@
 			'parameter' => $parameter, 
 			'startYear' => $startYear, 
 			'endYear' => $endYear, 
-			'isASpecies' => $isASpecies
+			'isASpecies' => $isASpecies,
+			'station' => $station
 		);
 	}
 
@@ -235,6 +237,55 @@
 				die("Query Error: " . $query->errorCode());
 			}
 			return $query->fetch();
+		}
+		
+		/** Get all distinct years where data points exist for the given species and parameter.
+		 * @param type $params Associative array of parameters. See {@link getQuery() getQuery()}.
+		 * @return array Associate array of the distinct years that have a record for the given species and 
+		 *		parameter, in ascending order. The array is two-deep, i.e. to get the parameter name, it is 
+		 *		usually $array[0][0] or $array[0]['result'] */
+		public function getDistinctYears($params) {
+			$queryString = "SELECT DISTINCT SampleYear as result FROM [dbo].[STEP_Table_AllResults] "
+				. "WHERE Parameter = '" . $params['parameter'] . "' ";
+			if($params['isASpecies']) {
+				$queryString .= "AND CommonName = '" . $params['species'] . "' ";
+			}
+			$queryString .= "ORDER BY result";
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			return $query->fetchAll();
+		}
+		
+		public function getStationRecords($params) {
+			$queryString = "EXEC [dbo].[P_STEP_Data] "
+				. "@station=N'" . $params["station"] . ", "
+				. "@param=N'" . $params["parameter"] . ", "
+				. "@startyr=" . $params["startYear"] . ", "
+				. "@endyr=" . $params["endYear"];
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			return $query->fetchAll();
+		}
+		
+		public function getNearbyData($params) {
+			$queryString = "EXEC [dbo].[P_STEP_Nearby] "
+				. "@station=N'" . $params["station"] . ", "
+				. "@param=N'" . $params["parameter"] . ", "
+				. "@species=N'" . $params["species"] . ", "
+				. "@startyr=" . $params["startYear"] . ", "
+				. "@endyr=" . $params["endYear"];
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			return $query->fetchAll();
 		}
 		
 	}

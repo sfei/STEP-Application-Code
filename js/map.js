@@ -15,8 +15,10 @@ var thresholds;
 var markerFactory;
 
 var //countiesGeoserverURL = "http://mapservices.sfei.org/geoserver/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
+	//countiesGeoserverURL = "http://stepls.sfei.me/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
 	countiesGeoserverURL = "data/counties.kml", // due to cross-origin request being denied we'll use locally stored file for now
-	countiesLayer;
+	countiesLayer,
+	countiesHidden = true;
 
 var defaultQuery = {
 		species: 'highest', 
@@ -69,20 +71,22 @@ function init() {
 			)
 		})
 	);
-	// mouse pointer location
-	map.addControl(new ol.control.MousePosition({
-		coordinateFormat: ol.coordinate.createStringXY(2),
-		projection: 'EPSG:4326',
-		target: document.getElementById("lat-long-display")
-	}));
 	// grabbing cursor functionality since it's not default to open layers 3
-	$('#map-view').mouseup(function() {
+	$('#map-view')
+		.mouseup(function() {
 			dragging = false;
 			$('#Map').switchClass("grabbing", "grab");
-		}).mousedown(function() {
+		})
+		.mousedown(function() {
 			dragging = true;
 			$('#Map').switchClass("grab", "grabbing");
 		});
+	// mouse pointer location (mainly only used for debugging, so currently commented out)
+//	map.addControl(new ol.control.MousePosition({
+//		coordinateFormat: ol.coordinate.createStringXY(2),
+//		projection: 'EPSG:4326',
+//		target: document.getElementById("lat-long-display")
+//	}));
 		
 	// create base layers in a layer group
 	baseLayerArray = [
@@ -115,11 +119,11 @@ function init() {
 		layers: baseLayerArray
 	});
 	baseLayerGroup.setZIndex(0);
-	// set ESRI satellite to default (adjust select option to match)
+	// set ESRI topo to default (adjust select option to match)
 	var baseLayers = baseLayerGroup.get("layers");
 	baseLayers.item(0).setVisible(false);
-	baseLayers.item(1).setVisible(false);
-	$("#base-layer-control").val(2);
+	baseLayers.item(2).setVisible(false);
+	$("#base-layer-control").val(1);
 	map.setLayerGroup(baseLayerGroup);
 	
 	// create marker factory
@@ -170,8 +174,7 @@ function init() {
 		})
 	});
 	countiesLayer.setZIndex(1);
-	// default to just show for now
-	map.addLayer(countiesLayer);
+	$("#show-counties-control").click(toggleCountiesLayer);
 }
 
 
@@ -190,6 +193,15 @@ function changeBaseLayer(baseLayerIndex) {
 	for(var i = 0; i < baseLayerArray.length; i++) {
 		baseLayerArray[i].setVisible(baseLayerIndex === i);
 	}
+}
+
+function toggleCountiesLayer() {
+	if(countiesHidden) {
+		map.addLayer(countiesLayer);
+	} else {
+		map.removeLayer(countiesLayer);
+	}
+	countiesHidden = !countiesHidden;
 }
 
 function openStationDetails(feature) {
@@ -287,6 +299,7 @@ function zoomToStationsExtent() {
 	}
 }
 
+// mainly only used for debugging
 function hideRandomFeatures(layer) {
 	var featureSource = layer.getSource();
 	if(featureSource.getState() === 'ready') {
@@ -299,6 +312,7 @@ function hideRandomFeatures(layer) {
 	}
 }
 
+// mainly only used for debugging
 function moveAllPoints(layer, deltax, deltay) {
 	var featureSource = layer.getSource();
 	if(featureSource.getState() === 'ready') {
@@ -327,8 +341,8 @@ function updateQuery(options) {
 		options.query = {
 			parameter: $("#parameter-control").val(), 
 			species: $("#species-control").val(), 
-			startYear: $("#start-year-control").val(), 
-			endYear: $("#end-year-control").val()
+			startYear: parseInt($("#start-year-control").val()), 
+			endYear: parseInt($("#end-year-control").val())
 		};
 	}
 	// lock interface
@@ -371,6 +385,7 @@ function updateQuery(options) {
 				updateParametersSelect(data.parameters);
 				updateYearsSelect(data.years);
 			}
+			flashQueryChanges(options.query, options.firstRun);
 			zoomToStationsExtent();
 		}, 
 		error: function(e) {
@@ -387,6 +402,43 @@ function updateQuery(options) {
 	});
 }
 
+function flashQueryChanges(query, firstRun) {
+	// store in list so we can fire them fairly simultaneously
+	var elements = [];
+	if(query.parameter !== lastQuery.parameter) {
+		elements.push($("#parameter-control"));
+	}
+	if(query.startYear !== lastQuery.startYear) {
+		elements.push($("#start-year-control"));
+	}
+	if(query.endYear !== lastQuery.endYear) {
+		elements.push($("#end-year-control"));
+	}
+	if(elements.length > 0 && !firstRun) {
+		// flash select boxes
+		elements.forEach(function(el) {
+			el.animate({backgroundColor: "#5070aa"}, 200)
+				.animate({backgroundColor: "#fff"}, 500);
+		});
+		// throw an alert
+		// this was actually getting real annoying so I commented it out
+//		var msg = "No data resulted for ";
+//		if(query.species === 'highest' || query.species === 'lowest') {
+//			msg += "species with " + query.species + " avg concentration of " + query.parameter; 
+//		} else {
+//			msg += query.parameter + " in " + query.species;
+//		}
+//		msg += " from " + query.startYear + "-" + query.endYear + "\n\n";
+//		msg += "Query adjusted to: ";
+//		if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
+//			msg += "species with " + lastQuery.species + " avg concentration of " + lastQuery.parameter; 
+//		} else {
+//			msg += lastQuery.parameter + " in " + lastQuery.species;
+//		}
+//		msg += " from " + lastQuery.startYear + "-" + lastQuery.endYear + "\n\n";
+//		alert(msg);
+	}
+}
 
 function updateSpeciesList() {
 	$.ajax({
@@ -435,13 +487,13 @@ function updateYearsSelect(data) {
 		.html(optionsHtml)
 		.val(lastQuery.startYear);
 	if(!$("#start-year-control").val()) {
-		$("#start-year-control").val(data['min']);
+		$("#start-year-control").val(toString(data['min']));
 	}
 	$("#end-year-control")
 		.html(optionsHtml)
 		.val(lastQuery.endYear);
 	if(!$("#end-year-control").val()) {
-		$("#end-year-control").val(data['max']);
+		$("#end-year-control").val(toString(data['max']));
 	}
 }
 
@@ -520,22 +572,22 @@ function updateThresholdStyles() {
 }
 
 function updateLegend() {
-	var title = lastQuery.parameter;
+	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
 	if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
-		title += " in Species with " + capitalizeSpecies + " Avg Concentration"; 
+		title = capitalizeSpecies + " Average " + lastQuery.parameter + " Concentration for Any Species"; 
 	} else {
-		title += " Concentrations in " + capitalizeSpecies;
+		title = lastQuery.parameter + " Concentrations in " + capitalizeSpecies;
 	}
 	title += " (" + thresholds[0].units + ")";
 	var table = $("#legend-table");
-	table.html("<div class='legend-table-row' style='text-align:center;font-size:16px;font-weight:bolder;margin:4px 0px;'>" + title + "</div>");
+	table.html("<div class='legend-table-row' style='text-align:center;font-size:16px;font-weight:bolder;margin:4px 0px;'>" + title + "</div><hr />");
 	// do legend in descending order
 	for(var i = thresholds.length-1; i >= -1; i--) {
 		var row = "<div class='legend-table-row'>";
 		var threshold = (i >= 0) ? thresholds[i] : { color:markerFactory.hexMap[0], value:0, units:thresholds[0].units, comments:"None" };
 		row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-		row += "<div class='legend-table-cell' style='width:60px;margin-right:10px;text-align:right;'>" + threshold.value + " " + threshold.units + "</div>";
+		row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + ((i === thresholds.length-1) ? "+" : "") + threshold.value + " " + threshold.units + "</div>";
 		row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 		row += "</div>";
 		table.append(row);

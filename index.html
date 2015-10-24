@@ -33,8 +33,14 @@
 			}
 			#layer-control-container {
 				position: absolute;
-				top: 12px;
-				right: 12px;
+				top: 0px;
+				width: 100%;
+				background: #000;
+				background: rgba(0, 0, 0, 0.8);
+				padding: 8px 10px;
+				box-sizing: border-box;
+				color: #fff;
+				text-align: center;
 			}
 			.grab {
 				cursor: move;
@@ -96,28 +102,31 @@
 				position: absolute;
 				bottom: 60px;
 				left: 40px;
+				display: table;
+				min-height: 200px;
 				padding: 2px;
 				background-color: #777;
 				border: 1px solid #555;
 				border-radius: 4px;
 			}
 			#legend-table {
+				display: table-cell;
+				overflow: auto;
 				min-width: 200px;
 				background-color: #fff;
 				border: 1px solid #555;
 				border-radius: 2px;
 				padding: 4px;
 				font-size: 12px;
-				overflow: auto;
 			}
 			.legent-table-row {
 				display: block;
+				overflow: auto;
 				height: 30px;
 				padding: 2px;
-				overflow: auto;
 			}
 			.legend-table-cell {
-				display: inline;
+				display: table-cell;
 				float: left;
 				clear: none;
 				height: 25px;
@@ -125,9 +134,6 @@
 				vertical-align: middle;
 				margin: 2px;
 				overflow: hidden;
-			}
-			.ol-attribution {
-				bottom: 30px;
 			}
 			.button {
 				background-color: #5070aa;
@@ -137,16 +143,14 @@
 				border-radius: 4px;
 				font-size: 14px;
 				color: #fff;
-				transition:.5s;
-				-o-transition:.5s;
-				-ms-transition:.5s;
-				-moz-transition:.5s;
-				-webkit-transition:.5s;
 			}
 			.button:hover {
 				background-color: #003C88;
 				background-color: rgba(0, 60, 136, 0.6);
 				cursor: pointer;
+			}
+			.ol-zoom {
+				top: 45px;
 			}
 		</style>
 	</head>
@@ -159,37 +163,31 @@
 			<!-- tooltip -->
 			<div id="station-tooltip"></div>
 			<!-- layer/data controls -->
-			<div id="layer-control-container">
-				<select id="species-control" style="font-size:14px;width:300px;" disabled>
+			<div id="layer-control-container" style="font-size:14px;">
+				<input type="checkbox" id="show-counties-control" style="float:left" />
+				<span style="float:left;">Show Counties Layer</span>
+				<select id="species-control" style="width:300px;" disabled>
 					<option>Loading..</option>
 				</select>
-				<select id="parameter-control" style="font-size:14px;width:100px;" disabled>
+				<select id="parameter-control" style="width:100px;" disabled>
 					<option>Loading..</option>
 				</select> 
-				<select id="start-year-control" style="font-size:14px;width:60px;" disabled>
+				<select id="start-year-control" style="width:60px;" disabled>
 					<option>Loading..</option>
 				</select> 
-				<select id="end-year-control" style="font-size:14px;width:60px;" disabled>
+				<select id="end-year-control" style="width:60px;" disabled>
 					<option>Loading..</option>
 				</select>
-				<span id="reset-controls" class="button">Reset Values</span>
-				<select id="base-layer-control" onchange="changeBaseLayer()" style="margin-left:100px;font-size:14px;">
+				<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
+				<select id="base-layer-control" onchange="changeBaseLayer()" style="float:right;width:100px;">
 					<option value="0">Landscape</option>
 					<option value="1">Topo</option>
 					<option value="2">Satellite</option>
-				</select> 
-			</div>
-			<!-- bottom bar with a few random features - mostly just useful for debugging -->
-			<div style="background-color:#000; color:#fff; position:relative; bottom:20px; left:0px; padding:2px;">
-				<a onclick="moveAllPoints(stationLayer, 0, 100000)">Move All Points</a> | 
-				<a onclick="hideRandomFeatures(stationLayer)">Hide Random Features</a>
-				<span id="lat-long-display"></span>
+				</select>
+				<span style="float:right;margin-right:5px;">Base Layer:</span>
 			</div>
 			<!-- legend -->
 			<div id="legend-container">
-				<div id="legend-title-bar">
-					<span id="legend-title"></span>
-				</div>
 				<div id="legend-table"></div>
 			</div>
 			<!-- a loading dealy -->
