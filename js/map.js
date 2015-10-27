@@ -22,12 +22,14 @@ var //countiesGeoserverURL = "http://mapservices.sfei.org/geoserver/ecoatlas/wms
 
 var defaultQuery = {
 		species: 'highest', 
-		parameter: 'Mercury',
+		contaminant: 'Mercury',
 		// query will automatically adjust years to min/max year
 		startYear: 1900,
 		endYear: new Date().getFullYear()
 	}, 
 	lastQuery;
+	
+var stationDetails = null;
 
 
 //************************************************************************************************************
@@ -44,12 +46,11 @@ var browserType = {
 // only chrome seems to handle hover interactions smoothly for OpenLayers-3
 var enableHoverInteractions = browserType.isChrome;
 
+window.onload = init;
 
 //************************************************************************************************************
 // Init functions (mostly to do with setting up the map object
 //************************************************************************************************************
-window.onload = init;
-
 function init() {
 	// initalize tooltip and dialog
 	$("#station-tooltip").hide();
@@ -148,7 +149,7 @@ function init() {
 	});
 	// add controls
 	$("#species-control").change(function() { updateQuery({firedBy: "species"}); });
-	$("#parameter-control").change(function() { updateQuery({firedBy: "parameter"}); });
+	$("#contaminant-control").change(function() { updateQuery({firedBy: "contaminant"}); });
 	$("#start-year-control").change(function() { updateQuery({firedBy: "startYear"}); });
 	$("#end-year-control").change(function() { updateQuery({firedBy: "endYear"}); });
 	$("#reset-controls").click(function() {
@@ -205,18 +206,27 @@ function toggleCountiesLayer() {
 }
 
 function openStationDetails(feature) {
-	var details = "<p style='font-size:12px;'>";
-	var keys = feature.getKeys();
-	for(var k = 0; k < keys.length; k++) {
-		details += keys[k] + ": " + feature.get(keys[k]) + "<br />";
+//	var details = "<p style='font-size:12px;'>";
+//	var keys = feature.getKeys();
+//	for(var k = 0; k < keys.length; k++) {
+//		details += keys[k] + ": " + feature.get(keys[k]) + "<br />";
+//	}
+//	details += "</p>";
+//	$('#station-details-dialog')
+//	  .html(details)
+//	  .dialog({ 
+//		  title: feature.get('name'),
+//		  width: 350
+//	  });
+	var options = {
+		query: lastQuery,
+		station: feature.get('name')
+	};
+	if(!stationDetails) {
+		stationDetails = new StationDetails(options);
+	} else {
+		stationDetails.init(options);
 	}
-	details += "</p>";
-	$('#station-details-dialog')
-	  .html(details)
-	  .dialog({ 
-		  title: feature.get('name'),
-		  width: 350
-	  });
 	return true;
 }
 
@@ -329,17 +339,14 @@ function moveAllPoints(layer, deltax, deltay) {
 // Query and data update functions
 //************************************************************************************************************
 function resetDefaultQuery() {
-	lastQuery = new Array();
-	for(var i in defaultQuery) {
-		lastQuery[i] = defaultQuery[i];
-	}
+	lastQuery = Object.assign({}, defaultQuery);
 }
 
 function updateQuery(options) {
 	if(!options.query) {
 		// if no query supplied, use from inputs
 		options.query = {
-			parameter: $("#parameter-control").val(), 
+			contaminant: $("#contaminant-control").val(), 
 			species: $("#species-control").val(), 
 			startYear: parseInt($("#start-year-control").val()), 
 			endYear: parseInt($("#end-year-control").val())
@@ -375,14 +382,14 @@ function updateQuery(options) {
 			}
 			// change inputs options down hierarchy as necessary depending on what select fired the query
 			if(options.firedBy === 'species') {
-				updateParametersSelect(data.parameters);
+				updateContaminantsSelect(data.contaminants);
 				updateYearsSelect(data.years);
-			} else if(options.firedBy === 'parameters') {
+			} else if(options.firedBy === 'contaminants') {
 				updateYearsSelect(data.years);
 			} else {
 				// if unknown or undefined firing event, just update everything
 				updateSpeciesList();
-				updateParametersSelect(data.parameters);
+				updateContaminantsSelect(data.contaminants);
 				updateYearsSelect(data.years);
 			}
 			flashQueryChanges(options.query, options.firstRun);
@@ -394,7 +401,7 @@ function updateQuery(options) {
 		complete: function() {
 			// unlock interface
 			$("#species-control").prop('disabled', false);
-			$("#parameter-control").prop('disabled', false);
+			$("#contaminant-control").prop('disabled', false);
 			$("#start-year-control").prop('disabled', false);
 			$("#end-year-control").prop('disabled', false);
 			$("#loading-box-container-outer").hide();
@@ -405,8 +412,8 @@ function updateQuery(options) {
 function flashQueryChanges(query, firstRun) {
 	// store in list so we can fire them fairly simultaneously
 	var elements = [];
-	if(query.parameter !== lastQuery.parameter) {
-		elements.push($("#parameter-control"));
+	if(query.contaminant !== lastQuery.contaminant) {
+		elements.push($("#contaminant-control"));
 	}
 	if(query.startYear !== lastQuery.startYear) {
 		elements.push($("#start-year-control"));
@@ -421,19 +428,19 @@ function flashQueryChanges(query, firstRun) {
 				.animate({backgroundColor: "#fff"}, 500);
 		});
 		// throw an alert
-		// this was actually getting real annoying so I commented it out
+		// this was actually getting really annoying so I commented it out
 //		var msg = "No data resulted for ";
 //		if(query.species === 'highest' || query.species === 'lowest') {
-//			msg += "species with " + query.species + " avg concentration of " + query.parameter; 
+//			msg += "species with " + query.species + " avg concentration of " + query.contaminant; 
 //		} else {
-//			msg += query.parameter + " in " + query.species;
+//			msg += query.contaminant + " in " + query.species;
 //		}
 //		msg += " from " + query.startYear + "-" + query.endYear + "\n\n";
 //		msg += "Query adjusted to: ";
 //		if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
-//			msg += "species with " + lastQuery.species + " avg concentration of " + lastQuery.parameter; 
+//			msg += "species with " + lastQuery.species + " avg concentration of " + lastQuery.contaminant; 
 //		} else {
-//			msg += lastQuery.parameter + " in " + lastQuery.species;
+//			msg += lastQuery.contaminant + " in " + lastQuery.species;
 //		}
 //		msg += " from " + lastQuery.startYear + "-" + lastQuery.endYear + "\n\n";
 //		alert(msg);
@@ -464,17 +471,17 @@ function updateSpeciesSelect(data) {
 		.val(lastQuery.species.toLowerCase());
 }
 
-function updateParametersSelect(data) {
+function updateContaminantsSelect(data) {
 	var optionsHtml = "";
 	for(var i = 0; i < data.length; i++) {
 		optionsHtml += "<option value=\"" + data[i][0] + "\">" + data[i][0] + "</option>";
 	}
-	$("#parameter-control")
+	$("#contaminant-control")
 		.html(optionsHtml)
-		.val(lastQuery.parameter);
+		.val(lastQuery.contaminant);
 	// check value, if null, just select first available
-	if(!$("#parameter-control").val()) {
-		$("#parameter-control").val(data[0][0]);
+	if(!$("#contaminant-control").val()) {
+		$("#contaminant-control").val(data[0][0]);
 	}
 }
 
@@ -575,9 +582,9 @@ function updateLegend() {
 	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
 	if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
-		title = capitalizeSpecies + " Average " + lastQuery.parameter + " Concentration for Any Species"; 
+		title = capitalizeSpecies + " Average " + lastQuery.contaminant + " Concentration for Any Species"; 
 	} else {
-		title = lastQuery.parameter + " Concentrations in " + capitalizeSpecies;
+		title = lastQuery.contaminant + " Concentrations in " + capitalizeSpecies;
 	}
 	title += " (" + thresholds[0].units + ")";
 	var table = $("#legend-table");

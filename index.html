@@ -14,8 +14,29 @@
 		<!-- local scripts -->
 		<script src="js/ColorMap.js"></script>
 		<script src="js/MarkerFactory.js"></script>
+		<script src="js/StationDetails.js"></script>
 		<script src="js/map.js"></script>
 		<style>
+			/* loading dialog related */
+			#loading-box-container-inner {
+				display: table-cell;
+				vertical-align: middle;
+			}
+			#loading-box {
+				position: relative;
+				width: 220px;
+				height: 35px;
+				margin: 0 auto;
+				padding-top: 20px;
+				background-color: #fff;
+				background-color: rgba(255, 255, 255, 0.9);
+				border: 2px #777 solid;
+				border-radius: 6px;
+				text-align: center;
+				font-weight: bolder;
+				z-index: 99;
+			}
+			/* map related */
 			#map-container {
 				position: absolute;
 				top: 0;
@@ -31,16 +52,8 @@
 				height: 100%;
 				overflow: hidden;
 			}
-			#layer-control-container {
-				position: absolute;
-				top: 0px;
-				width: 100%;
-				background: #000;
-				background: rgba(0, 0, 0, 0.8);
-				padding: 8px 10px;
-				box-sizing: border-box;
-				color: #fff;
-				text-align: center;
+			.ol-zoom {
+				top: 45px;
 			}
 			.grab {
 				cursor: move;
@@ -63,11 +76,17 @@
 				border-radius: 3px;
 				font-size: 14px;
 			}
-			#lat-long-display {
-				float: right;
-				position: relative;
-				bottom: 10px;
-				width: 200px;
+			/* layers controls related */
+			#layer-control-container {
+				position: absolute;
+				top: 0px;
+				width: 100%;
+				background: #000;
+				background: rgba(0, 0, 0, 0.8);
+				padding: 8px 10px;
+				box-sizing: border-box;
+				color: #fff;
+				text-align: center;
 			}
 			#loading-box-container-outer {
 				position: absolute;
@@ -80,24 +99,13 @@
 				margin: auto;
 				overflow: hidden;
 			}
-			#loading-box-container-inner {
-				display: table-cell;
-				vertical-align: middle;
-			}
-			#loading-box {
+			#lat-long-display {
+				float: right;
 				position: relative;
-				width: 220px;
-				height: 35px;
-				margin: 0 auto;
-				padding-top: 20px;
-				background-color: #fff;
-				background-color: rgba(255, 255, 255, 0.9);
-				border: 2px #777 solid;
-				border-radius: 6px;
-				text-align: center;
-				font-weight: bolder;
-				z-index: 99;
+				bottom: 10px;
+				width: 200px;
 			}
+			/* thresholds legend related */
 			#legend-container {
 				position: absolute;
 				bottom: 60px;
@@ -119,9 +127,9 @@
 				padding: 4px;
 				font-size: 12px;
 			}
-			.legent-table-row {
+			.legend-table-row {
 				display: block;
-				overflow: auto;
+				overflow: hidden;
 				height: 30px;
 				padding: 2px;
 			}
@@ -135,6 +143,7 @@
 				margin: 2px;
 				overflow: hidden;
 			}
+			/* generic button style */
 			.button {
 				background-color: #5070aa;
 				background-color: rgba(80, 112, 170, 0.6);
@@ -149,8 +158,32 @@
 				background-color: rgba(0, 60, 136, 0.6);
 				cursor: pointer;
 			}
-			.ol-zoom {
-				top: 45px;
+			/* generic tab style (but specifically used for details dialog) */
+			.tab {
+				border-color: #ddd;
+				border-style: solid;
+				border-width: 1px;
+				border-top-left-radius: 2px;
+				border-top-right-radius: 2px;
+				background-color: #ddd;
+				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ddd), to(#aaa));
+				background: -webkit-linear-gradient(top, #ddd, #aaa);
+				background: -moz-linear-gradient(top, #ddd, #aaa);
+				background: -ms-linear-gradient(top, #ddd, #aaa);
+				background: -o-linear-gradient(top, #ddd, #aaa);
+			}
+			.tab:hover {
+				cursor: pointer;
+				background-color: #dde;
+				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#dde), to(#aac));
+				background: -webkit-linear-gradient(top, #dde, #aac);
+				background: -moz-linear-gradient(top, #dde, #aac);
+				background: -ms-linear-gradient(top, #dde, #aac);
+				background: -o-linear-gradient(top, #dde, #aac);
+			}
+			.tab-active {
+				border-width: 1px 1px 0px 1px;
+				background-color: #fff;
 			}
 		</style>
 	</head>
@@ -169,7 +202,7 @@
 				<select id="species-control" style="width:300px;" disabled>
 					<option>Loading..</option>
 				</select>
-				<select id="parameter-control" style="width:100px;" disabled>
+				<select id="contaminant-control" style="width:100px;" disabled>
 					<option>Loading..</option>
 				</select> 
 				<select id="start-year-control" style="width:60px;" disabled>

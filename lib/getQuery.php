@@ -29,21 +29,21 @@
 	$instance = StepQueries::getInstance();
 	
 	$result = array(
-		'parameters' => $instance->getAvailableParameters($query), 
+		'contaminants' => $instance->getAvailableContaminants($query), 
 		'years' => $instance->getAvailableYearSpan($query)
 	);
 	
-	// if there's no min/max years for species-parameter combination, there's no row resulting
+	// if there's no min/max years for species-contaminant combination, there's no row resulting
 	if(!$result['years']['min']) {
-		// if parameter doesn't exist in list of parameters, pick first available one
-		$query['parameter'] = $result['parameters'][0]['result'];
+		// if contaminant doesn't exist in list of contaminants, pick first available one
+		$query['contaminant'] = $result['contaminant'][0]['result'];
 		// update years - way code runs it will try to keep the initial year values, but adjust as necessary
 		$result['years'] = $instance->getAvailableYearSpan($query);
 	}
 	
 	// adjust years not to exceed min-max values, since they may be off
 	validateYears($query, $result['years']);
-	// at this point we know parameter is valid so add thresholds
+	// at this point we know contaminant is valid so add thresholds
 	$result['thresholds'] = $instance->getThresholds($query);
 	
 	// now that we have a valid query, grab the stations data
