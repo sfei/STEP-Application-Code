@@ -107,6 +107,7 @@
 			}
 			/* thresholds legend related */
 			#legend-container {
+				display: table;
 				position: absolute;
 				bottom: 60px;
 				left: 40px;
@@ -158,32 +159,130 @@
 				background-color: rgba(0, 60, 136, 0.6);
 				cursor: pointer;
 			}
-			/* generic tab style (but specifically used for details dialog) */
-			.tab {
+			/* details dialog related */
+			#details-container {
+				display: table;
+				position: absolute;
+				top: 30%;
+				left: 30%;
+				overflow: visible;
+				min-width: 500px;
+				min-height: 200px;
+				padding: 2px;
+				background-color: #777;
+				border: 1px solid #555;
+				border-radius: 4px;
+			}
+			#details-dialog {
+				display: inline-block;
+				min-width: 500px;
+				min-height: 200px;
+				background-color: #fff;
+				border: 1px solid #555;
+				border-radius: 2px;
+				padding: 4px;
+				font-size: 12px;
+			}
+			#details-title {
+				position: relative;
+				display: block;
+				font-weight: bold;
+				font-size: 18px;
+				margin-left: 8px;
+				margin-bottom: 12px;
+			}
+			#details-station-name {
+				width: 470px;
+			}
+			#details-dialog-close {
+				float: right;
+				position: absolute;
+				top: -2px;
+				right: -2px;
+				width: 14px;
+				height: 14px;
+				border-radius: 8px;
+				border: 2px solid #777;
+				text-align: center;
+				line-height: 14px;
+			}
+			#details-content {
+				display: block;
+				width: -moz-fit-content;
+				height: -moz-fit-content;
+			}
+			#details-tabs-container {
+				border-bottom: 1px solid #ddd;
+				margin-bottom: 5px;
+			}
+			#details-dialog-tabs {
+				overflow: hidden;
+				margin-bottom: -1px;
+				padding: 0px;
+				vertical-align: bottom;
+			}
+				/* generic tab style (but specifically used for details dialog) */
+				.nav-tab, .nav-tab-active {
+					display: inline-block;
+					float: left;
+					clear: none;
+					margin: 0px 3px;
+					border: 1px solid #ddd;
+					border-top-left-radius: 2px;
+					border-top-right-radius: 2px;
+					padding: 5px 10px;
+					font-size: 13px;
+				}
+				.nav-tab {
+					background-color: #eee;
+					background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#eee), to(#fff));
+					background: -webkit-linear-gradient(top, #eee, #fff);
+					background: -moz-linear-gradient(top, #eee, #fff);
+					background: -ms-linear-gradient(top, #eee, #fff);
+					background: -o-linear-gradient(top, #eee, #fff);
+				}
+				.nav-tab:hover {
+					cursor: pointer;
+					background-color: #D7E8EF;
+					background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#D7E8EF), to(#E7F6FD));
+					background: -webkit-linear-gradient(top, #D7E8EF, #E7F6FD);
+					background: -moz-linear-gradient(top, #D7E8EF, #E7F6FD);
+					background: -ms-linear-gradient(top, #D7E8EF, #E7F6FD);
+					background: -o-linear-gradient(top, #D7E8EF, #E7F6FD);
+				}
+				.nav-tab-active {
+					background-color: #fff;
+					border-bottom-color: #fff;
+				}
+			.details-table-row {
+				display: block;
+				overflow: hidden;
 				border-color: #ddd;
 				border-style: solid;
-				border-width: 1px;
-				border-top-left-radius: 2px;
-				border-top-right-radius: 2px;
-				background-color: #ddd;
-				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ddd), to(#aaa));
-				background: -webkit-linear-gradient(top, #ddd, #aaa);
-				background: -moz-linear-gradient(top, #ddd, #aaa);
-				background: -ms-linear-gradient(top, #ddd, #aaa);
-				background: -o-linear-gradient(top, #ddd, #aaa);
+				border-width: 0px 0px 1px 0px;
+				padding: 2px;
+				vertical-align: bottom;
 			}
-			.tab:hover {
-				cursor: pointer;
-				background-color: #dde;
-				background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#dde), to(#aac));
-				background: -webkit-linear-gradient(top, #dde, #aac);
-				background: -moz-linear-gradient(top, #dde, #aac);
-				background: -ms-linear-gradient(top, #dde, #aac);
-				background: -o-linear-gradient(top, #dde, #aac);
+			.details-table-row:before {
+				content: "";
+				display: inline-block;
+				vertical-align: bottom;
+				height: 100%;
 			}
-			.tab-active {
-				border-width: 1px 1px 0px 1px;
-				background-color: #fff;
+			.details-table-cell, .details-table-header {
+				display: inline-block;
+				float: left;
+				clear: none;
+				margin: 2px;
+				overflow: hidden;
+				text-align: right;
+			}
+			.details-table-header {
+				font-weight: bolder;
+				vertical-align: bottom;
+			}
+			.details-table-cell {
+				vertical-align: middle;
 			}
 		</style>
 	</head>
@@ -220,7 +319,7 @@
 				<span style="float:right;margin-right:5px;">Base Layer:</span>
 			</div>
 			<!-- legend -->
-			<div id="legend-container">
+			<div id="legend-container" class="grab">
 				<div id="legend-table"></div>
 			</div>
 			<!-- a loading dealy -->

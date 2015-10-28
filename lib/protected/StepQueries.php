@@ -17,6 +17,7 @@
 		$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
 		$station		= strtolower(filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING));
 		
+		
 		if($startYear && $endYear) {
 			if($startYear > $endYear) {
 				$tempyr = $startYear;
@@ -30,6 +31,9 @@
 		}
 		
 		$isASpecies = $species && $species != 'highest' && $species != 'lowest';
+		
+		// escape any single quotes for sql query (which is two single-quotes)
+		$station = str_replace("'", "''", $station);
 		
 		return array(
 			'species' => $species, 
@@ -293,7 +297,7 @@
 					"contaminant" => $raw[$i]['Parameter'], 
 					"value" => $raw[$i]['AvgResult'], 
 					"units" => $raw[$i]['UnitName'], 
-					"sampleYear" => $raw[$i]['sampleYear'], 
+					"sampleYear" => $raw[$i]['SampleYear'], 
 					"sampleType" => $raw[$i]['sampletype_grp'], 
 					"tissueCode" => $raw[$i]['TissueCode'], 
 					"prepCode" => $raw[$i]['PrepCode']
@@ -327,10 +331,11 @@
 		 *			<li>(String) prepCode - preparation code (e.g skin off)</li>
 		 *		</ul> */
 		public function getNearbyData($params) {
+			$avg = ($params["species"] == "highest" || $params["species"] == "lowest");
 			$queryString = "EXEC [dbo].[P_STEP_Nearby] "
-				. "@station=N'" . $params["station"] . ", "
-				. "@param=N'" . $params["contaminant"] . ", "
-				. "@species=N'" . $params["species"] . ", "
+				. "@station=N'" . $params["station"] . "', "
+				. "@param=N'" . $params["contaminant"] . "', "
+				. "@species='" . $params["species"] . "', "
 				. "@startyr=" . $params["startYear"] . ", "
 				. "@endyr=" . $params["endYear"];
 			$query = StepQueries::$dbconn->prepare($queryString);
@@ -338,7 +343,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchArray();
+			$raw = $query->fetchAll();
 			
 			$records = array();
 			for($i = 0; $i < count($raw); $i++) {
@@ -347,9 +352,10 @@
 					"distanceMiles" => $raw[$i]['Distance_Miles'], 
 					"species" => $raw[$i]['CommonName'], 
 					"contaminant" => $raw[$i]['Parameter'], 
-					"value" => $raw[$i]['Result'], 
+					"value" => ($avg) ? $raw[$i]['Result'] : $raw[$i]['AvgResult'], 
 					"units" => $raw[$i]['UnitName'], 
-					"sampleYear" => $raw[$i]['sampleYear'], 
+					"sampleYear" => $raw[$i]['SampleYear'], 
+					"sampleType" => $raw[$i]['sampletype_grp'], 
 					"prepCode" => $raw[$i]['PrepCode']
 				);
 			}

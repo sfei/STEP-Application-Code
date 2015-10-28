@@ -54,7 +54,13 @@ window.onload = init;
 function init() {
 	// initalize tooltip and dialog
 	$("#station-tooltip").hide();
-	$("#legend-container").draggable({containment: "parent"});
+	var legend = $("#legend-container").draggable({containment: "parent"});
+	legend.mouseup(function(evt) {
+			legend.switchClass("grabbing", "grab");
+		})
+		.mousedown(function(evt) {
+			legend.switchClass("grab", "grabbing");
+		});
 	
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
@@ -132,11 +138,11 @@ function init() {
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
 			if(watertype === "lake_reservoir") {
-				return 0;
+				return markerFactory.shapes.circle;
 			} else if(watertype === "coast") {
-				return 1;
+				return markerFactory.shapes.triangle;
 			} else {
-				return 2;
+				return markerFactory.shapes.diamond;
 			}
 		}
 	});
@@ -225,7 +231,7 @@ function openStationDetails(feature) {
 	if(!stationDetails) {
 		stationDetails = new StationDetails(options);
 	} else {
-		stationDetails.init(options);
+		stationDetails.open(options);
 	}
 	return true;
 }
@@ -339,7 +345,13 @@ function moveAllPoints(layer, deltax, deltay) {
 // Query and data update functions
 //************************************************************************************************************
 function resetDefaultQuery() {
-	lastQuery = Object.assign({}, defaultQuery);
+	//lastQuery = Object.assign({}, defaultQuery);
+	lastQuery = {};
+	for(var v in defaultQuery) {
+		if(defaultQuery.hasOwnProperty(v)) {
+			lastQuery[v] = defaultQuery[v];
+		}
+	}
 }
 
 function updateQuery(options) {
@@ -360,8 +372,8 @@ function updateQuery(options) {
 		data: options.query, 
 		dataType: "json", 
 		success: function(data) {
-			console.log(options.query);
-			console.log(data);
+			//console.log(options.query);
+			//console.log(data);
 			// update last successful query
 			lastQuery = data.query;
 			// update thresholds

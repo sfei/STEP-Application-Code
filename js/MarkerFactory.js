@@ -9,10 +9,12 @@ var MarkerFactory = function(options) {
 		this.stroke2		= new ol.style.Stroke({color: 'white', width: this.strokeWidth});
 		// styles caches in shape-specific dictionaries by color (integer 0 to 10) then stroke (normal or highlight)
 		this.shapes			= {
-								'square': { 'value': 0, 'cache': [] }, 
-								'triangle': { 'value': 1, 'cache': [] }, 
-								'circle': { 'value': 2, 'cache': [] }, 
-								'length': 3
+								square: [], 
+								diamond: [], 
+								triangle: [], 
+								circle: [], 
+								cross: [],
+								x: []
 							};
 		// since setStyle(null) doesn't appear to work, just have a specific style with no fill/stroke
 		this.nullStyle		= new ol.style.Style({
@@ -36,7 +38,7 @@ var MarkerFactory = function(options) {
 	};
 	
 	this.determineShape = function(feature) {
-		return this.shapes.square.value;
+		return this.shapes.circle;
 	};
 
 	this.setStyle = function(options) {
@@ -90,6 +92,16 @@ var MarkerFactory = function(options) {
 					stroke: thestroke,
 					points: 4,
 					radius: this.radius,
+					angle: Math.PI/4
+				})
+			});
+		} else if(shape == this.shapes.diamond) {
+			return new ol.style.Style({
+				image: new ol.style.RegularShape({
+					fill: fill,
+					stroke: thestroke,
+					points: 4,
+					radius: this.radius,
 					angle: 0
 				})
 			});
@@ -112,7 +124,24 @@ var MarkerFactory = function(options) {
 					radius: this.radius-1
 				})
 			});
+		} else if(shape == this.shapes.cross) {
+			return new ol.style.Style({
+				fill: fill, 
+				stroke: thestroke, 
+				radius: this.radius,
+				radius2: 0, 
+				angle: 0
+			});
+		} else if(shape == this.shapes.x) {
+			return new ol.style.Style({
+				fill: fill, 
+				stroke: thestroke, 
+				radius: this.radius,
+				radius2: 0,
+				angle: Math.PI/4
+			});
 		}
+		return null;
 	};
 
 	this.createHighlightStyle = function(feature) {
@@ -122,21 +151,8 @@ var MarkerFactory = function(options) {
 	this.createLayerStyle = function(feature, highlight) {
 		var styles = feature.get("mfStyle");
 		if(!styles) {
-			var shape;
 			// determine the shape (by index)
-			var shapeNumber = this.determineShape(feature);
-			if(!shapeNumber || shapeNumber < 0) {
-				shapeNumber = 0;
-			} else if(shapeNumber >= this.shapes.length) {
-				shapeNumber = this.shapes.length-1;
-			}
-			// load the shape object
-			for(var k in this.shapes) {
-				if(this.shapes[k].value == shapeNumber) {
-					shape = this.shapes[k];
-					break;
-				}
-			}
+			var shape = this.determineShape(feature);
 			// if no shape object exists, return null
 			if(!shape) { return null; }
 			// determine the color index
@@ -148,16 +164,16 @@ var MarkerFactory = function(options) {
 			}
 			iColor = Math.round(iColor*this.resolution);
 			// if nothing in cache, create the styles
-			if(!shape.cache[iColor]) {
+			if(!shape[iColor]) {
 				var fill = this.fills[iColor];
-				shape.cache[iColor] = {
+				shape[iColor] = {
 					normal: this.createShape(shape, fill, this.stroke), 
 					highlight: this.createShape(shape, fill, this.stroke2)
 				};
 			}
-			styles = shape.cache[iColor];
+			styles = shape[iColor];
 			// store in feature data as styles are incredibly taxing on speed it looks like
-			feature.set("styles", styles);
+			feature.set("mfStyle", styles);
 		}
 		// return the styles
 		return (!highlight) ? [styles.normal] : [styles.highlight];
