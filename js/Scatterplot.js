@@ -139,7 +139,6 @@ var Scatterplot = {
 		var color = d3.scale.category10();
 		
 		// create the SVG
-		$("#"+options.container).html("");
 		var svg = d3.select("#"+options.container)
 		  .append("svg")
 			.attr("width", width + margin.left + margin.right)
@@ -205,7 +204,6 @@ var Scatterplot = {
 			);
 	
 		// lines
-		console.log(lines);
 		svg.selectAll(".scatterplot-line")
 			.data(lines.coords)
 		  .enter().append("path")

@@ -570,27 +570,35 @@ function updateThresholdStyles() {
 	// set the style function (see MarkerFactory.js)
 	markerFactory.setStyle({
 		resolution: numThresholds*stretchFactor,
-		valueFunction: function(feature) {
-			// calculate color index
-			var iColor = 0;
-			var value = feature.get("value");
-			if(value > thresholds[0].value) {
-				for(var i = 0; i < numThresholds; i++) {
-					iColor += i;
-					if(value > thresholds[i].value) {
-						iColor += (value - thresholds[i].value)/thresholds[i].value;
-						break;
-					}
-				}
-			}
-			iColor /= numThresholds;
-			return iColor;
-		}
+		valueFunction: function(feature) { return getThresholdColorIndex(feature.get("value")); }
 	});
 	// get the color values for each threshold
 	for(var i = 0; i < numThresholds; i++) {
 		thresholds[i].color = markerFactory.hexMap[(1+i)*stretchFactor];
 	}
+}
+
+function getThresholdColor(value) {
+	var colorIndex = getThresholdColorIndex(value);
+	return markerFactory.hexMap[Math.round(colorIndex*markerFactory.resolution)];
+}
+
+// calculate color index
+function getThresholdColorIndex(value) {
+	var numThresholds = thresholds.length;
+	var iColor = numThresholds;
+	for(var i = 0; i < numThresholds; i++) {
+		if(value <= thresholds[i].value) {
+			if(i === 0) {
+				iColor = value/thresholds[i].value;
+			} else {
+				iColor = i + (value - thresholds[i-1].value)/(thresholds[i].value - thresholds[i-1].value);
+			}
+			break;
+		}
+	}
+	iColor /= numThresholds;
+	return iColor;
 }
 
 function updateLegend() {

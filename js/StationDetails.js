@@ -35,7 +35,7 @@ var StationDetails = function(query) {
 					} else {
 						yearMsg = "in " + query.startYear;
 					}
-					return "What records exist at \"" + query.station + "\" " + yearMsg + "?";
+					return "What records exist for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
 				},
 				bottomMsg: "A result of ND means the concentration was below detection limits."
 			}, 
@@ -49,7 +49,7 @@ var StationDetails = function(query) {
 					} else {
 						yearMsg = "in " + query.startYear;
 					}
-					return "What are the trends at \"" + query.station + "\" " + yearMsg + "?";
+					return "What are the trends for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
 				}
 			}, 
 			nearby: {
@@ -137,9 +137,9 @@ var StationDetails = function(query) {
 	this.createDetailsDialog = function() {
 		var self = this;
 		$('#' + this.parent).append(
-			"<div id='" + this.divIdPrefix+"-container" + "' class='grab'>" + 
+			"<div id='" + this.divIdPrefix+"-container" + "'>" + 
 				"<div id='"+this.divIdPrefix+"-dialog'>" + 
-					"<div id='"+this.divIdPrefix+"-title'></div>" + // title set elsewhere
+					"<div id='"+this.divIdPrefix+"-title' class='grab'></div>" + // title set elsewhere
 						"<div id='"+this.divIdPrefix+"-tabs-container'>" + 
 							"<ul id='"+this.divIdPrefix+"-dialog-tabs'>" + 
 								"<li id='" + this.tabs.data.tabId + "' class='"+this.divIdPrefix+"-tab'>Data</li>" + 
@@ -152,13 +152,16 @@ var StationDetails = function(query) {
 			"</div>"
 		);
 		this.element = $("#"+this.divIdPrefix+"-container");
+		var titleElement = this.element.find("#"+this.divIdPrefix+"-title");
 		this.element.hide()
 			.draggable({containment: "parent"})
-			.mouseup(function(evt) {
-				self.element.switchClass("grabbing", "grab");
-			})
 			.mousedown(function(evt) {
-				self.element.switchClass("grab", "grabbing");
+				self.element.addClass("grabbing");
+				titleElement.removeClass("grab");
+			})
+			.mouseup(function(evt) {
+				self.element.removeClass("grabbing");
+				titleElement.addClass("grab");
 			});
 		this.tabs.data.element = $("#"+this.tabs.data.tabId)
 			.on('click', function() { self.openTabData(); });
@@ -243,7 +246,7 @@ var StationDetails = function(query) {
 					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[0] + "px;text-align:left;'>" + 
 						this.stationData[i].species + 
 					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[1] + "px;'>" + 
+					"<div class='"+this.divIdPrefix+"-table-cell color-value' style='width:" + this.tabs.data.colWidths[1] + "px;font-weight:bolder;'>" + 
 						this.stationData[i].value + 
 					"</div>" + 
 					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[2] + "px;'>" + 
@@ -258,6 +261,10 @@ var StationDetails = function(query) {
 				"</div>"
 			);
 		}
+		// colorize!
+		contentDiv.find(".color-value").each(function(i, element) {
+			element.style.color = getThresholdColor(parseFloat(element.innerHTML));
+		});
 		if(this.tabs.data.bottomMsg) {
 			contentDiv.append(
 				"<div style='" + this.style.bottomMsg + "'>" + this.tabs.data.bottomMsg + "</div>"
@@ -268,7 +275,13 @@ var StationDetails = function(query) {
 	
 	this.openTabTrends = function() {
 		this.openLoadingMessage();
-		// not used but get the return svg object for now
+		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		contentDiv.html(
+			"<div style='width:650px;" + this.style.titleDiv + this.style.title + "'>" + 
+				this.tabs.trends.titleFunction(this.query) + 
+			"</div>"
+		);
+		// not used but it returns the svg object (already added to container)
 		var svg = Scatterplot.create({
 			container: this.divIdPrefix+"-content",
 			data: this.stationData, 
@@ -297,7 +310,7 @@ var StationDetails = function(query) {
 		} else {
 			// check whether there was at least 1 record returned (done early to set width)
 			var hasResult = this.nearbyData.length > 0;
-			var width = (hasResult) ? this.tabs.nearby.tableWidth : 500;
+			var width = this.tabs.nearby.tableWidth;
 			// create the header and select options
 			contentDiv.html(
 				"<div style='width:" + width + "px;" + this.style.titleDiv + "'>" + 
@@ -328,35 +341,35 @@ var StationDetails = function(query) {
 				self.openTabNearby();
 			});
 			// now get to writing the table
+			// table headers
+			contentDiv.append(
+				"<div class='"+this.divIdPrefix+"-table-row'>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left;'>" + 
+						"Location" + 
+					"</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[1] + "px;'>" + 
+						"Distance (mi)" + 
+					"</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[2] + "px;'>" + 
+						"Species" + 
+					"</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[3] + "px;'>" + 
+						this.query.contaminant + (hasResult ? " ("+this.nearbyData[0].units+")" : "") + "</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[4] + "px;'>" + 
+						"Sample Year" + 
+					"</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[5] + "px;'>" + 
+						"Prep Code" + 
+					"</div>" + 
+					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[6] + "px;'>" + 
+						"Sample Type" + 
+					"</div>" + 
+				"</div>"
+			);
 			if(!hasResult) {
 				// if no result, display no data message
-				contentDiv.append("<div style='margin:0px 15px;'>" + this.tabs.nearby.noDataMsg + "</div>");
+				contentDiv.append("<div class='"+this.divIdPrefix+"-table-row' style='padding:10px 5px;margin-bottom:30px;'>" + this.tabs.nearby.noDataMsg + "</div>");
 			} else {
-				// table headers
-				contentDiv.append(
-					"<div class='"+this.divIdPrefix+"-table-row'>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left;'>" + 
-							"Location" + 
-						"</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[1] + "px;'>" + 
-							"Distance (mi)" + 
-						"</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[2] + "px;'>" + 
-							"Species" + 
-						"</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[3] + "px;'>" + 
-							this.query.contaminant + " (" +  this.nearbyData[0].units + ")</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[4] + "px;'>" + 
-							"Sample Year" + 
-						"</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[5] + "px;'>" + 
-							"Prep Code" + 
-						"</div>" + 
-						"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[6] + "px;'>" + 
-							"Sample Type" + 
-						"</div>" + 
-					"</div>"
-				);
 				// loop through rows
 				for(var i = 0; i < this.nearbyData.length; i++) {
 					contentDiv.append(
@@ -370,7 +383,7 @@ var StationDetails = function(query) {
 							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[2] + "px;'>" + 
 								this.nearbyData[i].species + 
 							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[3] + "px;'>" + 
+							"<div class='"+this.divIdPrefix+"-table-cell color-value' style='width:" + this.tabs.nearby.colWidths[3] + "px;font-weight:bolder;'>" + 
 								this.nearbyData[i].value + 
 							"</div>" + 
 							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[4] + "px;'>" + 
@@ -385,6 +398,10 @@ var StationDetails = function(query) {
 						"</div>"
 					);
 				}
+				// colorize!
+				contentDiv.find(".color-value").each(function(i, element) {
+					element.style.color = getThresholdColor(parseFloat(element.innerHTML));
+				});
 				if(this.tabs.nearby.bottomMsg) {
 					contentDiv.append(
 						"<div style='" + this.style.bottomMsg + "'>" + this.tabs.nearby.bottomMsg + "</div>"

@@ -73,12 +73,12 @@ var ColorMap = {
 	}, 
 	/** With color map specified at top, creates an array of hex values as appropriate in a smooth gradient, using 
 	 * HSV transition (rather than trying to RGB gradient it), linearlly interpolated
-	 * @param {Number} resolution : determines the number of discrete colors to create, the final output will 
-	 *		will however have one more than the resolution as it is zero to resolution inclusive. E.g. specifying 
-	 *		a resolution of 10 will have 11 values for 0 to 10 inclusive.
+	 * @param {Array} colorMap : array of [r,g,b] values array that determines gradient
+	 * @param {Number} resolution : determines the number of discrete colors to create, must be at least equal
+	 *		to the length of the colorMap
 	 * @return {Array} array of hex strings representing the color map (with leading '#') */
 	createHexColorMap: function(colorMap, resolution) {
-		resolution = parseInt(resolution+1);
+		resolution = parseInt(resolution);
 		var hexColors = [];
 		var spread = colorMap.length;
 		if(spread == 1) {
