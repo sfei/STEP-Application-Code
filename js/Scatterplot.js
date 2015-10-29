@@ -96,7 +96,8 @@ var Scatterplot = {
 				} else {
 					// check there's not more than one data point for that x-value
 					var exists = false;
-					for(var c in lines.coords[lineIndex]) {
+					for(var j = 0; j < lines.coords[lineIndex].length; j++) {
+						var c = lines.coords[lineIndex][j];
 						if(c[0] === data[i].x) {
 							// if it exists, add to count and use average y-value
 							c[2] += 1;
