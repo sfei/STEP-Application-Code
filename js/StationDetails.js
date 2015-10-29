@@ -313,11 +313,10 @@ var StationDetails = function(query) {
 					"</div>" + 
 				"</div>"
 			);
-			// add specific species option if applicable,
+			// add all available species to the list
 			var speciesSelect = contentDiv.find("#"+this.divIdPrefix+"-species-control");
-			var isASpecies = this.query.species !== "highest" && this.query.species !== "lowest";
-			if(isASpecies) {
-				speciesSelect.append("<option value='" + this.query.species + "'>" + this.query.species.capitalize() + "</option>");
+			for(var i = 0; i < speciesList.length; i++) {
+				speciesSelect.append("<option value=\"" + speciesList[i][0].toLowerCase() + "\">" + speciesList[i][0].capitalize() + "</option>");
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
