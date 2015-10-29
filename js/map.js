@@ -1,9 +1,13 @@
 
+// common function that comes in handy
+String.prototype.capitalize = function() {
+    return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+};
+
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
 
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857';	// web mercator wgs84
-var dragging = false;				// necessary for grab cursor animations
 
 var baseLayerArray;					// array of loaded baselayers (stored this way for base layers switching)
 
@@ -80,13 +84,11 @@ function init() {
 	);
 	// grabbing cursor functionality since it's not default to open layers 3
 	$('#map-view')
-		.mouseup(function() {
-			dragging = false;
-			$('#Map').switchClass("grabbing", "grab");
-		})
 		.mousedown(function() {
-			dragging = true;
-			$('#Map').switchClass("grab", "grabbing");
+			$('#map-view').switchClass("grab", "grabbing");
+		})
+		.mouseup(function() {
+			$('#map-view').switchClass("grabbing", "grab");
 		});
 	// mouse pointer location (mainly only used for debugging, so currently commented out)
 //	map.addControl(new ol.control.MousePosition({
@@ -289,19 +291,17 @@ function loadStationsLayer(data) {
 		});
 		// hover tooltip
 		stationInteraction.on("select", function(evt) {
-			if(!dragging) {
-				var features = evt.selected;
-				if(features[0]) {
-					$("#map-view").css("cursor", "pointer");
-					$("#station-tooltip").html(features[0].get("name"))
-					  .css({
-						top: evt.mapBrowserEvent.pixel[1]-10,
-						left: evt.mapBrowserEvent.pixel[0]+15
-					  }).show();
-				} else {
-					$("#map-view").css("cursor", "");
-					$("#station-tooltip").hide();
-				}
+			var features = evt.selected;
+			if(features[0]) {
+				$("#map-view").css("cursor", "pointer");
+				$("#station-tooltip").html(features[0].get("name"))
+				  .css({
+					top: evt.mapBrowserEvent.pixel[1]-10,
+					left: evt.mapBrowserEvent.pixel[0]+15
+				  }).show();
+			} else {
+				$("#map-view").css("cursor", "");
+				$("#station-tooltip").hide();
 			}
 		});
 		map.addInteraction(stationInteraction);
@@ -476,7 +476,7 @@ function updateSpeciesSelect(data) {
 	var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
 		+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
 	for(var i = 0; i < data.length; i++) {
-		optionsHtml += "<option value=\"" + data[i][0].toLowerCase() + "\">" + data[i][0] + "</option>";
+		optionsHtml += "<option value=\"" + data[i][0].toLowerCase() + "\">" + data[i][0].capitalize() + "</option>";
 	}
 	$("#species-control")
 		.html(optionsHtml)
