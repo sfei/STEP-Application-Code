@@ -276,8 +276,8 @@ var StationDetails = function(query) {
 			xAxisLabel: 'Year', 
 			yValueName: 'value', 
 			yAxisLabel: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
-			width: 550,
-			height: 400
+			width: 640,
+			height: 360
 		});
 		this.setActiveTab(this.tabs.trends);
 	};
