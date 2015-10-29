@@ -268,7 +268,8 @@ var StationDetails = function(query) {
 	
 	this.openTabTrends = function() {
 		this.openLoadingMessage();
-		Scatterplot({
+		// not used but get the return svg object for now
+		var svg = Scatterplot.create({
 			container: this.divIdPrefix+"-content",
 			data: this.stationData, 
 			dataPointName: 'species', 
