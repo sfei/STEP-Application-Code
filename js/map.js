@@ -24,6 +24,8 @@ var //countiesGeoserverURL = "http://mapservices.sfei.org/geoserver/ecoatlas/wms
 	countiesLayer,
 	countiesHidden = true;
 
+var speciesList;
+
 var defaultQuery = {
 		species: 'highest', 
 		contaminant: 'Mercury',
@@ -464,7 +466,8 @@ function updateSpeciesList() {
 		url: "lib/getAllSpecies.php", 
 		dataType: "json", 
 		success: function(data) {
-			updateSpeciesSelect(data);
+			speciesList = data;
+			updateSpeciesSelect();
 		}, 
 		error: function(e) {
 			alert(defaultErrorMessage + "(Error SpeciesList)");
@@ -472,11 +475,11 @@ function updateSpeciesList() {
 	});
 }
 
-function updateSpeciesSelect(data) {
+function updateSpeciesSelect() {
 	var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
 		+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
-	for(var i = 0; i < data.length; i++) {
-		optionsHtml += "<option value=\"" + data[i][0].toLowerCase() + "\">" + data[i][0].capitalize() + "</option>";
+	for(var i = 0; i < speciesList.length; i++) {
+		optionsHtml += "<option value=\"" + speciesList[i][0].toLowerCase() + "\">" + speciesList[i][0].capitalize() + "</option>";
 	}
 	$("#species-control")
 		.html(optionsHtml)
