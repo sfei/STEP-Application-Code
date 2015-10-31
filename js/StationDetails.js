@@ -16,13 +16,17 @@ var StationDetails = function(query) {
 		// you change this, much of the default css styles (those not specified in this.style which is a lot) 
 		// will not apply and must accounted for.
 		this.divIdPrefix = "details";
-		// styles for a few things that appear infrequently so is easier to modify here instead of css file
+		// styles for a few things that appear frequently and/or has cascading effects on parent/child 
+		// elements so is easier to set here as variables
+		this.titleDivPadLeft = 12;
+		this.containerPadding = 2;
+		this.contentPadding = 4;
 		this.style = {
 			title: "font-size:14px;font-weight:bolder;", 
-			titleDiv: "margin:12px 0px;padding-left:12px;", 
+			titleDiv: "margin:12px 0px;padding-left:"+this.titleDivPadLeft+"px;", 
 			bottomMsg: "height:35px;line-height:35px;text-align:right;font-size:10px;"
 		};
-		// tabs
+		// tabs configurations
 		this.tabs = { 
 			data: {
 				tabId: this.divIdPrefix + "-tab-data", 
@@ -42,6 +46,8 @@ var StationDetails = function(query) {
 			trends: {
 				tabId: this.divIdPrefix + "-tab-trends", 
 				element: null, 
+				chartWidth: 640, 
+				chartHeight: 360, 
 				titleFunction: function(query) {
 					var yearMsg;
 					if(query.startYear !== query.endYear) {
@@ -77,6 +83,8 @@ var StationDetails = function(query) {
 		for(var t in this.tabs) {
 			if(this.tabs.hasOwnProperty(t) && this.tabs[t].colWidths) {
 				this.tabs[t].tableWidth = this.tabs[t].colWidths.reduce(function(a, b) { return a + b; });
+				// plus 2px padding each side of every cell
+				this.tabs[t].tableWidth += this.tabs[t].colWidths.length*4;
 			}
 		}
 		// the element that contains the dialog box/tabs
@@ -113,8 +121,8 @@ var StationDetails = function(query) {
 			success: function(data) {
 				//console.log(data);
 				self.stationData = data;
-				self.openTabData();
 				self.element.show();
+				self.openTabData();
 			},
 			error: function(e) {
 				//self.openErrorMessage();
@@ -137,8 +145,8 @@ var StationDetails = function(query) {
 	this.createDetailsDialog = function() {
 		var self = this;
 		$('#' + this.parent).append(
-			"<div id='" + this.divIdPrefix+"-container" + "'>" + 
-				"<div id='"+this.divIdPrefix+"-dialog'>" + 
+			"<div id='" + this.divIdPrefix+"-container" + "' style='padding:"+this.containerPadding+"px;'>" + 
+				"<div id='"+this.divIdPrefix+"-dialog' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='"+this.divIdPrefix+"-title' class='grab'></div>" + // title set elsewhere
 						"<div id='"+this.divIdPrefix+"-tabs-container'>" + 
 							"<ul id='"+this.divIdPrefix+"-dialog-tabs'>" + 
@@ -154,7 +162,7 @@ var StationDetails = function(query) {
 		this.element = $("#"+this.divIdPrefix+"-container");
 		var titleElement = this.element.find("#"+this.divIdPrefix+"-title");
 		this.element.hide()
-			.draggable({containment: "parent"})
+			.draggable()
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");
@@ -208,6 +216,28 @@ var StationDetails = function(query) {
 		}
 	};
 	
+	// getting divs to fit content across all browsers is a pain so just do it manually
+	this.adjustContainerDimensions = function(width, height) {
+		var dialogDiv = this.element.find("#"+this.divIdPrefix+"-dialog");
+		
+		if(!width || width <= 0) { 
+			width = dialogDiv.width();
+		} else {
+			dialogDiv.width(width);
+			width += 2*this.contentPadding + 2;	// plus 2 from the border
+		}
+		this.element.width(width);
+		
+		if(!height || height <= 0) { 
+			height = dialogDiv.height();
+			height += 2*this.contentPadding;
+		} else {
+			dialogDiv.height(height);
+			height += 2*this.contentPadding + 2;
+		}
+		this.element.height(height+2*this.containerPadding);
+	};
+	
 	this.openTabData = function() {
 		var yearMsg;
 		if(this.query.startYear !== this.query.endYear) {
@@ -216,13 +246,14 @@ var StationDetails = function(query) {
 			yearMsg = "in " + this.query.startYear;
 		}
 		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		var width = this.tabs.data.tableWidth;
 		contentDiv.html(
-			"<div style='width:" + this.tabs.data.tableWidth + "px;" + this.style.titleDiv + this.style.title + "'>" + 
+			"<div style='width:" + (width-this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
 				this.tabs.data.titleFunction(this.query) + 
 			"</div>"
 		);
 		contentDiv.append(
-			"<div class='"+this.divIdPrefix+"-table-row'>" + 
+			"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
 				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[0] + "px;text-align:left;'>" + 
 					"Species" + 
 				"</div>" + 
@@ -242,7 +273,7 @@ var StationDetails = function(query) {
 		);
 		for(var i = 0; i < this.stationData.length; i++) {
 			contentDiv.append(
-				"<div class='"+this.divIdPrefix+"-table-row'>" + 
+				"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
 					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[0] + "px;text-align:left;'>" + 
 						this.stationData[i].species + 
 					"</div>" + 
@@ -267,17 +298,17 @@ var StationDetails = function(query) {
 		});
 		if(this.tabs.data.bottomMsg) {
 			contentDiv.append(
-				"<div style='" + this.style.bottomMsg + "'>" + this.tabs.data.bottomMsg + "</div>"
+				"<div style='width:" + width + "px;" + this.style.bottomMsg + "'>" + this.tabs.data.bottomMsg + "</div>"
 			);
 		}
 		this.setActiveTab(this.tabs.data);
+		this.adjustContainerDimensions(this.tabs.data.tableWidth);
 	};	
 	
 	this.openTabTrends = function() {
-		this.openLoadingMessage();
 		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
 		contentDiv.html(
-			"<div style='width:650px;" + this.style.titleDiv + this.style.title + "'>" + 
+			"<div style='width:" + (this.tabs.trends.chartWidth - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
 				this.tabs.trends.titleFunction(this.query) + 
 			"</div>"
 		);
@@ -290,10 +321,11 @@ var StationDetails = function(query) {
 			xAxisLabel: 'Year', 
 			yValueName: 'value', 
 			yAxisLabel: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
-			width: 640,
-			height: 360
+			width: this.tabs.trends.chartWidth,
+			height: this.tabs.trends.chartHeight
 		});
 		this.setActiveTab(this.tabs.trends);
+		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
 	
 	this.openTabNearby = function() {
@@ -302,7 +334,6 @@ var StationDetails = function(query) {
 			this.openLoadingMessage();
 			this.nearbyData = this.loadNearbyData();
 		}
-		
 		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
 		if(!this.nearbyData) {
 			// if data still does not exist, throw error
@@ -313,7 +344,7 @@ var StationDetails = function(query) {
 			var width = this.tabs.nearby.tableWidth;
 			// create the header and select options
 			contentDiv.html(
-				"<div style='width:" + width + "px;" + this.style.titleDiv + "'>" + 
+				"<div style='width:" + (width-this.titleDivPadLeft) + "px;" + this.style.titleDiv + "'>" + 
 					"<div style='" + this.style.title + "margin-bottom:6px;'>" + 
 						this.tabs.nearby.titleFunction(this.query) + 
 					"</div>" + 
@@ -343,7 +374,7 @@ var StationDetails = function(query) {
 			// now get to writing the table
 			// table headers
 			contentDiv.append(
-				"<div class='"+this.divIdPrefix+"-table-row'>" + 
+				"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
 					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left;'>" + 
 						"Location" + 
 					"</div>" + 
@@ -368,12 +399,12 @@ var StationDetails = function(query) {
 			);
 			if(!hasResult) {
 				// if no result, display no data message
-				contentDiv.append("<div class='"+this.divIdPrefix+"-table-row' style='padding:10px 5px;margin-bottom:30px;'>" + this.tabs.nearby.noDataMsg + "</div>");
+				contentDiv.append("<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;padding:10px 5px;margin-bottom:30px;'>" + this.tabs.nearby.noDataMsg + "</div>");
 			} else {
 				// loop through rows
 				for(var i = 0; i < this.nearbyData.length; i++) {
 					contentDiv.append(
-						"<div class='"+this.divIdPrefix+"-table-row'>" + 
+						"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
 							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left'>" + 
 								this.nearbyData[i].station + 
 							"</div>" + 
@@ -404,12 +435,13 @@ var StationDetails = function(query) {
 				});
 				if(this.tabs.nearby.bottomMsg) {
 					contentDiv.append(
-						"<div style='" + this.style.bottomMsg + "'>" + this.tabs.nearby.bottomMsg + "</div>"
+						"<div style='width:" + width + "px;" + this.style.bottomMsg + "'>" + this.tabs.nearby.bottomMsg + "</div>"
 					);
 				}
 			}
 		}
 		this.setActiveTab(this.tabs.nearby);
+		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
 	this.loadNearbyData = function() {

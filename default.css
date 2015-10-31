@@ -1,130 +1,5 @@
-
-/* loading dialog related */
-#loading-box-container-inner {
-	display: table-cell;
-	vertical-align: middle;
-}
-#loading-box {
-	position: relative;
-	width: 220px;
-	height: 35px;
-	margin: 0 auto;
-	padding-top: 20px;
-	background-color: #fff;
-	background-color: rgba(255, 255, 255, 0.9);
-	border: 2px #777 solid;
-	border-radius: 6px;
-	text-align: center;
-	font-weight: bolder;
-	z-index: 99;
-}
-/* map related */
-#map-container {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	overflow: hidden;
+body {
 	font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
-}
-#map-view {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-}
-.ol-zoom {
-	top: 45px;
-}
-.grab {
-	cursor: move;
-	cursor: url(grab.cur);
-	cursor: -moz-grab;
-	cursor: -webkit-grab;
-}
-.grabbing {
-	cursor: move;
-	cursor: url(grabbing.cur);
-	cursor: -moz-grabbing;
-	cursor: -webkit-grabbing;
-}
-#station-tooltip {
-	position: absolute;
-	background-color: #000;
-	color: #fff;
-	padding: 1px 4px;
-	border: 1px solid #fff;
-	border-radius: 3px;
-	font-size: 14px;
-}
-/* layers controls related */
-#layer-control-container {
-	position: absolute;
-	top: 0px;
-	width: 100%;
-	background: #000;
-	background: rgba(0, 0, 0, 0.8);
-	padding: 8px 10px;
-	box-sizing: border-box;
-	color: #fff;
-	text-align: center;
-}
-#loading-box-container-outer {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100vh;
-	/*background: rgba(200, 200, 200, 0.4);*/
-	display: table;
-	margin: auto;
-	overflow: hidden;
-}
-#lat-long-display {
-	float: right;
-	position: relative;
-	bottom: 10px;
-	width: 200px;
-}
-/* thresholds legend related */
-#legend-container {
-	display: table;
-	position: absolute;
-	bottom: 60px;
-	left: 40px;
-	display: table;
-	min-height: 200px;
-	padding: 2px;
-	background-color: #777;
-	border: 1px solid #555;
-	border-radius: 4px;
-}
-#legend-table {
-	display: table-cell;
-	overflow: auto;
-	min-width: 200px;
-	background-color: #fff;
-	border: 1px solid #555;
-	border-radius: 2px;
-	padding: 4px;
-	font-size: 12px;
-}
-.legend-table-row {
-	display: block;
-	overflow: hidden;
-	height: 30px;
-	padding: 2px;
-}
-.legend-table-cell {
-	display: table-cell;
-	float: left;
-	clear: none;
-	height: 25px;
-	line-height: 25px;
-	vertical-align: middle;
-	margin: 2px;
-	overflow: hidden;
 }
 /* generic button style */
 .button {
@@ -141,3 +16,129 @@
 	background-color: rgba(0, 60, 136, 0.6);
 	cursor: pointer;
 }
+/* loading dialog related */
+#loading-box-container-outer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	/*background: rgba(200, 200, 200, 0.4);*/
+	display: table;
+	margin: auto;
+	overflow: hidden;
+}
+	#loading-box-container-inner {
+		display: table-cell;
+		vertical-align: middle;
+	}
+		#loading-box {
+			position: relative;
+			width: 220px;
+			height: 35px;
+			margin: 0 auto;
+			padding-top: 20px;
+			background-color: #fff;
+			background-color: rgba(255, 255, 255, 0.9);
+			border: 2px #777 solid;
+			border-radius: 6px;
+			text-align: center;
+			font-weight: bolder;
+			z-index: 99;
+		}
+/* map related */
+#map-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+}
+	#map-view {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+	.ol-zoom {
+		top: 45px;
+	}
+	#station-tooltip {
+		position: absolute;
+		background-color: #000;
+		color: #fff;
+		padding: 1px 4px;
+		border: 1px solid #fff;
+		border-radius: 3px;
+		font-size: 14px;
+	}
+#lat-long-display {
+	float: right;
+	position: relative;
+	bottom: 10px;
+	width: 200px;
+}
+.grab {
+	cursor: move;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.grabbing {
+	cursor: move;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+
+/* layers controls related */
+#layer-control-container {
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	background: #000;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 8px 10px;
+	box-sizing: border-box;
+	color: #fff;
+	text-align: center;
+}
+/* thresholds legend related */
+#legend-container {
+	position: absolute;
+	bottom: 60px;
+	left: 40px;
+	display: block;
+	overflow: visible;
+	padding: 2px;
+	background-color: #777;
+	border: 1px solid #555;
+	border-radius: 4px;
+}
+	#legend-table {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		background-color: #fff;
+		border: 1px solid #555;
+		border-radius: 2px;
+		padding: 4px;
+		font-size: 12px;
+	}
+		.legend-table-row {
+			display: block;
+			overflow: hidden;
+			height: 30px;
+			padding: 2px 0px;
+		}
+		.legend-table-cell {
+			display: inline-block;
+			float: left;
+			clear: none;
+			height: 25px;
+			line-height: 25px;
+			vertical-align: middle;
+			margin: 2px;
+			overflow: hidden;
+		}

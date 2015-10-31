@@ -579,7 +579,7 @@ function updateThresholdStyles() {
 }
 
 function getThresholdColor(value) {
-	var colorIndex = getThresholdColorIndex(value);
+	var colorIndex = !isNaN(value) ? getThresholdColorIndex(value) : 0;
 	return markerFactory.hexMap[Math.round(colorIndex*markerFactory.resolution)];
 }
 
@@ -622,4 +622,6 @@ function updateLegend() {
 		row += "</div>";
 		table.append(row);
 	}
+	// getting divs to fit content across all browsers is a pain so just do it manually
+	$("#legend-container").height(table.height()+10);
 }
