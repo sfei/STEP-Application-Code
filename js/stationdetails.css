@@ -55,6 +55,14 @@
 			text-align: center;
 			line-height: 14px;
 		}
+	#details-info {
+		
+	}
+		#details-info li {
+			margin-left: 6px;
+			text-indent: -6px;
+			margin-bottom: 4px;
+		}
 	#details-tabs-container {
 		position: relative;
 		border-bottom: 1px solid #ddd;
@@ -101,7 +109,9 @@
 	#details-content {
 		position: relative;
 		display: block;
-		overflow: visible;
+		max-height: 460px;
+		overflow-x: hidden;
+		overflow-y: scroll;
 	}
 		.details-table-row {
 			position: relative;

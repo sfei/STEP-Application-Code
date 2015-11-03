@@ -230,7 +230,7 @@ function openStationDetails(feature) {
 //	  });
 	var options = {
 		query: lastQuery,
-		station: feature.get('name')
+		station: feature
 	};
 	if(!stationDetails) {
 		stationDetails = new StationDetails(options);

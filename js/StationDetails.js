@@ -26,6 +26,9 @@ var StationDetails = function(query) {
 			titleDiv: "margin:12px 0px;padding-left:"+this.titleDivPadLeft+"px;", 
 			bottomMsg: "height:35px;line-height:35px;text-align:right;font-size:10px;"
 		};
+		// doesn't customize the actual width as doing that isn't consistent cross-browser, but set here so it
+		// can adjust every place where it is called in one line
+		this.scrollbarWidth = 20;
 		// tabs configurations
 		this.tabs = { 
 			data: {
@@ -103,7 +106,8 @@ var StationDetails = function(query) {
 		// the query that constructed this
 		this.query = this.copyQuery(inputQuery.query);
 		if(inputQuery.station) {
-			this.query.station = inputQuery.station;
+			this.station = inputQuery.station;
+			this.query.station = this.station.get("name");
 		}
 		// this needs to be reset
 		this.tabs.nearby.species = null;
@@ -148,13 +152,14 @@ var StationDetails = function(query) {
 			"<div id='" + this.divIdPrefix+"-container" + "' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='"+this.divIdPrefix+"-dialog' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='"+this.divIdPrefix+"-title' class='grab'></div>" + // title set elsewhere
-						"<div id='"+this.divIdPrefix+"-tabs-container'>" + 
-							"<ul id='"+this.divIdPrefix+"-dialog-tabs'>" + 
-								"<li id='" + this.tabs.data.tabId + "' class='"+this.divIdPrefix+"-tab'>Data</li>" + 
-								"<li id='" + this.tabs.trends.tabId + "' class='"+this.divIdPrefix+"-tab'>Trends</li>" + 
-								"<li id='" + this.tabs.nearby.tabId + "' class='"+this.divIdPrefix+"-tab'>Nearby</li>" + 
-							"</ul>" + 
-						"</div>" + 
+					"<div id='"+this.divIdPrefix+"-info'></div>" +
+					"<div id='"+this.divIdPrefix+"-tabs-container'>" + 
+						"<ul id='"+this.divIdPrefix+"-dialog-tabs'>" + 
+							"<li id='" + this.tabs.data.tabId + "' class='"+this.divIdPrefix+"-tab'>Data</li>" + 
+							"<li id='" + this.tabs.trends.tabId + "' class='"+this.divIdPrefix+"-tab'>Trends</li>" + 
+							"<li id='" + this.tabs.nearby.tabId + "' class='"+this.divIdPrefix+"-tab'>Nearby</li>" + 
+						"</ul>" + 
+					"</div>" + 
 					"<div id='"+this.divIdPrefix+"-content'></div>" + 
 				"</div>" + 
 			"</div>"
@@ -188,6 +193,30 @@ var StationDetails = function(query) {
 		this.element.find("#"+this.divIdPrefix+"-dialog-close").click(function() {
 			self.element.hide();
 		});
+		var advisoryName = "View <b>General Guidance of Safe Fish Consumption</b>";
+		if(this.station.get("advisoryName")) {
+			advisoryName = "View <b>Specific Safe Eating Guidelines</b> for this water body";
+		}
+		var infoHtml = "<ul>" + 
+			"<li>" + 
+				"<a  id='"+this.divIdPrefix+"-advisory' " + 
+					"href='" + this.station.get("advisoryUrl") + "' target='_blank'>" + 
+						advisoryName + 
+				"</a>" + 
+			"</li>";
+		if(this.station.get("waterType") === "coast") {
+			var coords = ol.proj.toLonLat(this.station.getGeometry().getCoordinates());
+			infoHtml += 
+				"<li>" + 
+					"<a	 id='"+this.divIdPrefix+"-tides' " + 
+						"href='https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor=" + 
+							coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4) + "' target='_blank'>" + 
+						"Find nearest <b>Tidal Prediction Stations</b> for this location" + 
+					"</a>" + 
+				"</li>";
+		}
+		infoHtml += "</ul>";
+		this.element.find("#"+this.divIdPrefix+"-info").html(infoHtml);
 	};	
 	
 	this.openLoadingMessage = function() {
@@ -223,6 +252,7 @@ var StationDetails = function(query) {
 		if(!width || width <= 0) { 
 			width = dialogDiv.width();
 		} else {
+			width += this.scrollbarWidth;
 			dialogDiv.width(width);
 			width += 2*this.contentPadding + 2;	// plus 2 from the border
 		}
