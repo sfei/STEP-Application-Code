@@ -1,4 +1,106 @@
+<!DOCTYPE html>
 <html>
-<head></head>
-<body>TEST</body>
+	<head>
+		<title>STEP Portal Dev/Test</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<!-- jQuery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+		<!-- OpenLayers-3 -->
+		<link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
+		<script src="http://openlayers.org/en/v3.10.1/build/ol-debug.js"></script>
+		<!-- D3 -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+		<!-- chosen -->
+		<link rel="stylesheet" href="js/chosen/chosen.min.css" type="text/css" />
+		<script src="js/chosen/chosen.jquery.min.js"></script>
+		
+		<!-- page CSS -->
+		<link rel="stylesheet" href="default.css" />
+		<!-- color/marker scripts -->
+		<script src="js/ColorMap.js"></script>
+		<script src="js/MarkerFactory.js"></script>
+		<!-- query backend and ui scripts -->
+		<script src="js/query.js"></script>
+		<!-- map legend scripts -->
+		<script src="js/legend.js"></script>
+		<!-- station details/tabs and scatterplot scripts -->
+		<link rel="stylesheet" href="js/scatterplot.css" />
+		<script src="js/Scatterplot.js"></script>
+		<link rel="stylesheet" href="js/stationdetails.css" />
+		<script src="js/StationDetails.js"></script>
+		<!-- main map script -->
+		<script src="js/map.js"></script>
+	</head>
+	<body>
+		<div id="map-container">
+			<!-- the actual OpenLayers map -->
+			<div id="map-view" class="grab"></div>
+			<!-- station details dialog -->
+			<div id="station-details-dialog" title="Unknown"></div>
+			<!-- tooltip -->
+			<div id="station-tooltip"></div>
+			<!-- layer/data controls -->
+			<div id="controls-container" style="font-size:14px;">
+				<div id="controls-stage">
+					<div id="station-controls" class="controls-group">
+						Select Station by Name: 
+						<select id="station-select" data-placeholder="Select a location.." style="width:460px;" disabled>
+							<option>Loading..</option>
+						</select>
+					</div>
+					<div id="query-controls" class="controls-group">
+						Filter by: 
+						<select id="species-control" style="width:300px;" disabled>
+							<option>Loading..</option>
+						</select>
+						<select id="contaminant-control" style="width:100px;" disabled>
+							<option>Loading..</option>
+						</select> 
+						<select id="start-year-control" style="width:60px;" disabled>
+							<option>Loading..</option>
+						</select> 
+						<select id="end-year-control" style="width:60px;" disabled>
+							<option>Loading..</option>
+						</select>
+						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
+					</diV>
+					<div id="map-controls" class="controls-group">
+						<input type="checkbox" id="show-counties-control" style="float:left;" />
+						<span style="float:left;margin-left:2px;">Show Counties Layer</span>
+						<span>Zoom to County:</span>
+						<select id="counties-select" style="width:280px;margin-left:4px;" disabled>
+							<option>Not yet functional</option>
+						</select>
+						<select id="base-layer-control" onchange="changeBaseLayer()" style="width:160px;float:right;">
+							<option value="0">Landscape</option>
+							<option value="1">Topo</option>
+							<option value="2">Satellite</option>
+						</select>
+						<span style="float:right;margin-right:6px;">Base Layer: </span>
+					</div>
+				</div>
+				<div id="controls-tabs">
+					<div id="control-tab-query" class="control-tab">Query Controls</div>
+					<div id="control-tab-station" class="control-tab">Station Controls</div>
+					<div id="control-tab-map" class="control-tab">Map Controls</div>
+				</div>
+			</div>
+			<!-- legend -->
+			<div id="legend-container" class="grab">
+				<div id="legend-table"></div>
+			</div>
+			<!-- a loading dealy -->
+			<div id="loading-box-container-outer">
+				<div id="loading-box-container-inner">
+					<div id="loading-box">
+						<img src="images/ajax-loader.gif" alt="loading" /> Loading stations..
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
