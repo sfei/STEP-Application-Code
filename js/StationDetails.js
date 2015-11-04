@@ -380,7 +380,7 @@ var StationDetails = function(query) {
 					"</div>" + 
 					"<div>" + 
 						"Compare by: " + 
-						"<select id='"+this.divIdPrefix+"-species-control' style='width:300px;'>" +
+						"<select id='"+this.divIdPrefix+"-species-control' style='width:360px;'>" +
 							"<option value='highest'>Any Species with Highest Avg Concentration</option>" + 
 							"<option value='lowest'>Any Species with Lowest Avg Concentration</option>" + 
 						"</select>" +
@@ -394,6 +394,8 @@ var StationDetails = function(query) {
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
+			// fancy select
+			contentDiv.find("#"+this.divIdPrefix+"-species-control").chosen();
 			// click functionality
 			var self = this;
 			speciesSelect.on('change', function() {

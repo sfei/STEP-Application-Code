@@ -34,9 +34,9 @@
 	);
 	
 	// if there's no min/max years for species-contaminant combination, there's no row resulting
-	if(!$result['years']['min']) {
+	if(!$result['years'] || !$result['years']['min']) {
 		// if contaminant doesn't exist in list of contaminants, pick first available one
-		$query['contaminant'] = $result['contaminant'][0]['result'];
+		$query['contaminant'] = $result['contaminants'][0][0];
 		// update years - way code runs it will try to keep the initial year values, but adjust as necessary
 		$result['years'] = $instance->getAvailableYearSpan($query);
 	}
