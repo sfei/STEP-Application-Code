@@ -1,6 +1,63 @@
 
 var thresholds;
 
+// Just creates the SVG shapes legend, which doesn't change. Let's use D3 because we already require it and 
+// it's well suited for SVG graphics
+function legendInit() {
+	$("#legend-container").hide();
+	var svg = d3.select("#legend-symbols")
+	  .append("svg")
+		.attr("width", 380)
+		.attr("height", 30)
+	  .append("g")
+	    .attr("transform", "translate(5,0)");
+	// circle (for lakes/reservoirs)
+	svg.append("circle")
+		.attr("cx", 10)
+		.attr("cy", 15)
+		.attr("r", 10)
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 25)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", 13)
+		.text("Lake/Reservoir");
+	// triangle (for coastal/ocean)
+	svg.append("path")
+		.attr("d", "M 140 25 L 164 25 L 152 5 z")
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 168)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", 13)
+		.text("Coast/Ocean");
+	// diamond (for rivers and misc)
+	svg.append("rect")
+		.attr("width", 17)
+		.attr("height", 17)
+		.attr("x", 280)
+		.attr("y", 6)
+		.attr("transform", "rotate(45,289,14)")
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 307)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", 13)
+		.text("River/Misc.");
+}
+
 //************************************************************************************************************
 // Legend and marker style functions (part of them, core of is is in marketFactory.js)
 //************************************************************************************************************
@@ -92,6 +149,7 @@ function updateLegend() {
 		row += "</div>";
 		table.append(row);
 	}
+	$("#legend-container").show();	// only necessary for first load, since legend is hidden until data loaded
 	// getting divs to fit content across all browsers is a pain so just do it manually
-	$("#legend-container").height(table.height()+10);
+	$("#legend-container").height(table.height()+62); // add SVG height and margins and hr
 }

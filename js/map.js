@@ -8,6 +8,7 @@ var defaultErrorMessage = "This site is experiencing some technical difficulties
 
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857';	// web mercator wgs84
+var wgs84 = 'EPSG:4326';
 
 var baseLayerArray;					// array of loaded baselayers (stored this way for base layers switching)
 
@@ -17,11 +18,10 @@ var stations,						// stations data as ol.Collection instance
 	
 var markerFactory;
 
-var //countiesGeoserverURL = "http://mapservices.sfei.org/geoserver/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
-	//countiesGeoserverURL = "http://stepls.sfei.me/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
-	countiesGeoserverURL = "data/counties.kml", // due to cross-origin request being denied we'll use locally stored file for now
+var //countiesUrl = "http://mapservices.sfei.org/geoserver/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
+	countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
-	countiesHidden = true;
+	countyNames = [];
 	
 var stationDetails = null;
 
@@ -43,9 +43,34 @@ var enableHoverInteractions = browserType.isChrome;
 window.onload = init;
 
 //************************************************************************************************************
-// Init functions (mostly to do with setting up the map object
+// Initialize functions
 //************************************************************************************************************
 function init() {
+	// init functions
+	markerFactory = new MarkerFactory({
+		shapeFunction: function(feature) {
+			var watertype = feature.get("waterType");
+			if(watertype === "lake_reservoir") {
+				return markerFactory.shapes.circle;
+			} else if(watertype === "coast") {
+				return markerFactory.shapes.triangle;
+			} else {
+				return markerFactory.shapes.diamond;
+			}
+		}
+	});
+	mapInit();
+	controlsInit();
+	legendInit();
+	// active functions -- start by populating query options and loading stations by firing an initial query
+	updateQuery({
+		query: defaultQuery, 
+		firstRun: true	// special option, this will add the click-interaction to features (so just done once)
+	});
+	controlsActivate();
+}
+
+function mapInit() {
 	// initalize tooltip and dialog
 	$("#station-tooltip").hide();
 	var legend = $("#legend-container").draggable({containment: "parent"});
@@ -54,10 +79,8 @@ function init() {
 		})
 		.mousedown(function(evt) {
 			legend.switchClass("grab", "grabbing");
-		});
-	// controls init process
-	controlsInit();
-	
+		});	
+		
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
 	map.setView(
@@ -82,36 +105,34 @@ function init() {
 		.mouseup(function() {
 			$('#map-view').switchClass("grabbing", "grab");
 		});
-	// mouse pointer location (mainly only used for debugging, so currently commented out)
-//	map.addControl(new ol.control.MousePosition({
-//		coordinateFormat: ol.coordinate.createStringXY(2),
-//		projection: 'EPSG:4326',
-//		target: document.getElementById("lat-long-display")
-//	}));
-		
+	
 	// create base layers in a layer group
 	baseLayerArray = [
 		new ol.layer.Tile({
 			source: new ol.source.XYZ({
-				url: "http://a.tile.thunderforest.com/landscape/{z}/{x}/{y}.png", 
+				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles by <a href='http://thunderforest.com/' target='_blank'>Thunderforest</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
 				})]
 			})
 		}), 
 		new ol.layer.Tile({
 			source: new ol.source.XYZ({
-				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 
+				url: "http://server.arcgisonline.com/arcgis/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
 				})]
+//				url: "http://a.tile.thunderforest.com/landscape/{z}/{x}/{y}.png", 
+//				attributions: [new ol.Attribution({
+//					html: "Map tiles by <a href='http://thunderforest.com/' target='_blank'>Thunderforest</a>"
+//				})]
 			})
 		}), 
 		new ol.layer.Tile({
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
 				})]
 			})
 		})
@@ -122,51 +143,46 @@ function init() {
 	baseLayerGroup.setZIndex(0);
 	// set ESRI topo to default (adjust select option to match)
 	var baseLayers = baseLayerGroup.get("layers");
-	baseLayers.item(0).setVisible(false);
+	$("#base-layer-control").val(0);
+	baseLayers.item(1).setVisible(false);
 	baseLayers.item(2).setVisible(false);
-	$("#base-layer-control").val(1);
 	map.setLayerGroup(baseLayerGroup);
 	
-	// create marker factory
-	markerFactory = new MarkerFactory({
-		shapeFunction: function(feature) {
-			var watertype = feature.get("waterType");
-			if(watertype === "lake_reservoir") {
-				return markerFactory.shapes.circle;
-			} else if(watertype === "coast") {
-				return markerFactory.shapes.triangle;
-			} else {
-				return markerFactory.shapes.diamond;
+	// load counties layer
+	// Done this way due to async nature of OL3 loading. It doesn't load until set visible (this defaults to 
+	// hidden at start), but we need to preload the features to create the counties name list
+	$.ajax({
+		async: false, 
+		dataType: "json", 
+		url: countiesUrl, 
+		success: function(json) {
+			for(var i = 0; i < json.features.length; i++) {
+				countyNames.push(json.features[i].properties.NAME);
 			}
+			countyNames.sort();
+			countiesLayer = new ol.layer.Vector({
+				title: 'CA Counties', 
+				source: new ol.source.Vector({
+					features: (new ol.format.GeoJSON())
+								.readFeatures(json, {
+									// json is technically in NAD83 but right now OL3 only supports WGS84 for datums
+									dataProjection: wgs84, 
+									featureProjection: mapProjection
+								})
+				}), 
+				style: new ol.style.Style({
+					fill: null, 
+					stroke: new ol.style.Stroke({
+						color: '#222',
+						width: 1.5
+					})
+				})
+			});
 		}
 	});
-	// populate query options and load stations but firing an initial query
-	updateQuery({
-		query: defaultQuery, 
-		firstRun: true	// special option, this will add the click-interaction to features (so just done once)
-	});
-	
-	// load counties layer
-	countiesLayer = new ol.layer.Vector({
-		title: 'CA Counties', 
-		source: new ol.source.Vector({
-			url: countiesGeoserverURL, 
-			format: new ol.format.KML({
-				extractStyles: false
-			})
-		}), 
-		style: new ol.style.Style({
-			image: null, 
-			fill: null, 
-			stroke: new ol.style.Stroke({
-				color: '#222',
-				width: 1.5
-			})
-		})
-	});
 	countiesLayer.setZIndex(1);
-	
-	controlsActivate();
+	countiesLayer.setVisible(false);
+	map.addLayer(countiesLayer);
 }
 
 
@@ -187,28 +203,7 @@ function changeBaseLayer(baseLayerIndex) {
 	}
 }
 
-function toggleCountiesLayer() {
-	if(countiesHidden) {
-		map.addLayer(countiesLayer);
-	} else {
-		map.removeLayer(countiesLayer);
-	}
-	countiesHidden = !countiesHidden;
-}
-
 function openStationDetails(feature) {
-//	var details = "<p style='font-size:12px;'>";
-//	var keys = feature.getKeys();
-//	for(var k = 0; k < keys.length; k++) {
-//		details += keys[k] + ": " + feature.get(keys[k]) + "<br />";
-//	}
-//	details += "</p>";
-//	$('#station-details-dialog')
-//	  .html(details)
-//	  .dialog({ 
-//		  title: feature.get('name'),
-//		  width: 350
-//	  });
 	var options = {
 		query: lastQuery,
 		station: feature
@@ -304,5 +299,26 @@ function zoomToStation(station) {
 		var view = map.getView();
 		view.setCenter(coords);
 		view.setZoom(16);
+	}
+}
+
+function zoomToCountyByName(countyName) {
+	if(!countyName || countyName < 0) { return; }
+	var counties = countiesLayer.getSource().getFeatures();
+	var selected = null;
+	for(var i = 0; i < counties.length; i++) {
+		if(counties[i].get("NAME").toLowerCase() === countyName) {
+			selected = counties[i];
+			break;
+		}
+	}
+	if(selected) {
+		// if county layer is not on, turn it on
+		if(!countiesLayer.getVisible()) {
+			countiesLayer.setVisible(true);
+			$("#show-counties-control").prop('checked', true);
+			flashNotification("CA counties layer turned on", 2000);
+		}
+		map.getView().fit(selected.getGeometry().getExtent(), map.getSize());
 	}
 }

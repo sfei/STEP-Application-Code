@@ -7,12 +7,14 @@
 	 *		<li>(String) <i>contaminant</i> - contaminant name</li>
 	 *		<li>(int) <i>startYear</i> - start year / min. year</li>
 	 *		<li>(int) <i>endYear</i> - end year / max. year</li>
+	 *		<li>(String) <i>station</i> - station name</li>
 	 * </ul>
 	 * @return array Query object (associative array) with values (String) <i>species</i>, (String) 
-	 *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, and (boolean) <i>isASpecies</i>. */
+	 *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, (boolean) <i>isASpecies</i>, 
+	 *		and (String) <i>station</i>.  */
 	function getQuery() {
 		$species		= strtolower(filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING));
-		$contaminant		= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
+		$contaminant	= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
 		$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
 		$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
 		$station		= strtolower(filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING));

@@ -109,6 +109,7 @@
 	#details-content {
 		position: relative;
 		display: block;
+		min-height: 340px;
 		max-height: 460px;
 		overflow-x: hidden;
 		overflow-y: scroll;

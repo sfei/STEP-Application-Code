@@ -12,18 +12,18 @@ var defaultQuery = {
 	
 var activeControl = null;
 var controls = {
-	station: {
-		name: "station", 
-		id: "station-controls",
-		element: null,
-		tabId: "control-tab-station", 
-		tabElement: null
-	}, 
 	query: {
 		name: "query", 
 		id: "query-controls",
 		element: null,
 		tabId: "control-tab-query", 
+		tabElement: null
+	}, 
+	location: {
+		name: "station", 
+		id: "location-controls",
+		element: null,
+		tabId: "control-tab-location", 
 		tabElement: null
 	}, 
 	map: {
@@ -39,9 +39,11 @@ var controls = {
 // General controls/ui functions
 //************************************************************************************************************
 function controlsInit() {
+	$("#notification-tab").hide();
 	// fancify the big select lists (must be done before hiding the elements)
 	$("#station-select").chosen();
 	$("#species-control").chosen();
+	$("#counties-select").chosen();
 	// cache the control groups and tabs, hide the groups
 	for(var key in controls) {
 		if(controls.hasOwnProperty(key)) {
@@ -55,16 +57,12 @@ function controlsInit() {
 	resetDefaultQuery();
 }
 
-function tabClickCallback(key) {
-	setActiveControl(key);
-}
-
 // should be called after all data has loaded and first query has fired successfully (thus loading select data)
 function controlsActivate() {
 	// add tabs event listeners
 	for(var key in controls) {
 		if(controls.hasOwnProperty(key)) {
-			controls[key].tabElement.on('click', tabClickCallback.bind(this, key));
+			controls[key].tabElement.on('click', setActiveControl.bind(this, key));
 		}
 	}
 	// add query controls event listeners
@@ -75,17 +73,38 @@ function controlsActivate() {
 	$("#reset-controls").click(function() {
 		updateQuery({query: defaultQuery});
 	});
-	// the query data is filled in the map.js init() as it's combined in the function to load the stations
-	$("#show-counties-control").click(toggleCountiesLayer); // this passes function in map.js
 	$("#station-select").change(function() {
 		var selectVal = parseInt($("#station-select").val());
 		if(selectVal >= 0) {
 			var station = stations.getArray()[selectVal];
 			zoomToStation(station);
 			openStationDetails(station);
-			$("#station-select").val(-1);
+			$("#station-select").find('option:first-child')
+			  .prop('selected', true)
+			  .end().trigger('chosen:updated');
 		}
 	});
+	$("#show-counties-control")
+		.prop('checked', countiesLayer.getVisible())
+		.click(function() {
+			countiesLayer.setVisible(!countiesLayer.getVisible());
+		});
+	// fill counties select
+	var countiesSelect = $("#counties-select");
+	countiesSelect.html("<option disabled value=' '></option>");
+	for(var i = 0; i < countyNames.length; i++) {
+		countiesSelect.append("<option value='" + countyNames[i].toLowerCase() + "'>" + countyNames[i] + "</option>");
+	}
+	countiesSelect
+		.val('')
+		.prop('disabled', false)
+		.on('change', function() {
+			zoomToCountyByName(countiesSelect.val()); 
+			countiesSelect.find('option:first-child')
+			  .prop('selected', true)
+			  .end().trigger('chosen:updated');
+		})
+		.trigger('chosen:updated');
 }
 
 function setActiveControlTab() {
@@ -116,6 +135,15 @@ function setActiveControl(controlName) {
 			setActiveControlTab();
 		}
 	}
+}
+
+function flashNotification(message, millis) {
+	$("#notification-tab")
+	  .html(message)
+	  .slideDown(200);
+	setTimeout(function() {
+		$("#notification-tab").slideUp(500);
+	}, millis);
 }
 
 //************************************************************************************************************
@@ -196,11 +224,11 @@ function updateQuery(options) {
 		}, 
 		complete: function() {
 			// unlock interface
-			$("#station-select").prop('disabled', false);
 			$("#species-control").prop('disabled', false);
 			$("#contaminant-control").prop('disabled', false);
 			$("#start-year-control").prop('disabled', false);
 			$("#end-year-control").prop('disabled', false);
+			$("#station-select").prop('disabled', false);
 			$("#loading-box-container-outer").hide();
 			// for some reason the trigger doesn't work in the updateStationsSelect() function but works here
 			$("#station-select").trigger("chosen:updated");
@@ -230,23 +258,8 @@ function flashQueryChanges(query, firstRun) {
 				.animate({backgroundColor: "#fff"}, 500);
 		});
 		// throw an alert
-		// this was actually getting really annoying so I commented it out, perhaps later use a less intrusive
-		// and gradually fading out popup in the corner or something like that
-//		var msg = "No data resulted for ";
-//		if(query.species === 'highest' || query.species === 'lowest') {
-//			msg += "species with " + query.species + " avg concentration of " + query.contaminant; 
-//		} else {
-//			msg += query.contaminant + " in " + query.species;
-//		}
-//		msg += " from " + query.startYear + "-" + query.endYear + "\n\n";
-//		msg += "Query adjusted to: ";
-//		if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
-//			msg += "species with " + lastQuery.species + " avg concentration of " + lastQuery.contaminant; 
-//		} else {
-//			msg += lastQuery.contaminant + " in " + lastQuery.species;
-//		}
-//		msg += " from " + lastQuery.startYear + "-" + lastQuery.endYear + "\n\n";
-//		alert(msg);
+		var msg = "Filters updated to match query results.";
+		flashNotification(msg, 3000);
 	}
 }
 
@@ -310,8 +323,7 @@ function updateYearsSelect(data) {
 }
 
 function updateStationsSelect() {
-	// right now just gets list of stations
-	var optionsHtml = "<option>Select location..</option>";
+	var optionsHtml = "<option disabled value=' '></option>";
 	for(var i = 0; i < stations.getLength(); i++) {
 		var stationName = stations.item(i).get("name");
 		optionsHtml += "<option value=" + i + ">" + stationName + "</option>";

@@ -38,7 +38,7 @@
 	<body>
 		<div id="map-container">
 			<!-- the actual OpenLayers map -->
-			<div id="map-view" class="grab"></div>
+			<div id="map-view" class="grab" title="Click on location icon for details"></div>
 			<!-- station details dialog -->
 			<div id="station-details-dialog" title="Unknown"></div>
 			<!-- tooltip -->
@@ -46,12 +46,6 @@
 			<!-- layer/data controls -->
 			<div id="controls-container" style="font-size:14px;">
 				<div id="controls-stage">
-					<div id="station-controls" class="controls-group">
-						Select Station by Name: 
-						<select id="station-select" data-placeholder="Select a location.." style="width:460px;" disabled>
-							<option>Loading..</option>
-						</select>
-					</div>
 					<div id="query-controls" class="controls-group">
 						Filter by: 
 						<select id="species-control" style="width:300px;" disabled>
@@ -68,30 +62,40 @@
 						</select>
 						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
 					</diV>
-					<div id="map-controls" class="controls-group">
-						<input type="checkbox" id="show-counties-control" style="float:left;" />
-						<span style="float:left;margin-left:2px;">Show Counties Layer</span>
-						<span>Zoom to County:</span>
-						<select id="counties-select" style="width:280px;margin-left:4px;" disabled>
+					<div id="location-controls" class="controls-group">
+						Zoom to County: 
+						<select id="counties-select" data-placeholder="Zoom to County.." style="width:180px;margin-left:4px;" disabled>
 							<option>Not yet functional</option>
 						</select>
-						<select id="base-layer-control" onchange="changeBaseLayer()" style="width:160px;float:right;">
-							<option value="0">Landscape</option>
-							<option value="1">Topo</option>
-							<option value="2">Satellite</option>
+						<span style="margin-left:30px;">Find by Location Name: </span>
+						<select id="station-select" data-placeholder="Select a Location.." style="width:460px;" disabled>
+							<option>Loading..</option>
 						</select>
-						<span style="float:right;margin-right:6px;">Base Layer: </span>
+					</div>
+					<div id="map-controls" class="controls-group">
+						<span style="margin-right:6px;">Base Layer: </span>
+						<select id="base-layer-control" onchange="changeBaseLayer()" style="width:160px;margin-right:45px;">
+							<option value="0">Topographic</option>
+							<option value="1">Oceans</option>
+							<option value="2">Imagery</option>
+						</select>
+						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;"/>
+						<span style="margin-left:0px;">Show Counties Layer</span>
 					</div>
 				</div>
 				<div id="controls-tabs">
-					<div id="control-tab-query" class="control-tab">Query Controls</div>
-					<div id="control-tab-station" class="control-tab">Station Controls</div>
-					<div id="control-tab-map" class="control-tab">Map Controls</div>
+					<div id="control-tab-query" class="control-tab">Search Query</div>
+					<div id="control-tab-location" class="control-tab">Find by Location</div>
+					<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
+					<div id="notification-tab">Notifications go here</div>
 				</div>
 			</div>
 			<!-- legend -->
 			<div id="legend-container" class="grab">
-				<div id="legend-table"></div>
+				<div id="legend-content">
+					<div id="legend-table"></div>
+					<div id="legend-symbols"><hr /></div>
+				</div>
 			</div>
 			<!-- a loading dealy -->
 			<div id="loading-box-container-outer">

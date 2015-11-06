@@ -114,6 +114,7 @@ var StationDetails = function(query) {
 		// put station name from query and place loading message
 		this.setTitle();
 		this.openLoadingMessage();
+		self.element.show();
 		// nearby data is left null until specifically requested
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
@@ -125,7 +126,6 @@ var StationDetails = function(query) {
 			success: function(data) {
 				//console.log(data);
 				self.stationData = data;
-				self.element.show();
 				self.openTabData();
 			},
 			error: function(e) {
