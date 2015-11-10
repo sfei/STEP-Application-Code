@@ -33,6 +33,10 @@ var MarkerFactory = function(options) {
 		this.setStyle(options);
 	};
 	
+	this.textFunction = function(feature) {
+		return "";
+	};
+	
 	this.normalizeValue = function(feature) {
 		return 0;
 	};
@@ -66,6 +70,9 @@ var MarkerFactory = function(options) {
 		}
 		if(options.valueFunction) {
 			this.normalizeValue = options.valueFunction;
+		}
+		if(options.textFunction) {
+			this.textFunction = options.textFunction;
 		}
 		// clear style/symbol cache
 		if(clearCache || !this.fills || !this.hexMap) {
@@ -126,19 +133,25 @@ var MarkerFactory = function(options) {
 			});
 		} else if(shape == this.shapes.cross) {
 			return new ol.style.Style({
-				fill: fill, 
-				stroke: thestroke, 
-				radius: this.radius,
-				radius2: 0, 
-				angle: 0
+				image: new ol.style.RegularShape({
+					fill: fill, 
+					stroke: thestroke, 
+					points: 4, 
+					radius: this.radius,
+					radius2: 0, 
+					angle: 0
+				})
 			});
 		} else if(shape == this.shapes.x) {
 			return new ol.style.Style({
-				fill: fill, 
-				stroke: thestroke, 
-				radius: this.radius,
-				radius2: 0,
-				angle: Math.PI/4
+				image: new ol.style.RegularShape({
+					fill: fill, 
+					stroke: thestroke, 
+					points: 4, 
+					radius: this.radius,
+					radius2: 0,
+					angle: Math.PI/4
+				})
 			});
 		}
 		return null;

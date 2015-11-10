@@ -1,0 +1,76 @@
+body {
+	font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
+}
+#container {
+	position: relative;
+	top: 0;
+	left: 0;
+	margin: 0px auto;
+	width: 670px;
+	overflow: visible;
+}
+
+#map-view {
+	position: relative;
+	width: 100%;
+	height: 400px;
+}
+.ol-zoom {
+	//position: absolute;
+	//top: 45px;
+}
+.grab {
+	cursor: move;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.grabbing {
+	cursor: move;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+#map-controls {
+	position: absolute;
+	top: 10px;
+	right: 0px;
+}
+#content-header {
+	width: 100%;
+	text-align: left;
+	font-weight: bolder;
+	font-size: 14px;
+}
+#content-container {
+	width: 100%;
+}
+.table {
+	display: block;
+	margin: 12px auto;
+}
+.table-row {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border-color: #ddd;
+	border-style: solid;
+	border-width: 0px 0px 1px 0px;
+	padding: 2px 0px;
+}
+.table-cell, .table-header {
+	display: table-cell;
+	vertical-align: bottom;
+	height: 30px;
+	padding: 0px 2px;
+	overflow: hidden;
+	text-align: right;
+	font-size: 12px;
+}
+.table-header {
+	font-weight: bolder;
+	vertical-align: bottom;
+}
+.table-cell {
+	vertical-align: middle;
+}

@@ -5,25 +5,18 @@ String.prototype.capitalize = function() {
 };
 
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
-
 var map,							// openlayers map object
-	mapProjection = 'EPSG:3857';	// web mercator wgs84
-var wgs84 = 'EPSG:4326';
-
-var baseLayerArray;					// array of loaded baselayers (stored this way for base layers switching)
-
+	mapProjection = 'EPSG:3857', 	// web mercator wgs84
+	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
 var stations,						// stations data as ol.Collection instance
 	stationLayer, 
 	stationInteraction;				// hover interactions stored globally so it can be removed/reapplied
-	
-var markerFactory;
-
-var //countiesUrl = "http://mapservices.sfei.org/geoserver/ecoatlas/wms/kml?layers=ecoatlas:counties_simplify&mode=download", 
-	countiesUrl = "data/ca_counties.geojson", 
+var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
+									// cached for performance
+var countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
-	countyNames = [];
-	
-var stationDetails = null;
+	countyNames = [];				// list of county names (for search drop-down)
+var stationDetails = null;			// this object handles the pop-up details
 
 
 //************************************************************************************************************
@@ -40,13 +33,14 @@ var browserType = {
 // only chrome seems to handle hover interactions smoothly for OpenLayers-3
 var enableHoverInteractions = browserType.isChrome;
 
-window.onload = init;
 
 //************************************************************************************************************
 // Initialize functions
 //************************************************************************************************************
 function init() {
-	// init functions
+	// initalize tooltip
+	$("#station-tooltip").hide();
+	// create marker factory
 	markerFactory = new MarkerFactory({
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
@@ -59,28 +53,23 @@ function init() {
 			}
 		}
 	});
+	// init functions
 	mapInit();
+	addCountyLayer();
 	controlsInit();
 	legendInit();
-	// active functions -- start by populating query options and loading stations by firing an initial query
+	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 
 		firstRun: true	// special option, this will add the click-interaction to features (so just done once)
 	});
 	controlsActivate();
+	// Technically we can release this variable for garbage collection as once the select dropdown is 
+	// populated, it never changes. It was only global to easily pass between scripts
+	countyNames = null;
 }
 
 function mapInit() {
-	// initalize tooltip and dialog
-	$("#station-tooltip").hide();
-	var legend = $("#legend-container").draggable({containment: "parent"});
-	legend.mouseup(function(evt) {
-			legend.switchClass("grabbing", "grab");
-		})
-		.mousedown(function(evt) {
-			legend.switchClass("grab", "grabbing");
-		});	
-		
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
 	map.setView(
@@ -105,117 +94,13 @@ function mapInit() {
 		.mouseup(function() {
 			$('#map-view').switchClass("grabbing", "grab");
 		});
-	
-	// create base layers in a layer group
-	baseLayerArray = [
-		new ol.layer.Tile({
-			source: new ol.source.XYZ({
-				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 
-				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
-				})]
-			})
-		}), 
-		new ol.layer.Tile({
-			source: new ol.source.XYZ({
-				url: "http://server.arcgisonline.com/arcgis/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}", 
-				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
-				})]
-//				url: "http://a.tile.thunderforest.com/landscape/{z}/{x}/{y}.png", 
-//				attributions: [new ol.Attribution({
-//					html: "Map tiles by <a href='http://thunderforest.com/' target='_blank'>Thunderforest</a>"
-//				})]
-			})
-		}), 
-		new ol.layer.Tile({
-			source: new ol.source.XYZ({
-				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 
-				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
-				})]
-			})
-		})
-	];
-	var baseLayerGroup = new ol.layer.Group({
-		layers: baseLayerArray
-	});
-	baseLayerGroup.setZIndex(0);
-	// set ESRI topo to default (adjust select option to match)
-	var baseLayers = baseLayerGroup.get("layers");
-	$("#base-layer-control").val(0);
-	baseLayers.item(1).setVisible(false);
-	baseLayers.item(2).setVisible(false);
-	map.setLayerGroup(baseLayerGroup);
-	
-	// load counties layer
-	// Done this way due to async nature of OL3 loading. It doesn't load until set visible (this defaults to 
-	// hidden at start), but we need to preload the features to create the counties name list
-	$.ajax({
-		async: false, 
-		dataType: "json", 
-		url: countiesUrl, 
-		success: function(json) {
-			for(var i = 0; i < json.features.length; i++) {
-				countyNames.push(json.features[i].properties.NAME);
-			}
-			countyNames.sort();
-			countiesLayer = new ol.layer.Vector({
-				title: 'CA Counties', 
-				source: new ol.source.Vector({
-					features: (new ol.format.GeoJSON())
-								.readFeatures(json, {
-									// json is technically in NAD83 but right now OL3 only supports WGS84 for datums
-									dataProjection: wgs84, 
-									featureProjection: mapProjection
-								})
-				}), 
-				style: new ol.style.Style({
-					fill: null, 
-					stroke: new ol.style.Stroke({
-						color: '#222',
-						width: 1.5
-					})
-				})
-			});
-		}
-	});
-	countiesLayer.setZIndex(1);
-	countiesLayer.setVisible(false);
-	map.addLayer(countiesLayer);
+	// add basemaps
+	addBasemaps();
 }
-
 
 //************************************************************************************************************
-// Map controls and functionalities
+// Station layer functionalities
 //************************************************************************************************************
-/** Base layers are changed just by comparing to the given index in the base layer group
- * @param {Number} baseLayerIndex */
-function changeBaseLayer(baseLayerIndex) {
-	if(baseLayerIndex === undefined || baseLayerIndex === null) {
-		baseLayerIndex = parseInt($("#base-layer-control").val());
-	}
-	if(baseLayerIndex < 0 || baseLayerIndex >= baseLayerArray.length) { 
-		baseLayerIndex = 0; 
-	}
-	for(var i = 0; i < baseLayerArray.length; i++) {
-		baseLayerArray[i].setVisible(baseLayerIndex === i);
-	}
-}
-
-function openStationDetails(feature) {
-	var options = {
-		query: lastQuery,
-		station: feature
-	};
-	if(!stationDetails) {
-		stationDetails = new StationDetails(options);
-	} else {
-		stationDetails.open(options);
-	}
-	return true;
-}
-
 /** (Re)load stations layers onto the map
  * @param {Array} data Array of the query results */
 function loadStationsLayer(data) {
@@ -235,7 +120,6 @@ function loadStationsLayer(data) {
 						mapProjection
 					)
 				),
-				type: "station", // necessary due to way highlighted features come from "null" layer
 				name: data[i].name, 
 				waterType: data[i].waterType, 
 				value: data[i].value, 
@@ -286,6 +170,16 @@ function loadStationsLayer(data) {
 	}
 }
 
+function openStationDetails(feature) {
+	var options = {
+		query: lastQuery,
+		station: feature
+	};
+	stationDetails = (!stationDetails) ? new StationDetails(options) : stationDetails.open(options);
+	// return true to break out of forEachFeature function in which this is called
+	return true;
+}
+
 function zoomToStationsExtent() {
 	var extent = stationLayer.getSource().getExtent();
 	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
@@ -300,6 +194,46 @@ function zoomToStation(station) {
 		view.setCenter(coords);
 		view.setZoom(16);
 	}
+}
+
+//************************************************************************************************************
+// County layer functionalities
+//************************************************************************************************************
+function addCountyLayer() {
+	// Done this way due to async nature of OL3 loading and how it doesn't load until set visible (since layer
+	// defaults to hidden at start), but we need to preload the features to create the counties name list.
+	$.ajax({
+		async: false, 
+		dataType: "json", 
+		url: countiesUrl, 
+		success: function(json) {
+			for(var i = 0; i < json.features.length; i++) {
+				countyNames.push(json.features[i].properties.NAME);
+			}
+			countyNames.sort();
+			countiesLayer = new ol.layer.Vector({
+				title: 'CA Counties', 
+				source: new ol.source.Vector({
+					features: (new ol.format.GeoJSON())
+								.readFeatures(json, {
+									// json is technically in NAD83 but right now OL3 only supports WGS84 for datums
+									dataProjection: wgs84, 
+									featureProjection: mapProjection
+								})
+				}), 
+				style: new ol.style.Style({
+					fill: null, 
+					stroke: new ol.style.Stroke({
+						color: '#222',
+						width: 1.5
+					})
+				})
+			});
+		}
+	});
+	countiesLayer.setZIndex(1);
+	countiesLayer.setVisible(false);
+	map.addLayer(countiesLayer);
 }
 
 function zoomToCountyByName(countyName) {

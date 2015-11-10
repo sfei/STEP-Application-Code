@@ -33,7 +33,10 @@
 		<link rel="stylesheet" href="js/stationdetails.css" />
 		<script src="js/StationDetails.js"></script>
 		<!-- main map script -->
+		<script src="js/basemaps.js"></script>
 		<script src="js/map.js"></script>
+		<!-- init called here so it can be overwritten in other templates -->
+		<script>window.onload = init;</script>
 	</head>
 	<body>
 		<div id="map-container">

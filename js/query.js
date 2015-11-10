@@ -196,9 +196,7 @@ function updateQuery(options) {
 				$(map.getViewport()).on('click', function(evt) {
 					var pixel = map.getEventPixel(evt.originalEvent);
 					map.forEachFeatureAtPixel(pixel, function(feature) {
-						if(feature.get("type") === "station") {
-							return openStationDetails(feature);
-						}
+						return openStationDetails(feature);
 					});
 				});
 			}

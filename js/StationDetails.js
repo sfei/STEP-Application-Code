@@ -1,8 +1,22 @@
 
-// common function that comes in handy
-String.prototype.capitalize = function() {
-    return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
-};
+function newWindow(e, url, name, width, height) {
+	if(!e) e = window.event;
+	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
+		if(width <= 0 || width > screen.width-20) {
+			width = screen.width - 20;
+		}
+		if(height <= 0 || height > screen.height-70) {
+			height = screen.height - 70;
+		}
+		var left = (screen.width/2)-(width/2);
+		var top = 0;
+		var new_top = (screen.height/2) - (height/2);
+		if(screen.height > (height+new_top+70)) top = new_top;
+		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", menubar=no, statusbar=no, location=no";
+		window.open(url, name, options);
+		return false;
+	}
+}
 
 var StationDetails = function(query) {
 	
@@ -77,6 +91,14 @@ var StationDetails = function(query) {
 				},
 				bottomMsg: "A result of ND means the concentration was below detection limits.", 
 				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
+			}, 
+			report: {
+				tabId: this.divIdPrefix + "-tab-report", 
+				element: null, 
+				width: 600,
+				titleFunction: function(query) {
+					return "Create summary report for " + query.station;
+				}
 			}
 		};
 		//****************************************************************************************************
@@ -119,6 +141,7 @@ var StationDetails = function(query) {
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
 		this.stationData = null;
+		var self = this;
 		$.ajax({
 			url: "lib/getStationData.php", 
 			data: this.query, 
@@ -146,6 +169,34 @@ var StationDetails = function(query) {
 		return theCopy;
 	};
 	
+	this.loadNearbyData = function() {
+		// load default selection for species type
+		if(this.tabs.nearby.species === null) {
+			this.tabs.nearby.species = this.query.species;
+		}
+		// create new query with possibly divergent species type
+		var nearbyQuery = this.copyQuery(this.query);
+		nearbyQuery.species = this.tabs.nearby.species;
+		//console.log(nearbyQuery);
+		// synchronized ajax call
+		var returnData = null;
+		$.ajax({
+			async: false, 
+			url: "lib/getNearbyData.php", 
+			data: nearbyQuery, 
+			dataType: "json", 
+			success: function(data) {
+				//console.log(data);
+				returnData = data;
+			},
+			error: function(e) {
+				// does nothing at the moment
+				//alert(defaultErrorMessage + "(Error NearbyData)");
+			}
+		});
+		return returnData;
+	};
+	
 	this.createDetailsDialog = function() {
 		var self = this;
 		$('#' + this.parent).append(
@@ -158,6 +209,7 @@ var StationDetails = function(query) {
 							"<li id='" + this.tabs.data.tabId + "' class='"+this.divIdPrefix+"-tab'>Data</li>" + 
 							"<li id='" + this.tabs.trends.tabId + "' class='"+this.divIdPrefix+"-tab'>Trends</li>" + 
 							"<li id='" + this.tabs.nearby.tabId + "' class='"+this.divIdPrefix+"-tab'>Nearby</li>" + 
+							"<li id='" + this.tabs.report.tabId + "' class='"+this.divIdPrefix+"-tab'>Report</li>" + 
 						"</ul>" + 
 					"</div>" + 
 					"<div id='"+this.divIdPrefix+"-content'></div>" + 
@@ -182,6 +234,8 @@ var StationDetails = function(query) {
 			.on('click', function() { self.openTabTrends(); });
 		this.tabs.nearby.element = $("#"+this.tabs.nearby.tabId)
 			.on('click', function() { self.openTabNearby(); });
+		this.tabs.report.element = $("#"+this.tabs.report.tabId)
+			.on('click', function() { self.openTabReport(); });
 	};
 	
 	this.setTitle = function() {
@@ -476,32 +530,40 @@ var StationDetails = function(query) {
 		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
-	this.loadNearbyData = function() {
-		// load default selection for species type
-		if(this.tabs.nearby.species === null) {
-			this.tabs.nearby.species = this.query.species;
-		}
-		// create new query with possibly divergent species type
-		var nearbyQuery = this.copyQuery(this.query);
-		nearbyQuery.species = this.tabs.nearby.species;
-		//console.log(nearbyQuery);
-		// synchronized ajax call
-		var returnData = null;
-		$.ajax({
-			async: false, 
-			url: "lib/getNearbyData.php", 
-			data: nearbyQuery, 
-			dataType: "json", 
-			success: function(data) {
-				//console.log(data);
-				returnData = data;
-			},
-			error: function(e) {
-				// does nothing at the moment
-				//alert(defaultErrorMessage + "(Error NearbyData)");
-			}
+	this.openTabReport = function() {
+		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		contentDiv.html(
+			"<div style='width:" + (this.tabs.report.width - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
+				this.tabs.report.titleFunction(this.query) + 
+			"</div>"
+		);
+		contentDiv.append(
+			"<div id='create-report' class='button'>Create Report</div>"
+		);
+		this.setActiveTab(this.tabs.report);
+		this.adjustContainerDimensions(this.tabs.report.width);
+		
+		var self = this;
+		contentDiv.find("#create-report").on("click", function() { 
+			contentDiv.html("Please wait..");
+			var reportQuery = self.copyQuery(self.query);
+			console.log(self.query);
+			reportQuery.radiusMiles = 20;
+			$.ajax({
+				url: "lib/sessionGatherReport.php", 
+				data: reportQuery, 
+				dataType: "json", 
+				success: function(response) {
+					// open new window with data (which will be stored in session)
+					newWindow(null, "lib/sessionRetrieveReport.php", "Summary Report", 700, 900);
+					// reset tab html
+					contentDiv.html("Success!");
+				},
+				error: function(e) {
+					contentDiv.html(defaultErrorMessage + "(Report Query Error)");
+				}
+			});
 		});
-		return returnData;
 	};
 	
 	// fire init function

@@ -8,17 +8,18 @@
 	 *		<li>(int) <i>startYear</i> - start year / min. year</li>
 	 *		<li>(int) <i>endYear</i> - end year / max. year</li>
 	 *		<li>(String) <i>station</i> - station name</li>
+	 *		<li>(int) <i>radiusMiles</i> - search radius in miles</li>
 	 * </ul>
 	 * @return array Query object (associative array) with values (String) <i>species</i>, (String) 
 	 *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, (boolean) <i>isASpecies</i>, 
-	 *		and (String) <i>station</i>.  */
+	 *		(String) <i>station</i>, and (int) <i>radiusMiles</i>.  */
 	function getQuery() {
 		$species		= strtolower(filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING));
 		$contaminant	= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
 		$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
 		$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
 		$station		= strtolower(filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING));
-		
+		$radiusMiles	= filter_input(INPUT_GET, 'radiusMiles', FILTER_SANITIZE_NUMBER_INT);
 		
 		if($startYear && $endYear) {
 			if($startYear > $endYear) {
@@ -36,6 +37,9 @@
 		
 		// escape any single quotes for sql query (which is two single-quotes)
 		$station = str_replace("'", "''", $station);
+		$station = str_replace("&#39;", "''", $station);
+		
+		if($radiusMiles < 0) { $radiusMiles = 0; }
 		
 		return array(
 			'species' => $species, 
@@ -43,19 +47,21 @@
 			'startYear' => $startYear, 
 			'endYear' => $endYear, 
 			'isASpecies' => $isASpecies,
-			'station' => $station
+			'station' => $station, 
+			'radiusMiles' => $radiusMiles
 		);
 	}
 
 	/** Singleton class makes it easy to consolidate common functions (and thus edit them in one pass). As a 
 	 * singleton, only one instance may exist at one time to reduce redundancy, in an almost static type of 
 	 * class functionality. Use StepQueries::getInstance() to get the instance, all functions can then be done 
-	 * on the acquired instance.<br />
-	 * <br />
-	 * Not that while most functions take a generic $param object (usually retrieved from the {@link 
-	 * getQuery() getQuery()} general method outside this class), methods follow the search heirarchy of 
-	 * species->contaminant->years. E.g. the {@link getAllParameters() getAllParameters()} function retrieves 
-	 * all available contaminants for the species, for any years. The only exception is {@link 
+	 * on the acquired instance.
+	 * <br /><br />
+	 * Note that while most functions take a generic $param object (usually retrieved from the {@link 
+	 * getQuery() getQuery()} global method outside this class), methods follow the search heirarchy of 
+	 * species->contaminant->years. E.g. {@link getAvailableContaminants($params) getAvailableContaminants()} 
+	 * retrieves available contaminants filtering by the species specified by the parameters but for any years 
+	 * (ignoring any year range specified in the parameters). The only exception is {@link 
 	 * getAvailableSpecies($params) getAvailableSpecies()}, which so far is unused (use {@link 
 	 * getAllSpecies($params) getAllSpecies()} instead). */
 	class StepQueries {
@@ -362,6 +368,103 @@
 				);
 			}
 			return $records;
+		}
+		
+		/** Get a list of stations within a specified distance (in miles) from the selected station.
+		 * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}. In 
+		 *		particular it needs the station name and max. distance in miles.
+		 * @return array Associative array of the specified station and nearby stations within the specified
+		 *		distance by keys/values:
+		 *		<ul>
+		 *			<li>(String) station - the station name for this record</li>
+		 *			<li>(int) distanceMiles - the distance to this station from the given station in miles</li>
+		 *			<li>(float) lat -latitude coordinates</li>
+		 *			<li>(float) long -longitude coordinates</li>
+		 *			<li>(String) waterType - station water type (e.g. river, coast, lake, etc.)</li>
+		 *		</ul> */
+		public function getNearbyStations($params) {
+			// first the get station info for the selected station
+			$queryString = "SELECT TOP 1 WaterType, Lat, Long "
+				. "FROM [dbo].[STEP_Stations] "
+				. "WHERE StationNameRevised = '" . $params["station"] . "'";
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			$result = $query->fetch();
+			
+			$records = array();
+			$records[] = array(
+				"station" => $params["station"], 
+				"distanceMiles" => 0, 
+				"waterType" => $result['WaterType'], 
+				"lat" => $result['Lat'], 
+				"long" => $result['Long']
+			);
+			
+			// then fill in the data for nearby stations
+			$queryString = "SELECT a.StationName_Nearby, a.Distance_Miles, b.WaterType, b.Lat, b.Long "
+				. "FROM [dbo].[STEP_StationGroups_PointDistance] AS a "
+				. "CROSS APPLY ("
+					. "SELECT TOP 1 StationNameRevised, WaterType, Lat, Long "
+					. "FROM [dbo].[STEP_Stations] as c "
+					. "WHERE a.StationName = '" . $params["station"] . "' AND a.StationName_Nearby = c.StationNameRevised"
+				. ") b "
+				. "WHERE a.Distance_Miles <= " . $params["radiusMiles"] . " "
+				. "ORDER BY a.Distance_Miles";
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			$raw = $query->fetchAll();
+			
+			for($i = 0; $i < count($raw); $i++) {
+				$records[] = array(
+					"station" => $raw[$i]['StationName_Nearby'], 
+					"distanceMiles" => $raw[$i]['Distance_Miles'], 
+					"waterType" => $raw[$i]['WaterType'], 
+					"lat" => $raw[$i]['Lat'], 
+					"long" => $raw[$i]['Long']
+				);
+			}
+			return $records;
+		}
+		
+		/** Get a list of stations within a specified distance (in miles) from the selected station, as well 
+		 * as the records for each station. Basically a combination of {@link getNearbyStations($params) 
+		 * getNearbyStations()} and {@link getStationRecords($params) getStationRecords()}.
+		 * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}. In 
+		 *		particular it needs the station name and max. distance in miles.
+		 * @return array Associative array of records ordered by distance with keys/values:
+		 *		<ul>
+		 *			<li>(String) station - the station name for this record</li>
+		 *			<li>(int) distanceMiles - the distance to this station from the given station in miles</li>
+		 *			<li>(float) lat -latitude coordinates</li>
+		 *			<li>(float) long -longitude coordinates</li>
+		 *			<li>(String) waterType - station water type (e.g. river, coast, lake, etc.)</li>
+		 *			<li>(Array) records
+		 *				<ul>
+		 *					<li>(String) species - species name</li>
+		 *					<li>(String) contaminant - the contaminant (which is redundant as we search by contaminant but 
+		 *						for now include it always)</li>
+		 *					<li>(float) value - the value for given contaminant</li>
+		 *					<li>(String) units - units of the contaminant</li>
+		 *					<li>(int) sampleYear - year sample was taken/li>
+		 *					<li>(String) sampleType - type of sample (e.g. average of composites or individuals)</li>
+		 *					<li>(String) tissueCode - tissue code</li>
+		 *					<li>(String) prepCode - preparation code (e.g skin off)</li>
+		 *				</ul>
+		 *			</li>
+		 *		</ul> */
+		public function getNearbyStationsRecords($params) {
+			$stations = $this->getNearbyStations($params);
+			for($i = 0; $i < count($stations); $i++) {
+				$params['station'] = $stations[$i]['station'];
+				$stations[$i]['records'] = $this->getStationRecords($params);
+			}
+			return $stations;
 		}
 		
 	}

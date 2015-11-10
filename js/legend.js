@@ -1,10 +1,18 @@
 
 var thresholds;
 
-// Just creates the SVG shapes legend, which doesn't change. Let's use D3 because we already require it and 
-// it's well suited for SVG graphics
 function legendInit() {
-	$("#legend-container").hide();
+	// set draggable and cursor functionality
+	var legend = $("#legend-container").draggable({containment: "parent"});
+	legend.mouseup(function(evt) {
+			legend.switchClass("grabbing", "grab");
+		})
+		.mousedown(function(evt) {
+			legend.switchClass("grab", "grabbing");
+		});	
+	// hide on init, show after thresholds loaded
+	legend.hide();
+	// create svg shapes legend
 	var svg = d3.select("#legend-symbols")
 	  .append("svg")
 		.attr("width", 380)
