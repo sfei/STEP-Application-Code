@@ -1,9 +1,34 @@
 
-// common function that comes in handy
+//************************************************************************************************************
+// Common utility functions
+//************************************************************************************************************
 String.prototype.capitalize = function() {
     return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
 
+function newWindow(e, url, name, width, height) {
+	if(!e) e = window.event;
+	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
+		if(width <= 0 || width > screen.width-20) {
+			width = screen.width - 20;
+		}
+		if(height <= 0 || height > screen.height-70) {
+			height = screen.height - 70;
+		}
+		var left = (screen.width/2)-(width/2);
+		var top = 0;
+		var new_top = (screen.height/2) - (height/2);
+		if(screen.height > (height+new_top+70)) top = new_top;
+		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", menubar=no, statusbar=no, location=no";
+		var popup = window.open(url, name, options);
+		setTimeout(function(){ popup.focus(); }, 200);
+		return false;
+	}
+}
+
+//************************************************************************************************************
+// Variables
+//************************************************************************************************************
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857', 	// web mercator wgs84
@@ -17,7 +42,6 @@ var countiesUrl = "data/ca_counties.geojson",
 	countiesLayer,
 	countyNames = [];				// list of county names (for search drop-down)
 var stationDetails = null;			// this object handles the pop-up details
-
 
 //************************************************************************************************************
 // Pre-init functions
@@ -33,7 +57,6 @@ var browserType = {
 // only chrome seems to handle hover interactions smoothly for OpenLayers-3
 var enableHoverInteractions = browserType.isChrome;
 
-
 //************************************************************************************************************
 // Initialize functions
 //************************************************************************************************************
@@ -44,11 +67,15 @@ function init() {
 	markerFactory = new MarkerFactory({
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
-			if(watertype === "lake_reservoir") {
+			console.log(watertype);
+			if(watertype.search(/reservoir|lake/i) >= 0) {
+				console.log("circle");
 				return markerFactory.shapes.circle;
-			} else if(watertype === "coast") {
+			} else if(watertype.search(/coast/i) >= 0) {
+				console.log("triangle");
 				return markerFactory.shapes.triangle;
 			} else {
+				console.log("diamond");
 				return markerFactory.shapes.diamond;
 			}
 		}
@@ -89,10 +116,10 @@ function mapInit() {
 	// grabbing cursor functionality since it's not default to open layers 3
 	$('#map-view')
 		.mousedown(function() {
-			$('#map-view').switchClass("grab", "grabbing");
+			$('#map-view').removeClass("grab").addClass("grabbing");
 		})
 		.mouseup(function() {
-			$('#map-view').switchClass("grabbing", "grab");
+			$('#map-view').removeClass("grabbing").addClass("grab");
 		});
 	// add basemaps
 	addBasemaps();
@@ -120,7 +147,7 @@ function loadStationsLayer(data) {
 						mapProjection
 					)
 				),
-				name: data[i].name, 
+				name: ((data[i].name) ? data[i].name : data[i].station), // station name can come one of two ways
 				waterType: data[i].waterType, 
 				value: data[i].value, 
 				advisoryName: data[i].advisoryName, 
@@ -175,7 +202,10 @@ function openStationDetails(feature) {
 		query: lastQuery,
 		station: feature
 	};
-	stationDetails = (!stationDetails) ? new StationDetails(options) : stationDetails.open(options);
+	if(!stationDetails) { 
+		stationDetails = new StationDetails(options);
+	}
+	stationDetails.open(options);
 	// return true to break out of forEachFeature function in which this is called
 	return true;
 }

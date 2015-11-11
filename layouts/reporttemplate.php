@@ -4,7 +4,7 @@
 	$jsonData = json_encode($data, JSON_NUMERIC_CHECK);
 	$station = $query['station'];
 	
-	// use HEREDOC for template
+	// use HEREDOC for ease of writing template
 	$html = <<< HTML
 <html>
 	<head>
@@ -33,7 +33,8 @@
 	</head>
 	<body>
 		<div id="container">
-			<h1>Sportfish Contamination Report</h1>
+			<h1 id="title">Sportfish Contamination Report</h1>
+			<div id="print-button" class="button" onclick="window.print();">Print Report</div>
 			<!-- the actual OpenLayers map -->
 			<div id="map-view" class="grab"></div>
 			<!-- header information -->

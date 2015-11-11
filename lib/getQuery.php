@@ -74,6 +74,8 @@
 	
 	// update query to match valid query after all that checking
 	$result['query'] = $query;
+	// due to database queries, station name escapes the single quote -- revert this to html safe
+	$result['query']['station'] = str_replace("''", "&#39;", $result['query']['station']);
 	
 	echo json_encode($result, JSON_NUMERIC_CHECK);
 

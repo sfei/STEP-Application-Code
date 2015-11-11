@@ -8,6 +8,18 @@ var ColorMap = {
 			return ("0" + Math.round(x*255).toString(16)).slice(-2);
 		}).join('');
 	}, 
+	/** Converts hex string to rgb numeric values
+	 * @param {String} hex string (with leading '#')
+	 * @returns {Array} rgb : array of red, green, and blue values */
+	hexTorgb: function(hex) {
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		if(!result) { return [0, 0, 0]; }
+		return [
+			parseInt(result[1], 16),
+			parseInt(result[2], 16),
+			parseInt(result[3], 16)
+		];
+	}, 
 	/** Converts HSV values to RGB - adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
 	 * @param {Array} hsv : array of hue, saturation (0-1.0), value (0-1.0) values
 	 * @return {Array} array of red, green, and blue values */
@@ -78,6 +90,18 @@ var ColorMap = {
 	 *		to the length of the colorMap
 	 * @return {Array} array of hex strings representing the color map (with leading '#') */
 	createHexColorMap: function(colorMap, resolution) {
+		// convert to decimal RGB values
+		for(var i = 0; i < colorMap.length; i++) {
+			if(Object.prototype.toString.call(colorMap[i]) === '[object Array]') {
+				while(colorMap[i].length < 3) {
+					colorMap[i].push(0);
+				}
+			} else if(typeof colorMap[i] === 'string') {
+				colorMap[i] = hexTorgb(colorMap[i]);
+			} else {
+				colorMap[i] = [0, 0, 0];
+			}
+		}
 		resolution = parseInt(resolution);
 		var hexColors = [];
 		var spread = colorMap.length;

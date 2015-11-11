@@ -1,23 +1,4 @@
 
-function newWindow(e, url, name, width, height) {
-	if(!e) e = window.event;
-	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
-		if(width <= 0 || width > screen.width-20) {
-			width = screen.width - 20;
-		}
-		if(height <= 0 || height > screen.height-70) {
-			height = screen.height - 70;
-		}
-		var left = (screen.width/2)-(width/2);
-		var top = 0;
-		var new_top = (screen.height/2) - (height/2);
-		if(screen.height > (height+new_top+70)) top = new_top;
-		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", menubar=no, statusbar=no, location=no";
-		window.open(url, name, options);
-		return false;
-	}
-}
-
 var StationDetails = function(query) {
 	
 	this.init = function(query) {
@@ -26,10 +7,6 @@ var StationDetails = function(query) {
 		//****************************************************************************************************
 		// the id for the container for any created details dialog
 		this.parent = "map-container";
-		// All div id's will use identified prefix follow by sub-id words separated by hyphens. Although if y
-		// you change this, much of the default css styles (those not specified in this.style which is a lot) 
-		// will not apply and must accounted for.
-		this.divIdPrefix = "details";
 		// styles for a few things that appear frequently and/or has cascading effects on parent/child 
 		// elements so is easier to set here as variables
 		this.titleDivPadLeft = 12;
@@ -46,8 +23,7 @@ var StationDetails = function(query) {
 		// tabs configurations
 		this.tabs = { 
 			data: {
-				tabId: this.divIdPrefix + "-tab-data", 
-				element: null, 
+				tabId: "details-tab-data", 
 				colWidths: [180, 80, 60, 80, 150], 
 				titleFunction: function(query) {
 					var yearMsg;
@@ -58,11 +34,11 @@ var StationDetails = function(query) {
 					}
 					return "What records exist for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
 				},
-				bottomMsg: "A result of ND means the concentration was below detection limits."
+				bottomMsg: "A result of ND means the concentration was below detection limits.", 
+				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			trends: {
-				tabId: this.divIdPrefix + "-tab-trends", 
-				element: null, 
+				tabId: "details-tab-trends", 
 				chartWidth: 640, 
 				chartHeight: 360, 
 				titleFunction: function(query) {
@@ -73,11 +49,11 @@ var StationDetails = function(query) {
 						yearMsg = "in " + query.startYear;
 					}
 					return "What are the trends for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
-				}
+				}, 
+				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			nearby: {
-				tabId: this.divIdPrefix + "-tab-nearby", 
-				element: null, 
+				tabId: "details-tab-nearby", 
 				species: null, 
 				colWidths: [240, 60, 180, 80, 60, 80, 150], 
 				titleFunction: function(query) {
@@ -93,11 +69,11 @@ var StationDetails = function(query) {
 				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
 			}, 
 			report: {
-				tabId: this.divIdPrefix + "-tab-report", 
+				tabId: "details-tab-report", 
 				element: null, 
-				width: 600,
+				width: 550,
 				titleFunction: function(query) {
-					return "Create summary report for " + query.station;
+					return "Generate and Print Summary Report";
 				}
 			}
 		};
@@ -113,18 +89,16 @@ var StationDetails = function(query) {
 			}
 		}
 		// the element that contains the dialog box/tabs
-		if($("#"+this.divIdPrefix+"-container").length === 0) {
+		if($("#details-container").length === 0) {
 			this.createDetailsDialog();
 		} else {
-			this.element = $("#"+this.divIdPrefix+"-container");
+			this.element = $("#details-container");
 		}
 		// open data/query
 		this.open(query);
 	};
 		
 	this.open = function(inputQuery) {
-		// self refernce necessary for callbacks
-		var self = this;
 		// the query that constructed this
 		this.query = this.copyQuery(inputQuery.query);
 		if(inputQuery.station) {
@@ -136,13 +110,15 @@ var StationDetails = function(query) {
 		// put station name from query and place loading message
 		this.setTitle();
 		this.openLoadingMessage();
-		self.element.show();
+		this.element.show();
 		// nearby data is left null until specifically requested
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
 		this.stationData = null;
+		// self refernce necessary for callbacks
 		var self = this;
 		$.ajax({
+			async: false, 
 			url: "lib/getStationData.php", 
 			data: this.query, 
 			dataType: "json", 
@@ -198,26 +174,25 @@ var StationDetails = function(query) {
 	};
 	
 	this.createDetailsDialog = function() {
-		var self = this;
 		$('#' + this.parent).append(
-			"<div id='" + this.divIdPrefix+"-container" + "' style='padding:"+this.containerPadding+"px;'>" + 
-				"<div id='"+this.divIdPrefix+"-dialog' style='padding:"+this.contentPadding+"px;'>" + 
-					"<div id='"+this.divIdPrefix+"-title' class='grab'></div>" + // title set elsewhere
-					"<div id='"+this.divIdPrefix+"-info'></div>" +
-					"<div id='"+this.divIdPrefix+"-tabs-container'>" + 
-						"<ul id='"+this.divIdPrefix+"-dialog-tabs'>" + 
-							"<li id='" + this.tabs.data.tabId + "' class='"+this.divIdPrefix+"-tab'>Data</li>" + 
-							"<li id='" + this.tabs.trends.tabId + "' class='"+this.divIdPrefix+"-tab'>Trends</li>" + 
-							"<li id='" + this.tabs.nearby.tabId + "' class='"+this.divIdPrefix+"-tab'>Nearby</li>" + 
-							"<li id='" + this.tabs.report.tabId + "' class='"+this.divIdPrefix+"-tab'>Report</li>" + 
+			"<div id='details-container" + "' style='padding:"+this.containerPadding+"px;'>" + 
+				"<div id='details-dialog' style='padding:"+this.contentPadding+"px;'>" + 
+					"<div id='details-title' class='grab'></div>" + // title set elsewhere
+					"<div id='details-info'></div>" +
+					"<div id='details-tabs-container'>" + 
+						"<ul id='details-dialog-tabs'>" + 
+							"<li id='" + this.tabs.data.tabId + "' class='details-tab'>Data</li>" + 
+							"<li id='" + this.tabs.trends.tabId + "' class='details-tab'>Trends</li>" + 
+							"<li id='" + this.tabs.nearby.tabId + "' class='details-tab'>Nearby</li>" + 
+							"<li id='" + this.tabs.report.tabId + "' class='details-tab'>Print Report</li>" + 
 						"</ul>" + 
 					"</div>" + 
-					"<div id='"+this.divIdPrefix+"-content'></div>" + 
+					"<div id='details-content'></div>" + 
 				"</div>" + 
 			"</div>"
 		);
-		this.element = $("#"+this.divIdPrefix+"-container");
-		var titleElement = this.element.find("#"+this.divIdPrefix+"-title");
+		this.element = $("#details-container");
+		var titleElement = this.element.find("#details-title");
 		this.element.hide()
 			.draggable()
 			.mousedown(function(evt) {
@@ -228,72 +203,75 @@ var StationDetails = function(query) {
 				self.element.removeClass("grabbing");
 				titleElement.addClass("grab");
 			});
-		this.tabs.data.element = $("#"+this.tabs.data.tabId)
-			.on('click', function() { self.openTabData(); });
-		this.tabs.trends.element = $("#"+this.tabs.trends.tabId)
-			.on('click', function() { self.openTabTrends(); });
-		this.tabs.nearby.element = $("#"+this.tabs.nearby.tabId)
-			.on('click', function() { self.openTabNearby(); });
-		this.tabs.report.element = $("#"+this.tabs.report.tabId)
-			.on('click', function() { self.openTabReport(); });
+		var self = this;
+		$("#"+this.tabs.data.tabId).on('click', function() { self.openTabData(); });
+		$("#"+this.tabs.trends.tabId).on('click', function() { self.openTabTrends(); });
+		$("#"+this.tabs.nearby.tabId).on('click', function() { self.openTabNearby(); });
+		$("#"+this.tabs.report.tabId).on('click', function() { self.openTabReport(); });
 	};
 	
 	this.setTitle = function() {
-		this.element.find("#"+this.divIdPrefix+"-title").html(
-			"<div id='"+this.divIdPrefix+"-station-name'>" + this.query.station + "</div>" + 
-			"<div id='"+this.divIdPrefix+"-dialog-close' class='button'>X</div>"
+		this.element.find("#details-title").html(
+			"<div id='details-station-name'>" + this.query.station + "</div>" + 
+			"<div id='details-dialog-close' class='button'>X</div>"
 		);
 		var self = this;
-		this.element.find("#"+this.divIdPrefix+"-dialog-close").click(function() {
+		this.element.find("#details-dialog-close").click(function() {
 			self.element.hide();
 		});
-		var advisoryName = "View <b>General Guidance of Safe Fish Consumption</b>";
-		if(this.station.get("advisoryName")) {
+		var advisoryName;
+		var advisoryUrl = this.station.get("advisoryUrl");
+		if(!advisoryUrl) {
+			if(this.station.get("waterType").search(/reservoir|lake/i)) {
+				advisoryName = "View <b>General Guidance of Safe Fish Consumption</b> for Lakes/Reservoirs";
+				advisoryUrl = "http://www.oehha.ca.gov/fish/special_reports/advisorylakesres.html";
+			} else {
+				advisoryName = "View <b>General Guidance of Safe Fish Consumption</b>";
+				advisoryUrl = "http://www.oehha.ca.gov/fish/general/broch.html";
+			}
+		} else {
 			advisoryName = "View <b>Specific Safe Eating Guidelines</b> for this water body";
 		}
-		var infoHtml = "<ul>" + 
-			"<li>" + 
-				"<a  id='"+this.divIdPrefix+"-advisory' " + 
-					"href='" + this.station.get("advisoryUrl") + "' target='_blank'>" + 
-						advisoryName + 
-				"</a>" + 
-			"</li>";
+		var listLinks = $("<ul></ul>");
+		var advisoryUrl = this.station.get("advisoryUrl");
+		listLinks.append(
+			$("<li></li>").html(
+				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + 
+					advisoryName + 
+				"</a>"
+		));
 		if(this.station.get("waterType") === "coast") {
 			var coords = ol.proj.toLonLat(this.station.getGeometry().getCoordinates());
-			infoHtml += 
-				"<li>" + 
-					"<a	 id='"+this.divIdPrefix+"-tides' " + 
+			listLinks.append(
+				$("<li></li>").html(
+					"<a id='details-tides' " + 
 						"href='https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor=" + 
 							coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4) + "' target='_blank'>" + 
 						"Find nearest <b>Tidal Prediction Stations</b> for this location" + 
-					"</a>" + 
-				"</li>";
+					"</a>"
+			));
 		}
-		infoHtml += "</ul>";
-		this.element.find("#"+this.divIdPrefix+"-info").html(infoHtml);
+		this.element.find("#details-info").html(listLinks);
 	};	
 	
 	this.openLoadingMessage = function() {
-		this.element.find("#"+this.divIdPrefix+"-content").html("Loading data...");
+		this.element.find("#details-content").html(
+			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>Loading data...</div>"
+		);
 	};
 	
 	this.setActiveTab = function(tab) {
 		for(var t in this.tabs) {
-			if(!tab.element) {
-				tab.element = $("#"+tab.tabId);
-			}
 			if(this.tabs.hasOwnProperty(t)) {
-				if(!this.tabs[t].element) {
-					this.tabs[t].element = $("#"+tab.tabId);
-				}
+				var element = $("#"+this.tabs[t].tabId);
 				if(this.tabs[t] === tab) {
-					this.tabs[t].element
-					  .removeClass(this.divIdPrefix+"-tab")
-					  .addClass(this.divIdPrefix+"-tab-active");
+					element
+					  .removeClass("details-tab")
+					  .addClass("details-tab-active");
 				} else {
-					this.tabs[t].element
-					  .removeClass(this.divIdPrefix+"-tab-active")
-					  .addClass(this.divIdPrefix+"-tab");
+					element
+					  .removeClass("details-tab-active")
+					  .addClass("details-tab");
 				}
 			}
 		}
@@ -301,7 +279,7 @@ var StationDetails = function(query) {
 	
 	// getting divs to fit content across all browsers is a pain so just do it manually
 	this.adjustContainerDimensions = function(width, height) {
-		var dialogDiv = this.element.find("#"+this.divIdPrefix+"-dialog");
+		var dialogDiv = this.element.find("#details-dialog");
 		
 		if(!width || width <= 0) { 
 			width = dialogDiv.width();
@@ -329,57 +307,96 @@ var StationDetails = function(query) {
 		} else {
 			yearMsg = "in " + this.query.startYear;
 		}
-		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		var contentDiv = this.element.find("#details-content");
 		var width = this.tabs.data.tableWidth;
 		contentDiv.html(
 			"<div style='width:" + (width-this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
 				this.tabs.data.titleFunction(this.query) + 
 			"</div>"
 		);
-		contentDiv.append(
-			"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
-				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[0] + "px;text-align:left;'>" + 
-					"Species" + 
-				"</div>" + 
-				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[1] + "px;'>" + 
-					this.query.contaminant + " (" +  this.stationData[0].units + ")" + 
-				"</div>" + 
-				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[2] + "px;'>" + 
-					"Sample Year" + 
-				"</div>" + 
-				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[3] + "px;'>" + 
-					"Prep Code" + 
-				"</div>" + 
-				"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.data.colWidths[4] + "px;'>" + 
-					"Sample Type" + 
-				"</div>" + 
-			"</div>"
-		);
-		for(var i = 0; i < this.stationData.length; i++) {
-			contentDiv.append(
-				"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[0] + "px;text-align:left;'>" + 
-						this.stationData[i].species + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell color-value' style='width:" + this.tabs.data.colWidths[1] + "px;font-weight:bolder;'>" + 
-						this.stationData[i].value + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[2] + "px;'>" + 
-						this.stationData[i].sampleYear + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[3] + "px;'>" + 
-						this.stationData[i].prepCode + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.data.colWidths[4] + "px;'>" + 
-						this.stationData[i].sampleType + 
-					"</div>" + 
-				"</div>"
-			);
+		var hasResult = this.stationData && this.stationData.length > 0;
+		// create headers
+		$("<div></div>").appendTo(contentDiv)
+			.addClass('details-table-header-row')
+			.width(width)
+		  .append(
+			$("<div>Species</div>")
+			  .addClass('details-table-header')
+			  .width(this.tabs.data.colWidths[0])
+			  .css('text-align', 'left')
+		  )
+		  .append(
+			$("<div></div>")
+			  .html(this.query.contaminant + ((hasResult) ? " (" + this.stationData[0].units + ")" : ""))
+			  .addClass('details-table-header')
+			  .width(this.tabs.data.colWidths[1])
+		  )
+		  .append(
+			$("<div>Sample Year</div>")
+			  .addClass('details-table-header')
+			  .width(this.tabs.data.colWidths[2])
+		  )
+		  .append(
+			$("<div>Prep Code</div>")
+			  .addClass('details-table-header')
+			  .width(this.tabs.data.colWidths[3])
+		  )
+		  .append(
+			$("<div>Sample Type</div>")
+			  .addClass('details-table-header')
+			  .width(this.tabs.data.colWidths[4])
+		  );
+		if(!hasResult) {
+			// if no result, display no data message
+			$("<div>"+this.tabs.data.noDataMsg+"</div>").appendTo(rowHeaders)
+				.addClass('details-table-row')
+				.width(width)
+				.css("padding", "10px 5px")
+				.css("margin-bottom", 30);
+		} else {
+			for(var i = 0; i < this.stationData.length; i++) {
+				$("<div></div>").appendTo(contentDiv)
+					.addClass('details-table-row')
+					.width(width)
+					.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""))
+				  .append(
+					  $("<div></div>")
+						.html(this.stationData[i].species)
+						.addClass('details-table-cell')
+						.width(this.tabs.data.colWidths[0])
+						.css('text-align', 'left')
+				  )
+				  .append(
+					  $("<div></div>")
+						.html(this.stationData[i].value)
+						.addClass('details-table-cell')
+						.addClass("color-value")
+						.width(this.tabs.data.colWidths[1])
+				  )
+				  .append(
+					  $("<div></div>")
+						.html(this.stationData[i].sampleYear)
+						.addClass('details-table-cell')
+						.width(this.tabs.data.colWidths[2])
+				  )
+				  .append(
+					  $("<div></div>")
+						.html(this.stationData[i].prepCode)
+						.addClass('details-table-cell')
+						.width(this.tabs.data.colWidths[3])
+				  )
+				  .append(
+					  $("<div></div>")
+						.html(this.stationData[i].sampleType)
+						.addClass('details-table-cell')
+						.width(this.tabs.data.colWidths[4])
+				  );
+			}
+			// colorize!
+			contentDiv.find(".color-value").each(function(i, element) {
+				element.style.color = getThresholdColor(parseFloat(element.innerHTML));
+			});
 		}
-		// colorize!
-		contentDiv.find(".color-value").each(function(i, element) {
-			element.style.color = getThresholdColor(parseFloat(element.innerHTML));
-		});
 		if(this.tabs.data.bottomMsg) {
 			contentDiv.append(
 				"<div style='width:" + width + "px;" + this.style.bottomMsg + "'>" + this.tabs.data.bottomMsg + "</div>"
@@ -390,24 +407,28 @@ var StationDetails = function(query) {
 	};	
 	
 	this.openTabTrends = function() {
-		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
 			"<div style='width:" + (this.tabs.trends.chartWidth - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
 				this.tabs.trends.titleFunction(this.query) + 
 			"</div>"
 		);
-		// not used but it returns the svg object (already added to container)
-		var svg = Scatterplot.create({
-			container: this.divIdPrefix+"-content",
-			data: this.stationData, 
-			dataPointName: 'species', 
-			xValueName: 'sampleYear', 
-			xAxisLabel: 'Year', 
-			yValueName: 'value', 
-			yAxisLabel: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
-			width: this.tabs.trends.chartWidth,
-			height: this.tabs.trends.chartHeight
-		});
+		if(this.stationData && this.stationData.length > 0) {
+			// not used but it returns the svg object (already added to container)
+			var svg = Scatterplot.create({
+				container: "details-content",
+				data: this.stationData, 
+				dataPointName: 'species', 
+				xValueName: 'sampleYear', 
+				xAxisLabel: 'Year', 
+				yValueName: 'value', 
+				yAxisLabel: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
+				width: this.tabs.trends.chartWidth,
+				height: this.tabs.trends.chartHeight
+			});
+		} else {
+			contentDiv.append(this.tabs.trends.noDataMsg);
+		}
 		this.setActiveTab(this.tabs.trends);
 		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
@@ -418,7 +439,7 @@ var StationDetails = function(query) {
 			this.openLoadingMessage();
 			this.nearbyData = this.loadNearbyData();
 		}
-		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		var contentDiv = this.element.find("#details-content");
 		if(!this.nearbyData) {
 			// if data still does not exist, throw error
 			contentDiv.html(defaultErrorMessage + "(Error NearbyData)");
@@ -434,7 +455,7 @@ var StationDetails = function(query) {
 					"</div>" + 
 					"<div>" + 
 						"Compare by: " + 
-						"<select id='"+this.divIdPrefix+"-species-control' style='width:360px;'>" +
+						"<select id='details-species-control' style='width:360px;'>" +
 							"<option value='highest'>Any Species with Highest Avg Concentration</option>" + 
 							"<option value='lowest'>Any Species with Lowest Avg Concentration</option>" + 
 						"</select>" +
@@ -442,14 +463,14 @@ var StationDetails = function(query) {
 				"</div>"
 			);
 			// add all available species to the list
-			var speciesSelect = contentDiv.find("#"+this.divIdPrefix+"-species-control");
+			var speciesSelect = contentDiv.find("#details-species-control");
 			for(var i = 0; i < speciesList.length; i++) {
 				speciesSelect.append("<option value=\"" + speciesList[i][0].toLowerCase() + "\">" + speciesList[i][0].capitalize() + "</option>");
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
 			// fancy select
-			contentDiv.find("#"+this.divIdPrefix+"-species-control").chosen();
+			contentDiv.find("#details-species-control").chosen();
 			// click functionality
 			var self = this;
 			speciesSelect.on('change', function() {
@@ -457,63 +478,105 @@ var StationDetails = function(query) {
 				self.tabs.nearby.species = speciesSelect.val();
 				self.openTabNearby();
 			});
-			// now get to writing the table
-			// table headers
-			contentDiv.append(
-				"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left;'>" + 
-						"Location" + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[1] + "px;'>" + 
-						"Distance (mi)" + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[2] + "px;'>" + 
-						"Species" + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[3] + "px;'>" + 
-						this.query.contaminant + (hasResult ? " ("+this.nearbyData[0].units+")" : "") + "</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[4] + "px;'>" + 
-						"Sample Year" + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[5] + "px;'>" + 
-						"Prep Code" + 
-					"</div>" + 
-					"<div class='"+this.divIdPrefix+"-table-header' style='width:" + this.tabs.nearby.colWidths[6] + "px;'>" + 
-						"Sample Type" + 
-					"</div>" + 
-				"</div>"
-			);
+			// write table headers
+			$("<div></div>").appendTo(contentDiv)
+				.addClass('details-table-header-row')
+				.width(width)
+			  .append(
+				  $("<div>Location</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[0])
+					.css('text-align', 'left')
+			  )
+			  .append(
+				  $("<div>Distance (mi)</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[1])
+			  )
+			  .append(
+				  $("<div>Species</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[2])
+			  )
+			  .append(
+				  $("<div></div>")
+					.html(this.query.contaminant + (hasResult ? " ("+this.nearbyData[0].units+")" : ""))
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[3])
+			  )
+			  .append(
+				$("<div>Sample Year</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[4])
+			  )
+			  .append(
+				  $("<div>Prep Code</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[5])
+			  )
+			  .append(
+				  $("<div>Sample Type</div>")
+					.addClass('details-table-header')
+					.width(this.tabs.nearby.colWidths[6])
+			  );
 			if(!hasResult) {
 				// if no result, display no data message
-				contentDiv.append("<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;padding:10px 5px;margin-bottom:30px;'>" + this.tabs.nearby.noDataMsg + "</div>");
+				$("<div>"+this.tabs.nearby.noDataMsg+"</div>").appendTo(rowHeaders)
+					.addClass('details-table-row')
+					.width(width)
+					.css("padding", "10px 5px")
+					.css("margin-bottom", 30);
 			} else {
 				// loop through rows
 				for(var i = 0; i < this.nearbyData.length; i++) {
-					contentDiv.append(
-						"<div class='"+this.divIdPrefix+"-table-row' style='width:" + width + "px;'>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[0] + "px;text-align:left'>" + 
-								this.nearbyData[i].station + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[1] + "px;'>" + 
-								this.nearbyData[i].distanceMiles + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[2] + "px;'>" + 
-								this.nearbyData[i].species + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell color-value' style='width:" + this.tabs.nearby.colWidths[3] + "px;font-weight:bolder;'>" + 
-								this.nearbyData[i].value + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[4] + "px;'>" + 
-								this.nearbyData[i].sampleYear + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[5] + "px;'>" + 
-								this.nearbyData[i].prepCode + 
-							"</div>" + 
-							"<div class='"+this.divIdPrefix+"-table-cell' style='width:" + this.tabs.nearby.colWidths[6] + "px;'>" + 
-								this.nearbyData[i].sampleType + 
-							"</div>" + 
-						"</div>"
-					);
+					$("<div></div>").appendTo(contentDiv)
+						.addClass('details-table-row')
+						.width(width)
+						.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""))
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].station)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[0])
+							.css('text-align', 'left')
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].distanceMiles)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[1])
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].species)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[2])
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].value)
+							.addClass('details-table-cell')
+							.addClass("color-value")
+							.width(this.tabs.nearby.colWidths[3])
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].sampleYear)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[4])
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].prepCode)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[5])
+					  )
+					  .append(
+						  $("<div></div>")
+							.html(this.nearbyData[i].sampleType)
+							.addClass('details-table-cell')
+							.width(this.tabs.nearby.colWidths[6])
+					  );
 				}
 				// colorize!
 				contentDiv.find(".color-value").each(function(i, element) {
@@ -531,39 +594,68 @@ var StationDetails = function(query) {
 	};
 	
 	this.openTabReport = function() {
-		var contentDiv = this.element.find("#"+this.divIdPrefix+"-content");
+		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
 			"<div style='width:" + (this.tabs.report.width - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
 				this.tabs.report.titleFunction(this.query) + 
 			"</div>"
 		);
-		contentDiv.append(
-			"<div id='create-report' class='button'>Create Report</div>"
-		);
-		this.setActiveTab(this.tabs.report);
-		this.adjustContainerDimensions(this.tabs.report.width);
+		var yearMsg = "";
+		if(this.query.startYear === this.query.endYear) {
+			yearMsg = "in <b>" + this.query.startYear;
+		} else {
+			yearMsg = "between <b>" + this.query.startYear + "-" + this.query.endYear;
+		}
+		yearMsg += "</b> ";
+		$("<div></div>").appendTo(contentDiv)
+			.css({ margin:"40px 20px", 'text-align':"center" })
+			.append(
+				"Retrieve all data recorded for <b>" + this.query.contaminant + "</b> contamination " + yearMsg + "<br />" + 
+				"within a distance of: <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
+				"<b>" + this.query.station + "</b><br />"
+			)
+			.append(
+				$("<div id='create-report'>Generate Report</div>")
+					.addClass('button')
+					.css({
+						width: 180,
+						height: 30, 
+						margin: "15px auto", 
+						'line-height': "30px",
+						'text-align': "center", 
+						'font-weight': "bolder"
+					})
+			);
+		var selectMiles = this.element.find("#report-select-miles");
+		selectMiles.append("<option value=5>5</option>");
+		selectMiles.append("<option value=10>10</option>");
+		selectMiles.append("<option value=15>15</option>");
+		selectMiles.append("<option value=20>20</option>");
+		selectMiles.append("<option value=25>25</option>");
+		selectMiles.val(this.query.radiusMiles);
+		if(!selectMiles.val()) { selectMiles.val(10); }
 		
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			contentDiv.html("Please wait..");
-			var reportQuery = self.copyQuery(self.query);
-			console.log(self.query);
-			reportQuery.radiusMiles = 20;
+			self.openLoadingMessage();
+			self.query.radiusMiles = selectMiles.val();
 			$.ajax({
-				url: "lib/sessionGatherReport.php", 
-				data: reportQuery, 
+				url: "lib/gatherSummaryReport.php", 
+				data: self.query, 
 				dataType: "json", 
 				success: function(response) {
 					// open new window with data (which will be stored in session)
-					newWindow(null, "lib/sessionRetrieveReport.php", "Summary Report", 700, 900);
+					newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950);
 					// reset tab html
-					contentDiv.html("Success!");
+					self.openTabReport();
 				},
 				error: function(e) {
 					contentDiv.html(defaultErrorMessage + "(Report Query Error)");
 				}
 			});
 		});
+		this.setActiveTab(this.tabs.report);
+		this.adjustContainerDimensions(this.tabs.report.width);
 	};
 	
 	// fire init function

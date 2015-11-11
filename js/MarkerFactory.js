@@ -33,9 +33,7 @@ var MarkerFactory = function(options) {
 		this.setStyle(options);
 	};
 	
-	this.textFunction = function(feature) {
-		return "";
-	};
+	this.textFunction = null;
 	
 	this.normalizeValue = function(feature) {
 		return 0;
@@ -188,8 +186,24 @@ var MarkerFactory = function(options) {
 			// store in feature data as styles are incredibly taxing on speed it looks like
 			feature.set("mfStyle", styles);
 		}
-		// return the styles
-		return (!highlight) ? [styles.normal] : [styles.highlight];
+		var style = (!highlight) ? [styles.normal] : [styles.highlight];
+		if(this.textFunction) {
+			style.push(
+				new ol.style.Style({
+					text: new ol.style.Text({
+						textAlign: "left",
+						textBaseline: "center",
+						font: "bold 12px Arial",
+						text: this.textFunction(feature),
+						fill: new ol.style.Fill({color: "#000"}),
+						stroke: new ol.style.Stroke({color: "#fff", width: 2}),
+						offsetX: this.radius+2, 
+						offsetY: this.radius/2
+					})
+				})
+			);
+		}
+		return style;
 	};
 	
 	this.init(options);

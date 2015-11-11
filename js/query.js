@@ -215,7 +215,9 @@ function updateQuery(options) {
 			updateStationsSelect();
 			// flash changes, set zoom to fit new extent
 			flashQueryChanges(options.query, options.firstRun);
-			zoomToStationsExtent();
+			if(options.firstRun) {
+				zoomToStationsExtent();
+			}
 		}, 
 		error: function(e) {
 			alert(defaultErrorMessage + "(Error Query)");
@@ -279,11 +281,11 @@ function updateSpeciesSelect() {
 	var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
 		+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
 	for(var i = 0; i < speciesList.length; i++) {
-		optionsHtml += "<option value=\"" + speciesList[i][0].toLowerCase() + "\">" + speciesList[i][0].capitalize() + "</option>";
+		optionsHtml += "<option value=\"" + speciesList[i][0] + "\">" + speciesList[i][0] + "</option>";
 	}
 	$("#species-control")
 		.html(optionsHtml)
-		.val(lastQuery.species.toLowerCase())
+		.val(lastQuery.species)
 		.trigger("chosen:updated");
 }
 

@@ -14,11 +14,11 @@
 	 *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, (boolean) <i>isASpecies</i>, 
 	 *		(String) <i>station</i>, and (int) <i>radiusMiles</i>.  */
 	function getQuery() {
-		$species		= strtolower(filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING));
+		$species		= filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING);
 		$contaminant	= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
 		$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
 		$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
-		$station		= strtolower(filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING));
+		$station		= filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING);
 		$radiusMiles	= filter_input(INPUT_GET, 'radiusMiles', FILTER_SANITIZE_NUMBER_INT);
 		
 		if($startYear && $endYear) {
