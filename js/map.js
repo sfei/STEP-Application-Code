@@ -9,20 +9,18 @@ String.prototype.capitalize = function() {
 function newWindow(e, url, name, width, height) {
 	if(!e) e = window.event;
 	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
-		if(width <= 0 || width > screen.width-20) {
-			width = screen.width - 20;
-		}
-		if(height <= 0 || height > screen.height-70) {
-			height = screen.height - 70;
-		}
-		var left = (screen.width/2)-(width/2);
-		var top = 0;
-		var new_top = (screen.height/2) - (height/2);
-		if(screen.height > (height+new_top+70)) top = new_top;
-		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", menubar=no, statusbar=no, location=no";
-		var popup = window.open(url, name, options);
-		setTimeout(function(){ popup.focus(); }, 200);
-		return false;
+		// center pop up, from http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
+		// Fixes dual-screen position                         Most browsers      Firefox
+		var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+		var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+		var winWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+		var winHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+		var left = ((winWidth / 2) - (width / 2)) + dualScreenLeft;
+		var top = ((winHeight / 2) - (height / 2)) + dualScreenTop;
+		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", scrollbars=yes, menubar=no, statusbar=no, location=no";
+		var popup = window.open(url, '', options);
+		if(popup) { popup.focus(); }
+		return popup;
 	}
 }
 
@@ -61,21 +59,26 @@ var enableHoverInteractions = browserType.isChrome;
 // Initialize functions
 //************************************************************************************************************
 function init() {
-	// initalize tooltip
-	$("#station-tooltip").hide();
+	// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
+	if(browserType.isIE) {
+		var version = parseInt(navigator.userAgent.toLowerCase().split('msie')[1]);
+		// Edge returns NaN value
+		if(version && !isNaN(version) && version <= 8) {
+			alert("This application is not compatible with Internet Explorer " + version + ", please upgrade your browser.");
+			return;
+		}
+	}
+	// add basemap control dynamically (easier to change the basemaps later without changing all related code)
+	addBasemapControl($("#base-layer-control-container"), {width: 200});
 	// create marker factory
 	markerFactory = new MarkerFactory({
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
-			console.log(watertype);
 			if(watertype.search(/reservoir|lake/i) >= 0) {
-				console.log("circle");
 				return markerFactory.shapes.circle;
 			} else if(watertype.search(/coast/i) >= 0) {
-				console.log("triangle");
 				return markerFactory.shapes.triangle;
 			} else {
-				console.log("diamond");
 				return markerFactory.shapes.diamond;
 			}
 		}
@@ -96,7 +99,7 @@ function init() {
 	countyNames = null;
 }
 
-function mapInit() {
+function mapInit(baseMapSelect) {
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
 	map.setView(
@@ -104,7 +107,7 @@ function mapInit() {
 			center: ol.proj.fromLonLat([-119, 38]),
 			zoom: 7,
 			minZoom: 6,
-			maxZoom: 14, 
+			maxZoom: 13, // past this zoom, many areas of the ESRI Oceans Basemap have no tiles
 			// map bounds
 			extent: ol.proj.transformExtent(
 				[-130, 31, -110, 44], 
@@ -121,8 +124,10 @@ function mapInit() {
 		.mouseup(function() {
 			$('#map-view').removeClass("grabbing").addClass("grab");
 		});
+	// initialize tooltip
+	$("<div id='station-tooltip'></div>").appendTo($("#map-view")).hide();
 	// add basemaps
-	addBasemaps();
+	addBasemaps(baseMapSelect);
 }
 
 //************************************************************************************************************
@@ -224,6 +229,19 @@ function zoomToStation(station) {
 		view.setCenter(coords);
 		view.setZoom(16);
 	}
+}
+
+function getStationByName(stationName) {
+	// to ease compare, remove any special characters except alphanumeric and spaces, especially since some, 
+	// like quotes, are replaced with character codes
+	stationName = stationName.replace(/[^A-Za-z0-9\s]/g,'');
+	var stationsArray = stations.getArray();
+	for(var i = 0; i < stationsArray.length; i++) {
+		if(stationsArray[i].get("name").replace(/[^A-Za-z0-9\s]/g,'') === stationName) {
+			return stationsArray[i];
+		}
+	}
+	return null;
 }
 
 //************************************************************************************************************

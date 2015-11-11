@@ -72,17 +72,18 @@ function init2() {
 			}
 		}
 	});
+	// add basemap control dynamically
+	var layerControls = $("<div id='layer-control'></div>").appendTo($("#map-view"))
+		.html("Basemap: ")
+		.css({
+			position: 'absolute',
+			top: -24,
+			right: 0, 
+			'font-size': '13px'
+		});
+	addBasemapControl(layerControls, { width: 200 });
 	// query and legend initalizations removed (which also removes associated color styling)
-	mapInit();
-	$("#map-view").append(
-		"<div id='map-controls' class='controls-group'>" + 
-			"<select id='base-layer-control' onchange='changeBaseLayer()' style='width:160px;margin-right:45px;'>" + 
-				"<option value=0>Topographic</option>" + 
-				"<option value=1>Oceans</option>" + 
-				"<option value=2>Imagery</option>" + 
-			"</select>" + 
-		"</div>"
-	);
+	mapInit(1);
 	// display station layer
 	loadStationsLayer(data);
 	zoomToStationsExtent();

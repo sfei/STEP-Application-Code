@@ -24,7 +24,9 @@ var StationDetails = function(query) {
 		this.tabs = { 
 			data: {
 				tabId: "details-tab-data", 
+				headers: ['Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [180, 80, 60, 80, 150], 
+				valueKeys: ['species', 'value', 'sampleYear', 'prepCode', 'sampleType'], 
 				titleFunction: function(query) {
 					var yearMsg;
 					if(query.startYear !== query.endYear) {
@@ -55,7 +57,9 @@ var StationDetails = function(query) {
 			nearby: {
 				tabId: "details-tab-nearby", 
 				species: null, 
+				headers: ['Location', 'Distance (mi)', 'Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [240, 60, 180, 80, 60, 80, 150], 
+				valueKeys: ['station', 'distanceMiles', 'species', 'value', 'sampleYear', 'prepCode', 'sampleType'], 
 				titleFunction: function(query) {
 					var yearMsg;
 					if(query.startYear !== query.endYear) {
@@ -316,86 +320,53 @@ var StationDetails = function(query) {
 		);
 		var hasResult = this.stationData && this.stationData.length > 0;
 		// create headers
-		$("<div></div>").appendTo(contentDiv)
+		var headers = $("<div></div>").appendTo(contentDiv)
 			.addClass('details-table-header-row')
-			.width(width)
-		  .append(
-			$("<div>Species</div>")
-			  .addClass('details-table-header')
-			  .width(this.tabs.data.colWidths[0])
-			  .css('text-align', 'left')
-		  )
-		  .append(
-			$("<div></div>")
-			  .html(this.query.contaminant + ((hasResult) ? " (" + this.stationData[0].units + ")" : ""))
-			  .addClass('details-table-header')
-			  .width(this.tabs.data.colWidths[1])
-		  )
-		  .append(
-			$("<div>Sample Year</div>")
-			  .addClass('details-table-header')
-			  .width(this.tabs.data.colWidths[2])
-		  )
-		  .append(
-			$("<div>Prep Code</div>")
-			  .addClass('details-table-header')
-			  .width(this.tabs.data.colWidths[3])
-		  )
-		  .append(
-			$("<div>Sample Type</div>")
-			  .addClass('details-table-header')
-			  .width(this.tabs.data.colWidths[4])
-		  );
+			.width(width);
+		for(var i = 0; i < this.tabs.data.headers.length; i++) {
+			var title = this.tabs.data.headers[i];
+			if(title.toLowerCase() === "contaminant" && hasResult) {
+				title = this.query.contaminant;
+				if(hasResult) { 
+					title += " (" + this.stationData[0].units + ")"; 
+				}
+			}
+			var cell = $("<div></div>").appendTo(headers)
+				.html(title)
+				.addClass('details-table-header')
+				.width(this.tabs.data.colWidths[i]);
+			if(i === 0) {
+				cell.css('text-align', 'left');
+			}
+		}
 		if(!hasResult) {
 			// if no result, display no data message
-			$("<div>"+this.tabs.data.noDataMsg+"</div>").appendTo(rowHeaders)
+			$("<div>"+this.tabs.data.noDataMsg+"</div>").appendTo(contentDiv)
 				.addClass('details-table-row')
 				.width(width)
 				.css("padding", "10px 5px")
 				.css("margin-bottom", 30);
 		} else {
 			for(var i = 0; i < this.stationData.length; i++) {
-				$("<div></div>").appendTo(contentDiv)
+				var row = $("<div></div>").appendTo(contentDiv)
 					.addClass('details-table-row')
 					.width(width)
-					.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""))
-				  .append(
-					  $("<div></div>")
-						.html(this.stationData[i].species)
+					.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""));
+				for(var c = 0; c < this.tabs.data.valueKeys.length; c++) {
+					var cell = $("<div></div>").appendTo(row)
+						.html(this.stationData[i][this.tabs.data.valueKeys[c]])
 						.addClass('details-table-cell')
-						.width(this.tabs.data.colWidths[0])
-						.css('text-align', 'left')
-				  )
-				  .append(
-					  $("<div></div>")
-						.html(this.stationData[i].value)
-						.addClass('details-table-cell')
-						.addClass("color-value")
-						.width(this.tabs.data.colWidths[1])
-				  )
-				  .append(
-					  $("<div></div>")
-						.html(this.stationData[i].sampleYear)
-						.addClass('details-table-cell')
-						.width(this.tabs.data.colWidths[2])
-				  )
-				  .append(
-					  $("<div></div>")
-						.html(this.stationData[i].prepCode)
-						.addClass('details-table-cell')
-						.width(this.tabs.data.colWidths[3])
-				  )
-				  .append(
-					  $("<div></div>")
-						.html(this.stationData[i].sampleType)
-						.addClass('details-table-cell')
-						.width(this.tabs.data.colWidths[4])
-				  );
+						.width(this.tabs.data.colWidths[c]);
+					if(c === 0) {
+						cell.css('text-align', 'left');
+					}
+					// commented out as this gets kind of hard to see depending on color
+//					if(this.tabs.data.valueKeys[c] === "value") {
+//						// colorize!
+//						cell.style("color", getThresholdColor(parseFloat(cell.html())));
+//					}
+				}
 			}
-			// colorize!
-			contentDiv.find(".color-value").each(function(i, element) {
-				element.style.color = getThresholdColor(parseFloat(element.innerHTML));
-			});
 		}
 		if(this.tabs.data.bottomMsg) {
 			contentDiv.append(
@@ -465,7 +436,7 @@ var StationDetails = function(query) {
 			// add all available species to the list
 			var speciesSelect = contentDiv.find("#details-species-control");
 			for(var i = 0; i < speciesList.length; i++) {
-				speciesSelect.append("<option value=\"" + speciesList[i][0].toLowerCase() + "\">" + speciesList[i][0].capitalize() + "</option>");
+				speciesSelect.append("<option value=\"" + speciesList[i][0] + "\">" + speciesList[i][0] + "</option>");
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
@@ -479,49 +450,28 @@ var StationDetails = function(query) {
 				self.openTabNearby();
 			});
 			// write table headers
-			$("<div></div>").appendTo(contentDiv)
+			var headers = $("<div></div>").appendTo(contentDiv)
 				.addClass('details-table-header-row')
-				.width(width)
-			  .append(
-				  $("<div>Location</div>")
+				.width(width);
+			for(var i = 0; i < this.tabs.nearby.headers.length; i++) {
+				var title = this.tabs.nearby.headers[i];
+				if(title.toLowerCase() === "contaminant" && hasResult) {
+					title = this.query.contaminant;
+					if(hasResult) { 
+						title += " (" + this.stationData[0].units + ")"; 
+					}
+				}
+				var cell = $("<div></div>").appendTo(headers)
+					.html(title)
 					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[0])
-					.css('text-align', 'left')
-			  )
-			  .append(
-				  $("<div>Distance (mi)</div>")
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[1])
-			  )
-			  .append(
-				  $("<div>Species</div>")
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[2])
-			  )
-			  .append(
-				  $("<div></div>")
-					.html(this.query.contaminant + (hasResult ? " ("+this.nearbyData[0].units+")" : ""))
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[3])
-			  )
-			  .append(
-				$("<div>Sample Year</div>")
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[4])
-			  )
-			  .append(
-				  $("<div>Prep Code</div>")
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[5])
-			  )
-			  .append(
-				  $("<div>Sample Type</div>")
-					.addClass('details-table-header')
-					.width(this.tabs.nearby.colWidths[6])
-			  );
+					.width(this.tabs.nearby.colWidths[i]);
+				if(i === 0) {
+					cell.css('text-align', 'left');
+				}
+			}
 			if(!hasResult) {
 				// if no result, display no data message
-				$("<div>"+this.tabs.nearby.noDataMsg+"</div>").appendTo(rowHeaders)
+				$("<div>"+this.tabs.nearby.noDataMsg+"</div>").appendTo(contentDiv)
 					.addClass('details-table-row')
 					.width(width)
 					.css("padding", "10px 5px")
@@ -529,54 +479,41 @@ var StationDetails = function(query) {
 			} else {
 				// loop through rows
 				for(var i = 0; i < this.nearbyData.length; i++) {
-					$("<div></div>").appendTo(contentDiv)
+					var row = $("<div></div>").appendTo(contentDiv)
 						.addClass('details-table-row')
 						.width(width)
-						.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""))
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].station)
+						.css("background-color", ((i%2===0)?" style='background-color:#eee;'":""));
+					for(var c = 0; c < this.tabs.nearby.valueKeys.length; c++) {
+						var cell = $("<div></div>").appendTo(row)
+							.html(this.nearbyData[i][this.tabs.nearby.valueKeys[c]])
 							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[0])
-							.css('text-align', 'left')
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].distanceMiles)
-							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[1])
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].species)
-							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[2])
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].value)
-							.addClass('details-table-cell')
-							.addClass("color-value")
-							.width(this.tabs.nearby.colWidths[3])
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].sampleYear)
-							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[4])
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].prepCode)
-							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[5])
-					  )
-					  .append(
-						  $("<div></div>")
-							.html(this.nearbyData[i].sampleType)
-							.addClass('details-table-cell')
-							.width(this.tabs.nearby.colWidths[6])
-					  );
+							.width(this.tabs.nearby.colWidths[c]);
+						if(c === 0) {
+							cell.css('text-align', 'left');
+						}
+						if(this.tabs.nearby.valueKeys[c] === 'station') {
+							cell.prop('title', "View this station's details")
+								.css('cursor', 'pointer')
+								.mouseover(function() {
+									$(this).css('color', '#003C88');
+								})
+								.mouseout(function() {
+									$(this).css('color', '#000');
+								})
+								.click(function() {
+									var station = getStationByName($(this).html());
+									if(station) {
+										zoomToStation(station);
+										openStationDetails(station);
+									}
+								});
+						}
+						// commented out as this gets kind of hard to see depending on color
+	//					if(this.tabs.nearby.valueKeys[c] === "value") {
+	//						// colorize!
+	//						cell.style("color", getThresholdColor(parseFloat(cell.html())));
+	//					}
+					}
 				}
 				// colorize!
 				contentDiv.find(".color-value").each(function(i, element) {
@@ -608,10 +545,10 @@ var StationDetails = function(query) {
 		}
 		yearMsg += "</b> ";
 		$("<div></div>").appendTo(contentDiv)
-			.css({ margin:"40px 20px", 'text-align':"center" })
+			.css({ margin:"40px 20px", 'text-align':"center", 'font-size': '13px' })
 			.append(
 				"Retrieve all data recorded for <b>" + this.query.contaminant + "</b> contamination " + yearMsg + "<br />" + 
-				"within a distance of: <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
+				"within a distance of <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
 				"<b>" + this.query.station + "</b><br />"
 			)
 			.append(
@@ -626,26 +563,31 @@ var StationDetails = function(query) {
 						'font-weight': "bolder"
 					})
 			);
-		var selectMiles = this.element.find("#report-select-miles");
-		selectMiles.append("<option value=5>5</option>");
-		selectMiles.append("<option value=10>10</option>");
-		selectMiles.append("<option value=15>15</option>");
-		selectMiles.append("<option value=20>20</option>");
-		selectMiles.append("<option value=25>25</option>");
-		selectMiles.val(this.query.radiusMiles);
+		var selectMiles = this.element.find("#report-select-miles")
+			.append("<option value=5>5</option>")
+			.append("<option value=10>10</option>")
+			.append("<option value=15>15</option>")
+			.append("<option value=20>20</option>")
+			.append("<option value=25>25</option>")
+			.append("<option value=30>30</option>")
+			.val(this.query.radiusMiles);
 		if(!selectMiles.val()) { selectMiles.val(10); }
 		
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			self.openLoadingMessage();
 			self.query.radiusMiles = selectMiles.val();
+			self.openLoadingMessage();
 			$.ajax({
 				url: "lib/gatherSummaryReport.php", 
 				data: self.query, 
 				dataType: "json", 
 				success: function(response) {
 					// open new window with data (which will be stored in session)
-					newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950);
+					if(self.reportWindow && !self.reportWindow.closed) {
+						// close and reopen if it already exists (only way to bring into focus with new browsers)
+						self.reportWindow.close();
+					}
+					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950);
 					// reset tab html
 					self.openTabReport();
 				},

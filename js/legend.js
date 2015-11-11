@@ -32,7 +32,7 @@ function legendInit() {
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
-		.style("font-size", 13)
+		.style("font-size", "13px")
 		.text("Lake/Reservoir");
 	// triangle (for coastal/ocean)
 	svg.append("path")
@@ -45,7 +45,7 @@ function legendInit() {
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
-		.style("font-size", 13)
+		.style("font-size", "13px")
 		.text("Coast/Ocean");
 	// diamond (for rivers and misc)
 	svg.append("rect")
@@ -62,7 +62,7 @@ function legendInit() {
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
-		.style("font-size", 13)
+		.style("font-size", "13px")
 		.text("River/Misc.");
 }
 

@@ -10,7 +10,6 @@
 	session_start();
 	$_SESSION['data'] = $result;
 	$_SESSION['query'] = $query;
-	$_SESSION['timestamp'] = time();
 	
 	echo json_encode($result);
 

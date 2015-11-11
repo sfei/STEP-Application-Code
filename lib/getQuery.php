@@ -51,7 +51,7 @@
 	// One final check to ensure we have at least one station. What often happens is there's one data point 
 	// at, say, 2005, another at 2010, so searching for 2007-2008 is technically valid but returns no result.
 	if(count($result['stations']) == 0) {
-		$years = $instance->getDistinctYears($params);
+		$years = $instance->getDistinctYears($query);
 		// find the minimum distance
 		$minDist = array( 'dist'=>9999, 'change'=>'startYear', 'to'=>1900 );
 		forEach($years as $y) {
@@ -68,7 +68,9 @@
 				$minDist['to'] = $y['result'];
 			}
 		}
+		$result['debug'] = $years;
 		// update stations
+		$query[$minDist['change']] = $minDist['to'];
 		$result['stations'] = $instance->getStations($query);
 	}
 	

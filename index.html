@@ -42,10 +42,6 @@
 		<div id="map-container">
 			<!-- the actual OpenLayers map -->
 			<div id="map-view" class="grab" title="Click on location icon for details"></div>
-			<!-- station details dialog -->
-			<div id="station-details-dialog" title="Unknown"></div>
-			<!-- tooltip -->
-			<div id="station-tooltip"></div>
 			<!-- layer/data controls -->
 			<div id="controls-container" style="font-size:14px;">
 				<div id="controls-stage">
@@ -77,11 +73,7 @@
 					</div>
 					<div id="map-controls" class="controls-group">
 						<span style="margin-right:6px;">Base Layer: </span>
-						<select id="base-layer-control" onchange="changeBaseLayer()" style="width:160px;margin-right:45px;">
-							<option value="0">Topographic</option>
-							<option value="1">Oceans</option>
-							<option value="2">Imagery</option>
-						</select>
+						<div id="base-layer-control-container" onchange="changeBaseLayer()" style="display:inline-block;margin-right:45px;"></div>
 						<span style="margin-right:45px;" class="button" onclick="zoomToStationsExtent();">Zoom to All Stations</span>
 						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;"/>
 						<span style="margin-left:0px;">Show Counties Layer</span>
