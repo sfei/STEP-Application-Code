@@ -87,7 +87,7 @@ function init() {
 	mapInit();
 	addCountyLayer();
 	controlsInit();
-	legendInit();
+	legendInit($("#map-view"));
 	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 
@@ -107,8 +107,9 @@ function mapInit(baseMapSelect) {
 			center: ol.proj.fromLonLat([-119, 38]),
 			zoom: 7,
 			minZoom: 6,
-			maxZoom: 13, // past this zoom, many areas of the ESRI Oceans Basemap have no tiles
-			// map bounds
+			// past this zoom, many areas of the ESRI Oceans Basemap have no tiles
+			maxZoom: 13,
+			// map bounds roughly fit to California
 			extent: ol.proj.transformExtent(
 				[-130, 31, -110, 44], 
 				'EPSG:4326',
@@ -117,17 +118,20 @@ function mapInit(baseMapSelect) {
 		})
 	);
 	// grabbing cursor functionality since it's not default to open layers 3
-	$('#map-view')
-		.mousedown(function() {
-			$('#map-view').removeClass("grab").addClass("grabbing");
-		})
-		.mouseup(function() {
-			$('#map-view').removeClass("grabbing").addClass("grab");
-		});
+	addGrabCursorFunctionality($('#map-view'));
 	// initialize tooltip
 	$("<div id='station-tooltip'></div>").appendTo($("#map-view")).hide();
 	// add basemaps
 	addBasemaps(baseMapSelect);
+}
+
+function addGrabCursorFunctionality(element) {
+	element.addClass("grab");
+	element.mousedown(function() {
+		element.removeClass("grab").addClass("grabbing");
+	}).mouseup(function() {
+		element.removeClass("grabbing").addClass("grab");
+	});
 }
 
 //************************************************************************************************************
@@ -227,7 +231,7 @@ function zoomToStation(station) {
 		var coords = station.getGeometry().getCoordinates();
 		var view = map.getView();
 		view.setCenter(coords);
-		view.setZoom(16);
+		view.setZoom(16);	// this will probably be overruled by max-zoom parameter
 	}
 }
 

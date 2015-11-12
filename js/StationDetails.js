@@ -195,8 +195,11 @@ var StationDetails = function(query) {
 				"</div>" + 
 			"</div>"
 		);
+		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
+		// appears only on white space parts, but grabbing appears on anywhere.
 		this.element = $("#details-container");
-		var titleElement = this.element.find("#details-title");
+		var titleElement = this.element.find("#details-title").addClass("grab");
+		var self = this;
 		this.element.hide()
 			.draggable()
 			.mousedown(function(evt) {
@@ -207,7 +210,7 @@ var StationDetails = function(query) {
 				self.element.removeClass("grabbing");
 				titleElement.addClass("grab");
 			});
-		var self = this;
+		// add click event listeners
 		$("#"+this.tabs.data.tabId).on('click', function() { self.openTabData(); });
 		$("#"+this.tabs.trends.tabId).on('click', function() { self.openTabTrends(); });
 		$("#"+this.tabs.nearby.tabId).on('click', function() { self.openTabNearby(); });
@@ -215,14 +218,17 @@ var StationDetails = function(query) {
 	};
 	
 	this.setTitle = function() {
+		// station name
 		this.element.find("#details-title").html(
 			"<div id='details-station-name'>" + this.query.station + "</div>" + 
 			"<div id='details-dialog-close' class='button'>X</div>"
 		);
+		// close button
 		var self = this;
 		this.element.find("#details-dialog-close").click(function() {
 			self.element.hide();
 		});
+		// advisory link
 		var advisoryName;
 		var advisoryUrl = this.station.get("advisoryUrl");
 		if(!advisoryUrl) {
@@ -244,7 +250,8 @@ var StationDetails = function(query) {
 					advisoryName + 
 				"</a>"
 		));
-		if(this.station.get("waterType") === "coast") {
+		// link for tidal datum if coastal type
+		if(this.station.get("waterType").search(/coast/i) >= 0) {
 			var coords = ol.proj.toLonLat(this.station.getGeometry().getCoordinates());
 			listLinks.append(
 				$("<li></li>").html(
@@ -281,10 +288,9 @@ var StationDetails = function(query) {
 		}
 	};
 	
-	// getting divs to fit content across all browsers is a pain so just do it manually
+	// getting divs to fit content across all browsers via css is a pain so just do it manually
 	this.adjustContainerDimensions = function(width, height) {
 		var dialogDiv = this.element.find("#details-dialog");
-		
 		if(!width || width <= 0) { 
 			width = dialogDiv.width();
 		} else {
@@ -293,7 +299,6 @@ var StationDetails = function(query) {
 			width += 2*this.contentPadding + 2;	// plus 2 from the border
 		}
 		this.element.width(width);
-		
 		if(!height || height <= 0) { 
 			height = dialogDiv.height();
 			height += 2*this.contentPadding;
@@ -311,6 +316,7 @@ var StationDetails = function(query) {
 		} else {
 			yearMsg = "in " + this.query.startYear;
 		}
+		// title
 		var contentDiv = this.element.find("#details-content");
 		var width = this.tabs.data.tableWidth;
 		contentDiv.html(
@@ -318,11 +324,11 @@ var StationDetails = function(query) {
 				this.tabs.data.titleFunction(this.query) + 
 			"</div>"
 		);
-		var hasResult = this.stationData && this.stationData.length > 0;
-		// create headers
+		// create table headers
 		var headers = $("<div></div>").appendTo(contentDiv)
 			.addClass('details-table-header-row')
 			.width(width);
+		var hasResult = this.stationData && this.stationData.length > 0;
 		for(var i = 0; i < this.tabs.data.headers.length; i++) {
 			var title = this.tabs.data.headers[i];
 			if(title.toLowerCase() === "contaminant" && hasResult) {
@@ -347,6 +353,7 @@ var StationDetails = function(query) {
 				.css("padding", "10px 5px")
 				.css("margin-bottom", 30);
 		} else {
+			// otherwise add rows to table
 			for(var i = 0; i < this.stationData.length; i++) {
 				var row = $("<div></div>").appendTo(contentDiv)
 					.addClass('details-table-row')
@@ -368,16 +375,19 @@ var StationDetails = function(query) {
 				}
 			}
 		}
+		// final little bottom note
 		if(this.tabs.data.bottomMsg) {
 			contentDiv.append(
 				"<div style='width:" + width + "px;" + this.style.bottomMsg + "'>" + this.tabs.data.bottomMsg + "</div>"
 			);
 		}
+		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.data);
 		this.adjustContainerDimensions(this.tabs.data.tableWidth);
 	};	
 	
 	this.openTabTrends = function() {
+		// title
 		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
 			"<div style='width:" + (this.tabs.trends.chartWidth - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
@@ -385,7 +395,7 @@ var StationDetails = function(query) {
 			"</div>"
 		);
 		if(this.stationData && this.stationData.length > 0) {
-			// not used but it returns the svg object (already added to container)
+			// not used but it returns the svg object (already added to container via the options)
 			var svg = Scatterplot.create({
 				container: "details-content",
 				data: this.stationData, 
@@ -400,6 +410,7 @@ var StationDetails = function(query) {
 		} else {
 			contentDiv.append(this.tabs.trends.noDataMsg);
 		}
+		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.trends);
 		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
@@ -515,10 +526,7 @@ var StationDetails = function(query) {
 	//					}
 					}
 				}
-				// colorize!
-				contentDiv.find(".color-value").each(function(i, element) {
-					element.style.color = getThresholdColor(parseFloat(element.innerHTML));
-				});
+				// bottom message/note
 				if(this.tabs.nearby.bottomMsg) {
 					contentDiv.append(
 						"<div style='width:" + width + "px;" + this.style.bottomMsg + "'>" + this.tabs.nearby.bottomMsg + "</div>"
@@ -526,43 +534,88 @@ var StationDetails = function(query) {
 				}
 			}
 		}
+		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.nearby);
 		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
-	this.openTabReport = function() {
+	this.openTabReport = function(reportQuery) {
+		// use last report query (which must be stored separately as it can adjust years)
+		if(!reportQuery) {
+			reportQuery = this.copyQuery(this.query);
+		}
+		// title
 		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
 			"<div style='width:" + (this.tabs.report.width - this.titleDivPadLeft) + "px;" + this.style.titleDiv + this.style.title + "'>" + 
-				this.tabs.report.titleFunction(this.query) + 
+				this.tabs.report.titleFunction(reportQuery) + 
 			"</div>"
 		);
-		var yearMsg = "";
-		if(this.query.startYear === this.query.endYear) {
-			yearMsg = "in <b>" + this.query.startYear;
-		} else {
-			yearMsg = "between <b>" + this.query.startYear + "-" + this.query.endYear;
-		}
-		yearMsg += "</b> ";
+		// create inner content
 		$("<div></div>").appendTo(contentDiv)
-			.css({ margin:"40px 20px", 'text-align':"center", 'font-size': '13px' })
+			.css({ margin:"30px 20px", 'text-align':"center", 'font-size': '14px' })
+			// Top message
 			.append(
-				"Retrieve all data recorded for <b>" + this.query.contaminant + "</b> contamination " + yearMsg + "<br />" + 
-				"within a distance of <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
-				"<b>" + this.query.station + "</b><br />"
+				"Retrieve all data recorded for <b>" + reportQuery.contaminant + "</b> contamination between:"
 			)
+			// Year select
+			.append(
+				$("<div id='select-year-range-container'></div>")
+					.css({
+						'display': 'block', 
+						'clear': 'both', 
+						'margin': "8px 0px",
+						'text-align': 'center'
+					})
+					.append(
+						"<div id='select-year-range-start' style='display:inline-block;font-weight:bolder;'>" + reportQuery.startYear + "</div>" + 
+						"<div id='select-year-range' style='display:inline-block;width:300px;margin:0px 20px;'></div>" +
+						"<div id='select-year-range-end' style='display:inline-block;font-weight:bolder;'>" + reportQuery.endYear + "</div>"
+					)
+			)
+			// Miles select
+			.append(
+				"Within a distance of <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
+				"<b>" + reportQuery.station + "</b><br />"
+			)
+			// Submit button
 			.append(
 				$("<div id='create-report'>Generate Report</div>")
 					.addClass('button')
 					.css({
 						width: 180,
 						height: 30, 
-						margin: "15px auto", 
+						margin: "25px auto", 
 						'line-height': "30px",
 						'text-align': "center", 
 						'font-weight': "bolder"
 					})
 			);
+		// get all years for query
+		var yearSlider;
+		$.ajax({
+			url: "lib/getAvailableYearSpan.php", 
+			data: { contaminant: reportQuery.contaminant, species: "highest"}, 
+			dataType: 'json', 
+			success: function(data) {
+				// create range slider
+				yearSlider = noUiSlider.create(document.getElementById('select-year-range'), {
+					start: [reportQuery.startYear, reportQuery.endYear],
+					step: 1, 
+					connect: true, 
+					range: { 'min': data.min, 'max': data.max }
+				});
+				// bind values to display
+				var display = [
+					document.getElementById("select-year-range-start"), 
+					document.getElementById("select-year-range-end")
+				];
+				yearSlider.on('update', function(values, handle) {
+					display[handle].innerHTML = parseInt(values[handle]);
+				});
+			}
+		});
+		// append select options
 		var selectMiles = this.element.find("#report-select-miles")
 			.append("<option value=5>5</option>")
 			.append("<option value=10>10</option>")
@@ -570,32 +623,39 @@ var StationDetails = function(query) {
 			.append("<option value=20>20</option>")
 			.append("<option value=25>25</option>")
 			.append("<option value=30>30</option>")
-			.val(this.query.radiusMiles);
+			.val(reportQuery.radiusMiles);
 		if(!selectMiles.val()) { selectMiles.val(10); }
-		
+		// add click functionality
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			self.query.radiusMiles = selectMiles.val();
+			// grab parameters from options
+			reportQuery.radiusMiles = selectMiles.val();
+			var yearRange = yearSlider.get();
+			reportQuery.startYear = parseInt(yearRange[0]);
+			reportQuery.endYear = parseInt(yearRange[1]);
+			// open loading message after getting parameters
 			self.openLoadingMessage();
+			// ajax call to gather data (held in session until ready)
 			$.ajax({
 				url: "lib/gatherSummaryReport.php", 
-				data: self.query, 
+				data: reportQuery, 
 				dataType: "json", 
 				success: function(response) {
-					// open new window with data (which will be stored in session)
 					if(self.reportWindow && !self.reportWindow.closed) {
-						// close and reopen if it already exists (only way to bring into focus with new browsers)
+						// close if it already exists (reopening is only way to bring into focus with new browsers)
 						self.reportWindow.close();
 					}
+					// open new window with data (which will be stored in session)
 					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950);
-					// reset tab html
-					self.openTabReport();
+					// reset tab html but carry over the last report query
+					self.openTabReport(reportQuery);
 				},
 				error: function(e) {
 					contentDiv.html(defaultErrorMessage + "(Report Query Error)");
 				}
 			});
 		});
+		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.report);
 		this.adjustContainerDimensions(this.tabs.report.width);
 	};

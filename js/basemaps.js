@@ -1,5 +1,5 @@
 // array of loaded baselayers (stored this way for base layers switching)
-var baseLayerArray = [
+var baseLayers = [
 	{
 		name: "Streets and Topographic", 
 		layer: new ol.layer.Tile({
@@ -33,54 +33,45 @@ var baseLayerArray = [
 		})
 	}
 ];
+var baseLayersGroup;
 
 function addBasemapControl(container, style) {
 	var basemapControl = $("<select id='base-layer-control'></select>");
 	if(style) { basemapControl.css(style); }
-	for(var i = 0; i < baseLayerArray.length; i++) {
+	for(var i = 0; i < baseLayers.length; i++) {
 		basemapControl.append(
-			$("<option></option>").attr('value', i).text(baseLayerArray[i].name)
+			$("<option></option>").attr('value', i).text(baseLayers[i].name)
 		);
 	}
 	basemapControl.appendTo(container);
-	basemapControl.on('change', function() { changeBaseLayer(basemapControl.val()); });
+	basemapControl.on('change', function() { changeBasemap(basemapControl.val()); });
 }
 
 function addBasemaps(baseMapSelect) {
-	// first convert to regular array
-	var baseLayers = [];
-	for(var i = 0; i < baseLayerArray.length; i++) {
-		baseLayers.push(baseLayerArray[i].layer);
+	// first convert to regular array and create a layer group
+	var baseLayersArray = [];
+	for(var i = 0; i < baseLayers.length; i++) {
+		baseLayersArray.push(baseLayers[i].layer);
 	}
-	var baseLayerGroup = new ol.layer.Group({
-		layers: baseLayers
+	baseLayersGroup = new ol.layer.Group({
+		layers: baseLayersArray
 	});
 	// select the basemap in controls and hide all but the initial selected basemap
-	if(!baseMapSelect || typeof baseMapSelect !== 'number' || baseMapSelect < 0) {
-		baseMapSelect = 0;
-	} else if(baseMapSelect > baseLayerArray.length-1) {
-		baseMapSelect = baseLayerArray.length-1;
-	}
-	var baseLayers = baseLayerGroup.get("layers");
-	for(var i = 0; i < baseLayerArray.length; i++) {
-		baseLayers.item(i).setVisible(i==baseMapSelect);
-	}
-	$("#base-layer-control").val(baseMapSelect);
+	changeBasemap(baseMapSelect);
 	// add to map
-	baseLayerGroup.setZIndex(0);
-	map.setLayerGroup(baseLayerGroup);
+	baseLayersGroup.setZIndex(0);
+	map.setLayerGroup(baseLayersGroup);
 }
 
 /** Base layers are changed just by comparing to the given index in the base layer group
- * @param {Number} baseLayerIndex */
-function changeBaseLayer(baseLayerIndex) {
-	if(baseLayerIndex === undefined || baseLayerIndex === null) {
-		baseLayerIndex = parseInt($("#base-layer-control").val());
+ * @param {Number} layerIndex */
+function changeBasemap(layerIndex) {
+	layerIndex = parseInt(layerIndex);
+	if(!layerIndex || layerIndex < 0 || layerIndex >= baseLayers.length) { 
+		layerIndex = 0; 
 	}
-	if(baseLayerIndex < 0 || baseLayerIndex >= baseLayerArray.length) { 
-		baseLayerIndex = 0; 
+	for(var i = 0; i < baseLayers.length; i++) {
+		baseLayers[i].layer.setVisible(layerIndex === i);
 	}
-	for(var i = 0; i < baseLayerArray.length; i++) {
-		baseLayerArray[i].layer.setVisible(baseLayerIndex === i);
-	}
+	$("#base-layer-control").val(layerIndex);
 }

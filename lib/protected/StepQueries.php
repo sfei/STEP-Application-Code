@@ -33,7 +33,7 @@
 			$startYear = $endYear;
 		}
 		
-		$isASpecies = $species && $species != 'highest' && $species != 'lowest';
+		$isASpecies = $species && strtolower($species) != 'highest' && strtolower($species) != 'lowest';
 		
 		// escape any single quotes for sql query (which is two single-quotes)
 		$station = str_replace("'", "''", $station);

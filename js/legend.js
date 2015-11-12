@@ -1,17 +1,22 @@
 
+// array of threshold values on which legend fit to
 var thresholds;
 
-function legendInit() {
-	// set draggable and cursor functionality
-	var legend = $("#legend-container").draggable({containment: "parent"});
-	legend.mouseup(function(evt) {
-			legend.switchClass("grabbing", "grab");
-		})
-		.mousedown(function(evt) {
-			legend.switchClass("grab", "grabbing");
-		});	
+function legendInit(container) {
+	var legend = $("<div id='legend-container'>").appendTo(container)
+		.draggable({containment: "parent"});
+	$("<div id='legend-content'></div>").appendTo(legend)
+		.append("<div id='legend-table'></div>")
+		.append("<div id='legend-symbols'><hr/></div>");
+	// dragging cursors
+	addGrabCursorFunctionality(legend);
+	// create the water type symbology
+	createWaterTypeLegend();
 	// hide on init, show after thresholds loaded
 	legend.hide();
+}
+	
+function createWaterTypeLegend() {
 	// create svg shapes legend
 	var svg = d3.select("#legend-symbols")
 	  .append("svg")
@@ -66,9 +71,6 @@ function legendInit() {
 		.text("River/Misc.");
 }
 
-//************************************************************************************************************
-// Legend and marker style functions (part of them, core of is is in marketFactory.js)
-//************************************************************************************************************
 function updateThresholds(data, validate) {
 	thresholds = data;
 	// while it should be encoded properly, ensure proper type conversion
