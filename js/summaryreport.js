@@ -129,7 +129,7 @@ function init2() {
 				table.append(html);
 			}
 		} else {
-			table.append("<div class='table-row' style='font-size:12px;padding-left:8px;height:30px;line-height:30px;'>No records for the selected parameters at this station.</div>");
+			table.append("<div class='table-row' style='font-size:12px;padding-left:8px;height:30px;line-height:30px;background-color:#eee;'>No records for the selected parameters at this station.</div>");
 		}
 	}
 	

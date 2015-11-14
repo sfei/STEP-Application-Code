@@ -24,6 +24,13 @@ function newWindow(e, url, name, width, height) {
 	}
 }
 
+jQuery.fn.center = function() {
+    this.css("position","absolute");
+    this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +  $(window).scrollTop()) + "px");
+    this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
+    return this;
+};
+
 //************************************************************************************************************
 // Variables
 //************************************************************************************************************
@@ -31,8 +38,9 @@ var defaultErrorMessage = "This site is experiencing some technical difficulties
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857', 	// web mercator wgs84
 	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
-var stations,						// stations data as ol.Collection instance
-	stationLayer, 
+var stationsData,					// raw stations data as array of GeoJSON
+	stations,						// stations data as ol.Collection instance
+	stationLayer,					// layer object
 	stationInteraction;				// hover interactions stored globally so it can be removed/reapplied
 var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
 									// cached for performance
@@ -140,11 +148,6 @@ function addGrabCursorFunctionality(element) {
 /** (Re)load stations layers onto the map
  * @param {Array} data Array of the query results */
 function loadStationsLayer(data) {
-	// remove existing (if applicable)
-	if(stationLayer !== null) {
-		map.removeLayer(stationLayer);
-		map.removeInteraction(stationInteraction);
-	}
 	// create array of ol.Features from data (since it's not technically geographic)
 	var featArray = new Array();
 	for(var i = 0; i < data.length; i++) {
@@ -163,6 +166,13 @@ function loadStationsLayer(data) {
 				advisoryUrl: data[i].advisoryUrl
 			})
 		);
+	}
+	// update stations data
+	stationsData = data;
+	// remove existing (if applicable)
+	if(stationLayer !== null) {
+		map.removeLayer(stationLayer);
+		map.removeInteraction(stationInteraction);
 	}
 	stations = new ol.Collection(featArray);
 	// load and add features
@@ -204,6 +214,12 @@ function loadStationsLayer(data) {
 		});
 		map.addInteraction(stationInteraction);
 	}
+}
+
+function refreshStations() {
+	// hopefully this updates in OL3 soon, right now only way is to force refreshing by deleting/recreating
+	loadStationsLayer(stationsData);
+	// note for later, a more direct solution you still need to remember to clear 'mfStyle' cache in feature
 }
 
 function openStationDetails(feature) {

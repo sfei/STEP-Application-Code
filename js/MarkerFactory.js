@@ -52,10 +52,16 @@ var MarkerFactory = function(options) {
 		if(options.colorMap && options.colorMap.length > 1) {
 			var valid = true;
 			for(var i = 0; i < options.colorMap.length; i++) {
-				valid = options.colorMap[i].length === 3;
-				valid = valid && (options.colorMap[i][0] === parseInt(options.colorMap[i][0])) && options.colorMap[i][0] >= 0;
-				valid = valid && (options.colorMap[i][1] === parseInt(options.colorMap[i][1])) && options.colorMap[i][0] >= 0;
-				valid = valid && (options.colorMap[i][2] === parseInt(options.colorMap[i][2])) && options.colorMap[i][0] >= 0;
+				if(Array.isArray(options.colorMap)) {
+					valid = options.colorMap[i].length === 3;
+					// check valid values (doesn't check max value but that'll be capped anyways)
+					valid = valid && (options.colorMap[i][0] === parseInt(options.colorMap[i][0])) && options.colorMap[i][0] >= 0;
+					valid = valid && (options.colorMap[i][1] === parseInt(options.colorMap[i][1])) && options.colorMap[i][0] >= 0;
+					valid = valid && (options.colorMap[i][2] === parseInt(options.colorMap[i][2])) && options.colorMap[i][0] >= 0;
+				} else {
+					// check valid hex
+					valid = /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(colorMap[i]);
+				}
 				if(!valid) { break; }
 			}
 			if(valid) {
@@ -86,7 +92,9 @@ var MarkerFactory = function(options) {
 					new ol.style.Fill({ color: this.hexMap[i] })
 				);
 			}
+			return true;
 		}
+		return false;
 	};
 
 	this.createShape = function(shape, fill, thestroke) {

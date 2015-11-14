@@ -243,7 +243,6 @@ var StationDetails = function(query) {
 			advisoryName = "View <b>Specific Safe Eating Guidelines</b> for this water body";
 		}
 		var listLinks = $("<ul></ul>");
-		var advisoryUrl = this.station.get("advisoryUrl");
 		listLinks.append(
 			$("<li></li>").html(
 				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + 
@@ -267,7 +266,9 @@ var StationDetails = function(query) {
 	
 	this.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
-			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>Loading data...</div>"
+			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>" +
+				"<img src='images/ajax-loader.gif' alt='loading' /> Loading data..." + 
+			"</div>"
 		);
 	};
 	
@@ -598,21 +599,27 @@ var StationDetails = function(query) {
 			data: { contaminant: reportQuery.contaminant, species: "highest"}, 
 			dataType: 'json', 
 			success: function(data) {
-				// create range slider
-				yearSlider = noUiSlider.create(document.getElementById('select-year-range'), {
-					start: [reportQuery.startYear, reportQuery.endYear],
-					step: 1, 
-					connect: true, 
-					range: { 'min': data.min, 'max': data.max }
-				});
-				// bind values to display
-				var display = [
-					document.getElementById("select-year-range-start"), 
-					document.getElementById("select-year-range-end")
-				];
-				yearSlider.on('update', function(values, handle) {
-					display[handle].innerHTML = parseInt(values[handle]);
-				});
+				// slider fails if start and end year are the same
+				if(data.min !== data.max) {
+					// create range slider
+					yearSlider = noUiSlider.create(document.getElementById('select-year-range'), {
+						start: [reportQuery.startYear, reportQuery.endYear],
+						step: 1, 
+						connect: true, 
+						range: { 'min': data.min, 'max': data.max }
+					});
+					// bind values to display
+					var display = [
+						document.getElementById("select-year-range-start"), 
+						document.getElementById("select-year-range-end")
+					];
+					yearSlider.on('update', function(values, handle) {
+						display[handle].innerHTML = parseInt(values[handle]);
+					});
+				} else {
+					// if a single year, just remove that part of the options
+					$("#select-year-range-container").html("Data only available for year <b>" + data.min + "</b>");
+				}
 			}
 		});
 		// append select options
@@ -630,9 +637,12 @@ var StationDetails = function(query) {
 		contentDiv.find("#create-report").on("click", function() { 
 			// grab parameters from options
 			reportQuery.radiusMiles = selectMiles.val();
-			var yearRange = yearSlider.get();
-			reportQuery.startYear = parseInt(yearRange[0]);
-			reportQuery.endYear = parseInt(yearRange[1]);
+			if(yearSlider) {
+				// if no slider, leave as default query, which should've already been adjusted for years available
+				var yearRange = yearSlider.get();
+				reportQuery.startYear = parseInt(yearRange[0]);
+				reportQuery.endYear = parseInt(yearRange[1]);
+			}
 			// open loading message after getting parameters
 			self.openLoadingMessage();
 			// ajax call to gather data (held in session until ready)
