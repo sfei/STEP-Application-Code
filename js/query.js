@@ -105,6 +105,8 @@ function controlsActivate() {
 			  .end().trigger('chosen:updated');
 		})
 		.trigger('chosen:updated');
+	// download query
+	$("#download-query").click(function() { downloadQueryData(); });
 }
 
 function setActiveControlTab() {
@@ -178,6 +180,7 @@ function updateQuery(options) {
 	$("#end-year-control").prop('disabled', true);
 	
 	$.ajax({
+		async: !options.firstRun,
 		url: "lib/getQuery.php", 
 		data: options.query, 
 		dataType: "json", 
@@ -190,16 +193,6 @@ function updateQuery(options) {
 			updateThresholds(data.thresholds);
 			// update stations to match query
 			loadStationsLayer(data.stations);
-			if(options.firstRun) {
-				// click interaction 
-				// (adding this way instead of oi.interaction object means we only need to do once)
-				$(map.getViewport()).on('click', function(evt) {
-					var pixel = map.getEventPixel(evt.originalEvent);
-					map.forEachFeatureAtPixel(pixel, function(feature) {
-						return openStationDetails(feature);
-					});
-				});
-			}
 			// change inputs options down hierarchy as necessary depending on what select fired the query
 			if(options.firedBy === 'species') {
 				updateContaminantsSelect(data.contaminants);
@@ -234,6 +227,10 @@ function updateQuery(options) {
 			$("#station-select").trigger("chosen:updated");
 		}
 	});
+}
+
+function downloadQueryData() {
+	
 }
 
 //************************************************************************************************************

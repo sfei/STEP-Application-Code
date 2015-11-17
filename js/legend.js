@@ -111,10 +111,14 @@ function updateThresholds(data, validate) {
 				// ensure ascending order
 				return a.value - b.value;
 			});
-		// remove any comments
+		// remove any comments if the threshold was changed
 		for(var i = 0; i < data.length; i++) {
 			data[i].units = thresholds[0].units;
-			data[i].comments = "User-Defined Threshold";
+			if(data[i].value !== thresholds[i].value) {
+				data[i].comments = "User-Defined Threshold";
+			} else {
+				data[i].comments = thresholds[i].comments;
+			}
 		}
 	}
 	thresholds = data;

@@ -52,25 +52,38 @@
 	// at, say, 2005, another at 2010, so searching for 2007-2008 is technically valid but returns no result.
 	if(count($result['stations']) == 0) {
 		$years = $instance->getDistinctYears($query);
-		// find the minimum distance
-		$minDist = array( 'dist'=>9999, 'change'=>'startYear', 'to'=>1900 );
-		forEach($years as $y) {
-			$dist = abs($query['startYear'] - $y['result']);
-			if($dist < $minDist['dist']) {
-				$minDist['dist'] = $dist;
-				$minDist['change'] = 'startYear';
-				$minDist['to'] = $y['result'];
+		// if there's only a single distinct year, that's easy enough
+		if($years.length == 1) {
+			$query['startYear'] = $query['endYear'] = $years[0]['result'];
+		} else {
+			// find the minimum distance
+			$minDist = array( 'dist'=>9999, 'change'=>'startYear', 'to'=>1900 );
+			forEach($years as $y) {
+				$dist = abs($query['startYear'] - $y['result']);
+				if($dist < $minDist['dist']) {
+					$minDist['dist'] = $dist;
+					$minDist['change'] = 'startYear';
+					$minDist['to'] = $y['result'];
+				}
+				$dist = abs($query['endYear'] - $y['result']);
+				if($dist < $minDist['dist']) {
+					$minDist['dist'] = $dist;
+					$minDist['change'] = 'endYear';
+					$minDist['to'] = $y['result'];
+				}
 			}
-			$dist = abs($query['endYear'] - $y['result']);
-			if($dist < $minDist['dist']) {
-				$minDist['dist'] = $dist;
-				$minDist['change'] = 'endYear';
-				$minDist['to'] = $y['result'];
+			// update years
+			$query[$minDist['change']] = $minDist['to'];
+			// there may result an odd case where start year is changed past end year (start year and end year
+			// were same, next year is after them, for example, and defaults to change startYear on tie)
+			if($query['startYear'] > $query['endYear']) {
+				$tmpYear = $query['startYear'];
+				$query['startYear'] = $query['endYear'];
+				$query['endYear'] = $tmpYear;
 			}
 		}
 		$result['debug'] = $years;
 		// update stations
-		$query[$minDist['change']] = $minDist['to'];
 		$result['stations'] = $instance->getStations($query);
 	}
 	

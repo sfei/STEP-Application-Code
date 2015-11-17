@@ -656,7 +656,7 @@ var StationDetails = function(query) {
 						self.reportWindow.close();
 					}
 					// open new window with data (which will be stored in session)
-					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950);
+					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
 					// reset tab html but carry over the last report query
 					self.openTabReport(reportQuery);
 				},

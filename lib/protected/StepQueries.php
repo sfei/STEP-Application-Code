@@ -467,4 +467,32 @@
 			return $stations;
 		}
 		
+		public function getAllRecords($params) {
+			if($params["species"] == "highest" || $params["species"] == "lowest") {
+				$params["species"] = "all";
+			}
+			$queryString = "EXEC [dbo].[P_STEP_Download] "
+				. "@param=N'" . $params["contaminant"] . "', "
+				. "@species='" . $params["species"] . "', "
+				. "@startyr=" . $params["startYear"] . ", "
+				. "@endyr=" . $params["endYear"];
+			$query = StepQueries::$dbconn->prepare($queryString);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			return $query->fetchAll();
+		}
+		
+		public function getMarineProtectedAreas() {
+			$query = StepQueries::$dbconn->prepare(
+				"SELECT [FULLNAME],[SHORTNAME],[Type],[DFG_URL],[geom].ToString() as geom FROM [dbo].[CA_MPA]"
+			);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			return $query->fetchAll();
+		}
+		
 	}

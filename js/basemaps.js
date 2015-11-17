@@ -11,7 +11,7 @@ var baseLayers = [
 			})})
 	}, 
 	{
-		name: "Natural Colors", 
+		name: "Landscape and Bathymetry", 
 		layer: new ol.layer.Tile({
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/arcgis/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}", 
@@ -22,7 +22,7 @@ var baseLayers = [
 		})
 	}, 
 	{
-		name: "Imagery", 
+		name: "Aerial/Satellite Imagery", 
 		layer: new ol.layer.Tile({
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 

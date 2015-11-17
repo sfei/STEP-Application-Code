@@ -6,7 +6,7 @@ String.prototype.capitalize = function() {
     return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
 
-function newWindow(e, url, name, width, height) {
+function newWindow(e, url, name, width, height, minimal) {
 	if(!e) e = window.event;
 	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
 		// center pop up, from http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
@@ -17,10 +17,20 @@ function newWindow(e, url, name, width, height) {
 		var winHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
 		var left = ((winWidth / 2) - (width / 2)) + dualScreenLeft;
 		var top = ((winHeight / 2) - (height / 2)) + dualScreenTop;
-		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top + ", scrollbars=yes, menubar=no, statusbar=no, location=no";
-		var popup = window.open(url, '', options);
-		if(popup) { popup.focus(); }
-		return popup;
+		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top;
+		if(minimal) {
+			options += ", scrollbars=yes, menubar=no, statusbar=no, location=no";
+		} else {
+			options += ", scrollbars=yes, menubar=yes, statusbar=yes, location=yes";
+		}
+		var newWin = window.open(url, '', options);
+		if(!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+			alert("Could not open new window, to view " + name + " allow an exception in your pop-up blocking settings.");
+			return null;
+		} else {
+			if(newWin) { newWin.focus(); }
+			return newWin;
+		}
 	}
 }
 
@@ -40,14 +50,17 @@ var map,							// openlayers map object
 	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
 var stationsData,					// raw stations data as array of GeoJSON
 	stations,						// stations data as ol.Collection instance
-	stationLayer,					// layer object
-	stationInteraction;				// hover interactions stored globally so it can be removed/reapplied
+	stationLayer;					// layer object
 var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
 									// cached for performance
 var countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
 	countyNames = [];				// list of county names (for search drop-down)
 var stationDetails = null;			// this object handles the pop-up details
+var mpaUrl = "data/mpa_ca.geojson", //"lib/getMPAsAsGeoJSON.php", 
+	mpaLayer,						// marine protected areas
+	mpaStyles;						// array of normal and hover style
+var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
 
 //************************************************************************************************************
 // Pre-init functions
@@ -94,13 +107,15 @@ function init() {
 	// init functions
 	mapInit();
 	addCountyLayer();
+	addMPALayer();
 	controlsInit();
 	legendInit($("#map-view"));
 	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 
-		firstRun: true	// special option, this will add the click-interaction to features (so just done once)
+		firstRun: true	// special option, basically disabled async
 	});
+	addClickInteractions();
 	controlsActivate();
 	// Technically we can release this variable for garbage collection as once the select dropdown is 
 	// populated, it never changes. It was only global to easily pass between scripts
@@ -142,6 +157,65 @@ function addGrabCursorFunctionality(element) {
 	});
 }
 
+function addHoverInteractions() {
+	hoverInteraction = new ol.interaction.Select({
+		condition: ol.events.condition.pointerMove, 
+		layers: [stationLayer, mpaLayer], 
+		style: function(feature) {
+			var type = feature.get('featType');
+			if(type === 'station') {
+				return markerFactory.createHighlightStyle(feature);
+			} else if(type === 'mpa') {
+				return [mpaStyles[1]];
+			}
+		}
+	});
+	// hover tooltip
+	hoverInteraction.on("select", function(evt) {
+		var features = evt.selected;
+		if(features[0]) {
+			$("#map-view").css("cursor", "pointer");
+			var name = 'unidentified';
+			var type = features[0].get('featType');
+			if(type === 'station') {
+				name = features[0].get('name');
+			} else if(type === 'mpa') {
+				name = features[0].get('NAME');
+			}
+			$("#station-tooltip").html(name)
+			  .css({
+				top: evt.mapBrowserEvent.pixel[1]-10,
+				left: evt.mapBrowserEvent.pixel[0]+15
+			  }).show();
+		} else {
+			$("#map-view").css("cursor", "");
+			$("#station-tooltip").hide();
+		}
+	});
+	map.addInteraction(hoverInteraction);
+}
+
+function addClickInteractions() {
+	$(map.getViewport()).on('click', function(evt) {
+		var pixel = map.getEventPixel(evt.originalEvent);
+		map.forEachFeatureAtPixel(
+			pixel, 
+			function(feature, layer) { 
+				// for some reason, checking by layer is buggy (often null, even for valid feature), so check
+				// by property
+				var type = feature.get('featType');
+				if(type === 'station') {
+					openStationDetails(feature); 
+					return true;
+				} else if(type === 'mpa') {
+					newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
+					return true;
+				}
+			}
+		);
+	});
+}
+
 //************************************************************************************************************
 // Station layer functionalities
 //************************************************************************************************************
@@ -163,7 +237,8 @@ function loadStationsLayer(data) {
 				waterType: data[i].waterType, 
 				value: data[i].value, 
 				advisoryName: data[i].advisoryName, 
-				advisoryUrl: data[i].advisoryUrl
+				advisoryUrl: data[i].advisoryUrl, 
+				featType: 'station'
 			})
 		);
 	}
@@ -172,7 +247,7 @@ function loadStationsLayer(data) {
 	// remove existing (if applicable)
 	if(stationLayer !== null) {
 		map.removeLayer(stationLayer);
-		map.removeInteraction(stationInteraction);
+		map.removeInteraction(hoverInteraction);
 	}
 	stations = new ol.Collection(featArray);
 	// load and add features
@@ -189,30 +264,7 @@ function loadStationsLayer(data) {
 	map.addLayer(stationLayer);
 	// hover interaction
 	if(enableHoverInteractions || featArray.length < 200) {
-		stationInteraction = new ol.interaction.Select({
-			condition: ol.events.condition.pointerMove, 
-			layers: [stationLayer], 
-			// hover highlight feature
-			style: function(feature) {
-				return markerFactory.createHighlightStyle(feature);
-			}
-		});
-		// hover tooltip
-		stationInteraction.on("select", function(evt) {
-			var features = evt.selected;
-			if(features[0]) {
-				$("#map-view").css("cursor", "pointer");
-				$("#station-tooltip").html(features[0].get("name"))
-				  .css({
-					top: evt.mapBrowserEvent.pixel[1]-10,
-					left: evt.mapBrowserEvent.pixel[0]+15
-				  }).show();
-			} else {
-				$("#map-view").css("cursor", "");
-				$("#station-tooltip").hide();
-			}
-		});
-		map.addInteraction(stationInteraction);
+		addHoverInteractions();
 	}
 }
 
@@ -231,8 +283,6 @@ function openStationDetails(feature) {
 		stationDetails = new StationDetails(options);
 	}
 	stationDetails.open(options);
-	// return true to break out of forEachFeature function in which this is called
-	return true;
 }
 
 function zoomToStationsExtent() {
@@ -265,7 +315,7 @@ function getStationByName(stationName) {
 }
 
 //************************************************************************************************************
-// County layer functionalities
+// County and MPA layer functionalities
 //************************************************************************************************************
 function addCountyLayer() {
 	// Done this way due to async nature of OL3 loading and how it doesn't load until set visible (since layer
@@ -323,4 +373,50 @@ function zoomToCountyByName(countyName) {
 		}
 		map.getView().fit(selected.getGeometry().getExtent(), map.getSize());
 	}
+}
+
+function addMPALayer() {
+	$.ajax({
+		async: false, // async must be false as hover interaction must be applied after this is loaded
+		dataType: "json", 
+		url: mpaUrl, 
+		success: function(json) {
+			mpaStyles = [
+				new ol.style.Style({
+					fill: new ol.style.Fill({
+						color: [255, 255, 0, 0.5]
+					}), 
+					stroke: new ol.style.Stroke({
+						color: '#aaa',
+						width: 1
+					})
+				}), 
+				new ol.style.Style({
+					fill: new ol.style.Fill({
+						color: [255, 255, 0, 0.5]
+					}), 
+					stroke: new ol.style.Stroke({
+						color: '#fff',
+						width: 1
+					})
+				})
+			];
+			mpaLayer = new ol.layer.Vector({
+				title: 'Marine Protected Areas', 
+				source: new ol.source.Vector({
+					features: (new ol.format.GeoJSON())
+								.readFeatures(json, {
+									dataProjection: wgs84, 
+									featureProjection: mapProjection
+								})
+				}), 
+				style: mpaStyles[0]
+			});
+			mpaLayer.getSource().forEachFeature(function(feature) {
+				feature.set('featType', 'mpa');
+			});
+			mpaLayer.setZIndex(1);
+			map.addLayer(mpaLayer);
+		}
+	});
 }
