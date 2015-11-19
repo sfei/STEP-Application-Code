@@ -11,6 +11,6 @@
 	$_SESSION['data'] = $result;
 	$_SESSION['query'] = $query;
 	
-	echo json_encode($result);
+	echo 0;
 
 ?>

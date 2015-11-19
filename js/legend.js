@@ -1,15 +1,22 @@
 
 // array of threshold values on which legend fit to
 var thresholds;
-
+// DOM element container
 var thresholdsContainer;
 
+//************************************************************************************************************
+// Constructor
+//************************************************************************************************************
 function legendInit(container) {
-	var legendContainer = $("<div id='legend-container'>").appendTo(container)
-		.draggable({containment: "parent"});
-	$("<div id='legend-content'></div>").appendTo(legendContainer)
-		.append("<div id='legend-table'></div>")
-		.append("<div id='legend-symbols'><hr/></div>");
+	var legendContainer = $("<div id='legend-container'>")
+		.appendTo(container)
+		  .addClass("container-styled")
+		  .draggable({containment: "parent"});
+	$("<div id='legend-content'></div>")
+		.appendTo(legendContainer)
+		  .addClass("inner-container-style")
+		  .append("<div id='legend-table'></div>")
+		  .append("<div id='legend-symbols'><hr/></div>");
 	// dragging cursors
 	addGrabCursorFunctionality(legendContainer);
 	// create the water type symbology
@@ -17,7 +24,10 @@ function legendInit(container) {
 	// hide on init, show after thresholds loaded
 	legendContainer.hide();
 }
-	
+
+//************************************************************************************************************
+// Symbol legend for water types
+//************************************************************************************************************
 function createWaterTypeLegend() {
 	// create svg shapes legend
 	var svg = d3.select("#legend-symbols")
@@ -74,6 +84,9 @@ function createWaterTypeLegend() {
 	$("#legend-symbols").append("<hr />");
 }
 
+//************************************************************************************************************
+// General thresholds functions
+//************************************************************************************************************
 function resetThresholds() {
 	$.ajax({
 		url: 'lib/getThresholds.php', 
@@ -111,14 +124,23 @@ function updateThresholds(data, validate) {
 				// ensure ascending order
 				return a.value - b.value;
 			});
-		// remove any comments if the threshold was changed
+		// match threshold comments with existing ones if they exist
 		for(var i = 0; i < data.length; i++) {
+			// also set the units as same as last
 			data[i].units = thresholds[0].units;
-			if(data[i].value !== thresholds[i].value) {
-				data[i].comments = "User-Defined Threshold";
-			} else {
-				data[i].comments = thresholds[i].comments;
+			// default for custom thresholds
+			var comment = "User-Defined Threshold";
+			// loop through last thresholds (which means comments if lost can't be reattained until reset)
+			for(var j = 0; j < thresholds.length; j++) {
+				if(data[i].value === thresholds[j].value) {
+					comment = thresholds[j].comments;
+					break;
+				} else if(thresholds[j].value > data[i].value) {
+					// since they're in ascending order we can break
+					break;
+				}
 			}
+			data[i].comments = comment;
 		}
 	}
 	thresholds = data;
@@ -163,6 +185,9 @@ function getThresholdColorIndex(value) {
 	return iColor;
 }
 
+//************************************************************************************************************
+// Legend UI
+//************************************************************************************************************
 function updateLegend() {
 	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
@@ -209,19 +234,26 @@ function updateLegend() {
 		);
 	$("#legend-container").show();	// only necessary for first load, since legend is hidden until data loaded
 	// getting divs to fit content across all browsers is a pain so just do it manually
-	$("#legend-container").height($("#legend-content").height()+10);
+	$("#legend-container").height($("#legend-content").height()+4);
 }
 
+//************************************************************************************************************
+// Custom Thresholds
+//************************************************************************************************************
 function showCustomThresholdsPanel(container) {
 	if(!thresholdsContainer) {
-		thresholdsContainer = $("<div id='custom-thresholds-container'>").appendTo(container)
-			.center()
-			.draggable({containment: "parent"});
+		thresholdsContainer = $("<div id='custom-thresholds-container'>")
+			.appendTo(container)
+			  .addClass("container-styled")
+			  .center()
+			  .draggable({containment: "parent"});
 		addGrabCursorFunctionality(thresholdsContainer);
 	} else {
 		thresholdsContainer.html("");
 	}
-	var panel = $("<div id='custom-thresholds-content'></div>").appendTo(thresholdsContainer);
+	var panel = $("<div id='custom-thresholds-content'></div>")
+		.appendTo(thresholdsContainer)
+		  .addClass("inner-container-style");
 	var buttonStyle = {
 		'display': 'inline-block',
 		'width': 70, 
@@ -236,11 +268,16 @@ function showCustomThresholdsPanel(container) {
 		addThresholdControl(inputs, thresholds[thresholds.length-1-i].value);
 	}
 	// add/remove buttons
-	panel.append("<hr />");
-	var addThreshold = $("<div id='custom-thresholds-add' class='button'>Add</div>").appendTo(panel)
-		.css(buttonStyle);
-	var removeThreshold = $("<div id='custom-thresholds-remove' class='button'>Remove</div>").appendTo(panel)
-		.css(buttonStyle);
+	var addThreshold = $("<div id='custom-thresholds-add' class='button'>+</div>")
+		.appendTo(panel)
+		  .css(buttonStyle)
+		  .css('font-weight', 'bold')
+		  .width(20);
+	var removeThreshold = $("<div id='custom-thresholds-remove' class='button'>−</div>")
+		.appendTo(panel)
+		  .css(buttonStyle)
+		  .css('font-weight', 'bold')
+		  .width(20);
 	panel.append("<hr />");
 	// add/remove thresholds
 	addThreshold.click(function() {
@@ -254,16 +291,17 @@ function showCustomThresholdsPanel(container) {
 		}
 	});
 	// append buttons
-	$("<div id='custom-thresholds-submit'></div>").appendTo(panel)
-		.css({
-			'text-align': 'center'
-		})
-		.append(
-			$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
-		)
-		.append(
-			$("<div id='custom-thresholds-cancel' class='button'>Cancel</div>").css(buttonStyle)
-		);
+	$("<div id='custom-thresholds-submit'></div>")
+		.appendTo(panel)
+		  .css({'text-align': 'center'})
+		  .append(
+			$("<div id='custom-thresholds-cancel' class='button'>Cancel</div>")
+				.css(buttonStyle)
+		  )
+		  .append(
+			$("<div id='custom-thresholds-submit' class='button'>Submit</div>")
+				.css(buttonStyle)
+		  );
 	// close functionality
 	$("#custom-thresholds-cancel").click(function() {
 		thresholdsContainer.remove();

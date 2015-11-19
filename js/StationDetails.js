@@ -6,7 +6,7 @@ var StationDetails = function(query) {
 		// All customizable variables below (but do it by manually coding, not dynamically)
 		//****************************************************************************************************
 		// the id for the container for any created details dialog
-		this.parent = "map-container";
+		this.parentId = "step-container";
 		// styles for a few things that appear frequently and/or has cascading effects on parent/child 
 		// elements so is easier to set here as variables
 		this.titleDivPadLeft = 12;
@@ -178,9 +178,9 @@ var StationDetails = function(query) {
 	};
 	
 	this.createDetailsDialog = function() {
-		$('#' + this.parent).append(
-			"<div id='details-container" + "' style='padding:"+this.containerPadding+"px;'>" + 
-				"<div id='details-dialog' style='padding:"+this.contentPadding+"px;'>" + 
+		$('#' + this.parentId).append(
+			"<div id='details-container" + "' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
+				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='details-title' class='grab'></div>" + // title set elsewhere
 					"<div id='details-info'></div>" +
 					"<div id='details-tabs-container'>" + 
@@ -647,7 +647,7 @@ var StationDetails = function(query) {
 			self.openLoadingMessage();
 			// ajax call to gather data (held in session until ready)
 			$.ajax({
-				url: "lib/gatherSummaryReport.php", 
+				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
 				success: function(response) {

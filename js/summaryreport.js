@@ -34,7 +34,7 @@ var reportColumns = [
 ];
 
 // this overrides the init from map.js
-function init2() {
+function initReport() {
 	// adjust page title
 	var titleHtml = query.contaminant + " Contamination Report<br />";
 	titleHtml += "<span style='font-size:16px;'>";

@@ -28,7 +28,7 @@
 		<script>
 			var query=$jsonQuery;
 			var data=$jsonData;
-			window.onload = init2;
+			window.onload = initReport;
 		</script>
 	</head>
 	<body>

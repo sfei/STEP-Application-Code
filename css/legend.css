@@ -1,0 +1,45 @@
+#legend-container {
+	position: absolute;
+	bottom: 20px;
+	left: 20px;
+}
+#legend-content {
+	width: 420px;
+}
+#legend-table {
+	display: block;
+	overflow: hidden;
+}
+.legend-table-row {
+	display: block;
+	overflow: visible;
+	height: 30px;
+	padding: 2px 0px;
+	margin-left: 4px;
+}
+.legend-table-cell {
+	display: inline-block;
+	float: left;
+	clear: none;
+	height: 25px;
+	line-height: 25px;
+	vertical-align: middle;
+	margin: 2px;
+	overflow: hidden;
+}
+#legend-symbols {
+	margin-top: 10px;
+	text-align: center;
+}
+
+#custom-thresholds-content {
+	padding: 4px;
+	text-align: center;
+}
+#custom-thresholds-inputs-container {
+	margin: 8px 5px;
+}
+.custom-threshold-input {
+	width: 80px;
+	text-align: right;
+}

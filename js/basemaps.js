@@ -6,7 +6,7 @@ var baseLayers = [
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>, created with data from: Esri, HERE, DeLorme, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, ©OpenStreetMap contributors, GIS User Community."
 				})]
 			})})
 	}, 
@@ -16,7 +16,7 @@ var baseLayers = [
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/arcgis/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>, created with data from: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors."
 				})]
 			})
 		})
@@ -27,7 +27,7 @@ var baseLayers = [
 			source: new ol.source.XYZ({
 				url: "http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 
 				attributions: [new ol.Attribution({
-					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>"
+					html: "Map tiles provided by <a href='http://ESRI.com/' target='_blank'>ESRI</a>, created with data from: Esri, DigitalGlobe, Earthstar Geographics, CNES/Airbus DS, GeoEye, USDA FSA, USGS, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community"
 				})]
 			})
 		})

@@ -116,7 +116,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchAll();
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
 
 			// could be skipped, reformats data to hide original column names, just in case
 			$thresholds = array();
@@ -154,7 +154,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchAll();
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
 			
 			$stations = array();
 			for($i = 0; $i < count($raw); $i++) {
@@ -183,7 +183,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetchAll();
+			return $query->fetchAll();	// fetch with keys as both numeric and as 'result'
 		}
 		
 		/** Get all available species from given contaminants.
@@ -204,7 +204,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetchAll();
+			return $query->fetchAll();	// fetch with keys as both numeric and as 'result'
 		}
 		
 		/** Get all available contaminants that have a record for the given species. Due to the 
@@ -226,7 +226,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetchAll();
+			return $query->fetchAll();	// fetch with keys as both numeric and as 'result'
 		}
 		
 		/** Get the min and max year range for the given contaminants (species and contaminant type). If no 
@@ -248,7 +248,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetch();
+			return $query->fetch(PDO::FETCH_ASSOC);
 		}
 		
 		/** Get all distinct years where data points exist for the given species and contaminant.
@@ -268,7 +268,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetchAll();
+			return $query->fetchAll(PDO::FETCH_ASSOC);
 		}
 		
 		/** Get all individual records for a given station, contaminant, and year range.
@@ -296,7 +296,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchAll();
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
 			
 			$records = array();
 			for($i = 0; $i < count($raw); $i++) {
@@ -351,7 +351,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchAll();
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
 			
 			$records = array();
 			for($i = 0; $i < count($raw); $i++) {
@@ -392,7 +392,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$result = $query->fetch();
+			$result = $query->fetch(PDO::FETCH_ASSOC);
 			
 			$records = array();
 			$records[] = array(
@@ -418,7 +418,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			$raw = $query->fetchAll();
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
 			
 			for($i = 0; $i < count($raw); $i++) {
 				$records[] = array(
@@ -481,18 +481,7 @@
 			if($query->errorCode() != 0) {
 				die("Query Error: " . $query->errorCode());
 			}
-			return $query->fetchAll();
-		}
-		
-		public function getMarineProtectedAreas() {
-			$query = StepQueries::$dbconn->prepare(
-				"SELECT [FULLNAME],[SHORTNAME],[Type],[DFG_URL],[geom].ToString() as geom FROM [dbo].[CA_MPA]"
-			);
-			$query->execute();
-			if($query->errorCode() != 0) {
-				die("Query Error: " . $query->errorCode());
-			}
-			return $query->fetchAll();
+			return $query->fetchAll(PDO::FETCH_ASSOC);
 		}
 		
 	}

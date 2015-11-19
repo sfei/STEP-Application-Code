@@ -1,38 +1,10 @@
 
 //************************************************************************************************************
-// Common utility functions
+// Common utility functions as extensions to existing prototypes
 //************************************************************************************************************
 String.prototype.capitalize = function() {
     return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
-
-function newWindow(e, url, name, width, height, minimal) {
-	if(!e) e = window.event;
-	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
-		// center pop up, from http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
-		// Fixes dual-screen position                         Most browsers      Firefox
-		var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
-		var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
-		var winWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
-		var winHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
-		var left = ((winWidth / 2) - (width / 2)) + dualScreenLeft;
-		var top = ((winHeight / 2) - (height / 2)) + dualScreenTop;
-		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top;
-		if(minimal) {
-			options += ", scrollbars=yes, menubar=no, statusbar=no, location=no";
-		} else {
-			options += ", scrollbars=yes, menubar=yes, statusbar=yes, location=yes";
-		}
-		var newWin = window.open(url, '', options);
-		if(!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-			alert("Could not open new window, to view " + name + " allow an exception in your pop-up blocking settings.");
-			return null;
-		} else {
-			if(newWin) { newWin.focus(); }
-			return newWin;
-		}
-	}
-}
 
 jQuery.fn.center = function() {
     this.css("position","absolute");
@@ -48,19 +20,22 @@ var defaultErrorMessage = "This site is experiencing some technical difficulties
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857', 	// web mercator wgs84
 	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
+	
+var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
+var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
+									// cached for performance
+var stationDetails = null;			// this object handles the pop-up details
+
 var stationsData,					// raw stations data as array of GeoJSON
 	stations,						// stations data as ol.Collection instance
 	stationLayer;					// layer object
-var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
-									// cached for performance
 var countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
-	countyNames = [];				// list of county names (for search drop-down)
-var stationDetails = null;			// this object handles the pop-up details
+	countyNames = [],				// list of county names (for search drop-down)
+	countyStyles;
 var mpaUrl = "data/mpa_ca.geojson", //"lib/getMPAsAsGeoJSON.php", 
 	mpaLayer,						// marine protected areas
 	mpaStyles;						// array of normal and hover style
-var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
 
 //************************************************************************************************************
 // Pre-init functions
@@ -71,7 +46,8 @@ var browserType = {
 	isFirefox: typeof InstallTrigger !== 'undefined', 
 	isSafari: Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0, 
 	isChrome: !!window.chrome && !this.isOpera, 
-	isIE: /*@cc_on!@*/false || !!document.documentMode
+	isIE: /*@cc_on!@*/false || !!document.documentMode, 
+	ieVersion: 9999
 };
 // only chrome seems to handle hover interactions smoothly for OpenLayers-3
 var enableHoverInteractions = browserType.isChrome;
@@ -82,13 +58,17 @@ var enableHoverInteractions = browserType.isChrome;
 function init() {
 	// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
 	if(browserType.isIE) {
-		var version = parseInt(navigator.userAgent.toLowerCase().split('msie')[1]);
+		browserType.ieVersion = parseInt(navigator.userAgent.toLowerCase().split('msie')[1]);
+		if(!browserType.ieVersion) {
+			browserType.ieVersion = 9999;
+		}
 		// Edge returns NaN value
-		if(version && !isNaN(version) && version <= 8) {
-			alert("This application is not compatible with Internet Explorer " + version + ", please upgrade your browser.");
+		if(!isNaN(browserType.ieVersion) && browserType.ieVersion <= 8) {
+			alert("This application is not compatible with Internet Explorer version 8 or below, please upgrade your browser.");
 			return;
 		}
 	}
+	setModalAsLoading(true, false);
 	// add basemap control dynamically (easier to change the basemaps later without changing all related code)
 	addBasemapControl($("#base-layer-control-container"), {width: 200});
 	// create marker factory
@@ -148,6 +128,9 @@ function mapInit(baseMapSelect) {
 	addBasemaps(baseMapSelect);
 }
 
+//************************************************************************************************************
+// Map functions
+//************************************************************************************************************
 function addGrabCursorFunctionality(element) {
 	element.addClass("grab");
 	element.mousedown(function() {
@@ -285,7 +268,7 @@ function openStationDetails(feature) {
 	stationDetails.open(options);
 }
 
-function zoomToStationsExtent() {
+function zoomToStations() {
 	var extent = stationLayer.getSource().getExtent();
 	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
 		map.getView().fit(extent, map.getSize());
@@ -325,6 +308,22 @@ function addCountyLayer() {
 		dataType: "json", 
 		url: countiesUrl, 
 		success: function(json) {
+			countyStyles = [
+				new ol.style.Style({
+					fill: null, 
+					stroke: new ol.style.Stroke({
+						color: '#222',
+						width: 1.5
+					})
+				}), 
+				new ol.style.Style({
+					fill: null, 
+					stroke: new ol.style.Stroke({
+						color: '#ddd',
+						width: 1.5
+					})
+				})
+			];
 			for(var i = 0; i < json.features.length; i++) {
 				countyNames.push(json.features[i].properties.NAME);
 			}
@@ -339,13 +338,7 @@ function addCountyLayer() {
 									featureProjection: mapProjection
 								})
 				}), 
-				style: new ol.style.Style({
-					fill: null, 
-					stroke: new ol.style.Stroke({
-						color: '#222',
-						width: 1.5
-					})
-				})
+				style: countyStyles[0]
 			});
 		}
 	});
@@ -416,6 +409,7 @@ function addMPALayer() {
 				feature.set('featType', 'mpa');
 			});
 			mpaLayer.setZIndex(1);
+			mpaLayer.setVisible(false);	// init not visible
 			map.addLayer(mpaLayer);
 		}
 	});

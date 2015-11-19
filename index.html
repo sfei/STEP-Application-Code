@@ -14,24 +14,27 @@
 		<!-- D3 -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 		<!-- chosen -->
-		<link rel="stylesheet" href="js/chosen/chosen.min.css" type="text/css" />
+		<link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
 		<script src="js/chosen/chosen.jquery.min.js"></script>
 		<!-- no UI slider -->
-		<link href="js/nouislider/nouislider.min.css" rel="stylesheet">
+		<link href="css/nouislider.min.css" rel="stylesheet">
 		<script src="js/nouislider/nouislider.min.js"></script>
 		<!-- page CSS -->
-		<link rel="stylesheet" href="default.css" />
+		<link rel="stylesheet" href="css/style.css" />
+		<!-- js for the ui -->
+		<script src="js/ui.js"></script>
 		<!-- color/marker scripts -->
 		<script src="js/ColorMap.js"></script>
 		<script src="js/MarkerFactory.js"></script>
 		<!-- query backend and ui scripts -->
 		<script src="js/query.js"></script>
 		<!-- map legend scripts -->
+		<link rel="stylesheet" href="css/legend.css" />
 		<script src="js/legend.js"></script>
 		<!-- station details/tabs and scatterplot scripts -->
-		<link rel="stylesheet" href="js/scatterplot.css" />
+		<link rel="stylesheet" href="css/scatterplot.css" />
 		<script src="js/Scatterplot.js"></script>
-		<link rel="stylesheet" href="js/stationdetails.css" />
+		<link rel="stylesheet" href="css/stationdetails.css" />
 		<script src="js/StationDetails.js"></script>
 		<!-- main map script -->
 		<script src="js/basemaps.js"></script>
@@ -40,7 +43,7 @@
 		<script>window.onload = init;</script>
 	</head>
 	<body>
-		<div id="map-container">
+		<div id="step-container">
 			<!-- the actual OpenLayers map -->
 			<div id="map-view" title="Click on location icon for details"></div>
 			<!-- layer/data controls -->
@@ -61,40 +64,38 @@
 							<option>Loading..</option>
 						</select>
 						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
-						<span id="download-query" class="button" style="margin-left:25px;">Download Query Data</span>
 					</diV>
 					<div id="location-controls" class="controls-group">
 						Zoom to County: 
 						<select id="counties-select" data-placeholder="Zoom to County.." style="width:180px;margin-left:4px;" disabled>
-							<option>Not yet functional</option>
+							<option>Loading..</option>
 						</select>
-						<span style="margin-left:30px;">Find by Location Name: </span>
-						<select id="station-select" data-placeholder="Select a Location.." style="width:460px;" disabled>
+						<span style="margin-left:30px;">Zoom to Station: </span>
+						<select id="station-select" data-placeholder="Select a Location.." style="width:420px;" disabled>
 							<option>Loading..</option>
 						</select>
 					</div>
 					<div id="map-controls" class="controls-group">
+						Show Counties Layer
+						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
+						Show MPA Layer
+						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
 						<span style="margin-right:6px;">Base Layer: </span>
-						<div id="base-layer-control-container" style="display:inline-block;margin-right:45px;"></div>
-						<span style="margin-right:45px;" class="button" onclick="zoomToStationsExtent();">Zoom to All Stations</span>
-						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;"/>
-						<span style="margin-left:0px;">Show Counties Layer</span>
+						<div id="base-layer-control-container" style="display:inline-block;"></div>
 					</div>
 				</div>
 				<div id="controls-tabs">
 					<div id="control-tab-query" class="control-tab">Search Query</div>
 					<div id="control-tab-location" class="control-tab">Find by Location</div>
 					<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
-					<div id="notification-tab">Notifications go here</div>
+					<div id="download-tab" class="button-tab">Download Data</div>
+					<div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
+					<div id="notification-tab" class="control-tab">Notifications go here</div>
 				</div>
 			</div>
-			<!-- a loading dealy -->
-			<div id="loading-box-container-outer">
-				<div id="loading-box-container-inner">
-					<div id="loading-box">
-						<img src="images/ajax-loader.gif" alt="loading" /> Loading stations..
-					</div>
-				</div>
+			<!-- modal blocking (for loading dialog usually) -->
+			<div id="modal-container-outer">
+				<div id="modal-container-inner"></div>
 			</div>
 		</div>
 	</body>
