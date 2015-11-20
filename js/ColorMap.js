@@ -142,9 +142,9 @@ var ColorMap = {
 					if(twoColors.index < spread) {
 						twoColors.second = hsvColors[twoColors.index];
 					}
-					twoColors.hdiff = hsvColors[1][0] - hsvColors[0][0]; 
-					twoColors.sdiff = hsvColors[1][1] - hsvColors[0][1]; 
-					twoColors.vdiff = hsvColors[1][2] - hsvColors[0][2];
+					twoColors.hdiff = twoColors.second[0] - twoColors.first[0]; 
+					twoColors.sdiff = twoColors.second[1] - twoColors.first[1]; 
+					twoColors.vdiff = twoColors.second[2] - twoColors.first[2];
 				}
 				var pos = (i - interpolatePositions.start) / increment;
 				var hsv = [
@@ -152,6 +152,8 @@ var ColorMap = {
 					twoColors.first[1] + twoColors.sdiff * pos, 
 					twoColors.first[2] + twoColors.vdiff * pos
 				];
+				// adjust hue if it's past max value
+				if(hsv[0] >= 360) { hsv[0] -= 360; }
 				hexColors.push(
 					this.rgb2hex( this.hsv2rgb(hsv) )
 				);

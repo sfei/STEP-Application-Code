@@ -384,9 +384,10 @@
 		 *		</ul> */
 		public function getNearbyStations($params) {
 			// first the get station info for the selected station
-			$queryString = "SELECT TOP 1 WaterType, Lat, Long "
-				. "FROM [dbo].[STEP_Stations] "
-				. "WHERE StationNameRevised = '" . $params["station"] . "'";
+			$queryString = "SELECT TOP 1 a.WaterType, a.Lat, a.Long, b.AdvisoryURL "
+				. "FROM [dbo].[STEP_Stations] as a " 
+					. "LEFT JOIN [dbo].[STEP_Advisories] as b ON (a.AdvisoryID = b.AdvisoryID) "
+				. "WHERE a.StationNameRevised = '" . $params["station"] . "'";
 			$query = StepQueries::$dbconn->prepare($queryString);
 			$query->execute();
 			if($query->errorCode() != 0) {
@@ -400,17 +401,20 @@
 				"distanceMiles" => 0, 
 				"waterType" => $result['WaterType'], 
 				"lat" => $result['Lat'], 
-				"long" => $result['Long']
+				"long" => $result['Long'], 
+				"advisoryUrl" => $result['AdvisoryURL']
 			);
 			
 			// then fill in the data for nearby stations
-			$queryString = "SELECT a.StationName_Nearby, a.Distance_Miles, b.WaterType, b.Lat, b.Long "
+			$queryString = "SELECT a.StationName_Nearby, a.Distance_Miles, b.WaterType, b.Lat, b.Long, d.AdvisoryURL "
 				. "FROM [dbo].[STEP_StationGroups_PointDistance] AS a "
 				. "CROSS APPLY ("
-					. "SELECT TOP 1 StationNameRevised, WaterType, Lat, Long "
+					. "SELECT TOP 1 c.StationNameRevised, c.WaterType, c.Lat, c.Long, c.AdvisoryID "
 					. "FROM [dbo].[STEP_Stations] as c "
 					. "WHERE a.StationName = '" . $params["station"] . "' AND a.StationName_Nearby = c.StationNameRevised"
-				. ") b "
+				. ") as b "
+				. "LEFT JOIN [dbo].[STEP_Advisories] as d "
+					. "ON (b.AdvisoryID = d.AdvisoryID) "
 				. "WHERE a.Distance_Miles <= " . $params["radiusMiles"] . " "
 				. "ORDER BY a.Distance_Miles";
 			$query = StepQueries::$dbconn->prepare($queryString);
@@ -426,7 +430,8 @@
 					"distanceMiles" => $raw[$i]['Distance_Miles'], 
 					"waterType" => $raw[$i]['WaterType'], 
 					"lat" => $raw[$i]['Lat'], 
-					"long" => $raw[$i]['Long']
+					"long" => $raw[$i]['Long'], 
+					"advisoryUrl" => $raw[$i]['AdvisoryURL']
 				);
 			}
 			return $records;

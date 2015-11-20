@@ -23,11 +23,13 @@
 		<link rel="stylesheet" href="css/style.css" />
 		<!-- js for the ui -->
 		<script src="js/ui.js"></script>
+		<!-- query backend and ui scripts -->
+		<script src="js/query.js"></script>
+		<!-- data download scripts -->
+		<script src="js/download.js"></script>
 		<!-- color/marker scripts -->
 		<script src="js/ColorMap.js"></script>
 		<script src="js/MarkerFactory.js"></script>
-		<!-- query backend and ui scripts -->
-		<script src="js/query.js"></script>
 		<!-- map legend scripts -->
 		<link rel="stylesheet" href="css/legend.css" />
 		<script src="js/legend.js"></script>
@@ -57,9 +59,11 @@
 						<select id="contaminant-control" style="width:100px;" disabled>
 							<option>Loading..</option>
 						</select> 
+						&nbsp;From:
 						<select id="start-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select> 
+						to
 						<select id="end-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select>
@@ -71,7 +75,7 @@
 							<option>Loading..</option>
 						</select>
 						<span style="margin-left:30px;">Zoom to Station: </span>
-						<select id="station-select" data-placeholder="Select a Location.." style="width:420px;" disabled>
+						<select id="station-select" data-placeholder="Select a Location.." style="width:390px;" disabled>
 							<option>Loading..</option>
 						</select>
 					</div>

@@ -80,7 +80,7 @@ function createWaterTypeLegend() {
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
 		.style("font-size", "13px")
-		.text("River/Misc.");
+		.text("River/Stream");
 	$("#legend-symbols").append("<hr />");
 }
 
@@ -234,7 +234,7 @@ function updateLegend() {
 		);
 	$("#legend-container").show();	// only necessary for first load, since legend is hidden until data loaded
 	// getting divs to fit content across all browsers is a pain so just do it manually
-	$("#legend-container").height($("#legend-content").height()+4);
+	$("#legend-container").height($("#legend-content").height()+3);
 }
 
 //************************************************************************************************************

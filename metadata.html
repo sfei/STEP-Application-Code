@@ -1,191 +1,116 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 	"http://www.w3.org/TR/html4/loose.dtd">
-	
 <html>
 	<head>
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 		<title>Safe To Eat Portal Metadata</title>
 		<style type="text/css" media="screen">
+			body { 
+				font-family: Arial, Helvetica, sans-serif; 
+				font-size: 0.8em; 
+				//margin:0; 
+				//padding:0;
+			}
+			p { margin: 0.7em 0 0.9em; }
+			p.title {
+				font-size:1.1em; 
+				font-weight:bold; 
+				color:#088110; 
+				margin-top:0;
+			}
+			a { 
+				color: #335B96; 
+				display:inline;
+			}
+			a:link, a:active { 
+				background: transparent none repeat scroll 0 0;
+				color: #335B96; 
+				text-decoration: underline; 
+			}
+			a:visited { 
+				background: transparent none repeat scroll 0 0;
+				color: purple;
+				text-decoration: underline;
+			}
+			a:hover { 
+				background: #335B96 none repeat scroll 0 0; 
+				color: #ffffff !important; 
+				text-decoration:underline;
+			}
+			img { border: 0 none; }
 			/* list style from waterboard site */
-			body 		{ font-family: Arial, Helvetica, sans-serif; font-size: 0.8em; /*margin:0; padding:0;*/ }
-			p           { margin: 0.7em 0 0.9em; }
-			p.title     {font-size:1.1em; font-weight:bold; color:#088110; margin-top:0;}  
-			ul    {	font-weight: normal;
-					list-style-image: url(http://www.waterboards.ca.gov/images/ca_department/arrow_blue.gif);
-					margin-bottom: 0; 
-					margin: 1em 0 1em 1.4em;
-					padding: 0 0 0.5em 1.4em;
-					}
-			li { padding: 1px 0 4px;}  
-			ul li {	font-weight: normal;
-					list-style-image: url(http://www.waterboards.ca.gov/images/ca_department/arrow_blue.gif);
-					margin-bottom: 0; }
-			ul ul { margin: 0 0 0 1.4em; padding: 0.2em 0 0.2em 1.4em; }
-			ul li a { color: #000000; display: inline; }
-			a { color: #335B96; display:inline;}
-			a:link, a:active { background: transparent none repeat scroll 0 0;
-								color: #335B96; text-decoration: underline; }
-			a:visited { background: transparent none repeat scroll 0 0;
-						color: purple;
-						text-decoration: underline;
-						}
-			a:hover { background: #335B96 none repeat scroll 0 0; color: #ffffff !important; text-decoration:underline;}
-			img {border: 0 none;}
-			
-			/* do not display these */
-			#browser-list { display: none; }
-			#browser-list a, #browser-list a img { color: #dedede; text-decoration: none; border: none; }
-			#browser-list a:hover { text-decoration: underline; color: black; }
-			
-			/* list style from waterboard site */
-			ul  {	font-weight: normal;
-					list-style-image: url(http://www.waterboards.ca.gov/images/ca_department/arrow_blue.gif);
-					margin-bottom: 10px; }
-			
-			/* set the size of the map and right-col divs */
-			#app-container { border: solid 0px black; /*background: white; overflow: auto;*/}
-			#map		{ height: 550px; width: 400px; }
-			#right-col  { /*width: 400px;*/ padding:0 0 0 10px; }
-
-			/* Misc */
-			.toggle-view { background: rgb(231,233,236); border: solid 1px rgb(204,212,223); padding:0 5px; 
-							width:275px; text-align:center; cursor:pointer;}
-			.toggle-view:hover {text-decoration:underline;}
-			.close-parent {background: transparent url(labs_step/images/454545_11x11_icon_close.gif) no-repeat scroll 0 0;
-							cursor:pointer; float:right; width:10px; height:10px;}
-
-			/* intro and legend */
-			#intro { background: #fff; border: solid 1px #fff; }
-			.container {padding:5px; margin:0; border: solid 1px rgb(204,212,223); background:#fff; }
-			#map-legend {cursor:move;position:absolute; width:135px; }
-			#map-legend p.legend-title {/*text-transform:uppercase;*/}
-			#map-legend p { margin: 0.2em;}
-			#map-legend .spacer {border-bottom:solid 1px #eee;}
-			#map-legend table {text-align:center; width:100%;}
-			#map-legend table p {margin:0.2em;}
-			#map-options { border: solid 1px #dedede; background: #eee; text-align:center; padding: 5px 0; display:none;}
-			#map-options span {cursor:pointer;}
-			#map-options span:hover {text-decoration: underline;}
-											
-			/* selection divs */
-			#station-select .select-body, #county-select .select-body { width: 398px !important;}
-			#select-container {width: 275px;}
-			.select-head { background: rgb(231,233,236) url(labs_step/images/222222_7x7_arrow_left.gif) no-repeat scroll 98% 50%;
-				 			border: solid 1px rgb(204,212,223);  
-							padding: 5px 10px; cursor:pointer; /*text-transform:uppercase;*/ }
-			.select-head.open {background: rgb(231,233,236) url(labs_step/images/222222_7x7_arrow_down.gif) no-repeat scroll 98% 50%;
-					 			border: solid 1px rgb(204,212,223);  
-								/*text-align: right;*/ padding: 5px 10px; cursor:pointer; /*text-transform:uppercase;*/}
-			.select-head ul, .select-submit ul {list-style-type:none; padding:0; margin:0;}
-			.select-head ul li, .select-body ul li {margin:0; list-style-image: none;	 }
-			.select-head:hover {text-decoration:underline;}
-			.select-body { border: solid 1px rgb(204,212,223);  background:#fff; z-index:999;
-								max-height: 200px; overflow:auto; position:absolute; width: 273px; /*need this to match the select head*/ }
-			.select-body ul {list-style-type:none; margin:0; padding:0;}
-			.select-body li { padding: 0 10px; cursor:pointer; /*text-transform:uppercase;*/}
-			.select-body li:hover { background: rgb(231,233,236); }
-			
-			.select-submit {background: rgb(231,233,236); border: solid 1px rgb(204,212,223); 
-								text-align:center; cursor:pointer; padding: 5px 10px; width:40px; }
-			.select-submit:hover {text-decoration:underline;}
-									
-			/* style the progress alert div */
-			#progress-alert { position: absolute; z-index:99; border: solid 1px #dedede; background: #fff; 
-							  padding:10px; white-space:nowrap;  }
-
-			/* marker info window */
-			#marker-desc {position:absolute; /*width:auto; */ /*height:500px;*/ border:solid 1px black; cursor: move;
-							 background:#fff; top:120px; left:150px; /*overflow:hidden;*/
-							/*width: expression(this.scrollWidth > 450 ? "450px");*/ /* IE hack for max-width*/ }
-			#marker-desc .select-head, #marker-desc .select-body {font-family: Arial, Helvetica, sans-serif; font-size: 0.9em;}
-			#marker-desc-tabs ul li {list-style-image:none;}
-			#marker-desc-tabs {border:none;}
-			#marker-desc-close {background: transparent url(labs_step/images/454545_11x11_icon_close.gif) no-repeat scroll 0 0;cursor:pointer; float:right; width:10px; height:10px;/*float:right; padding:5px; cursor:pointer;*/ margin-right:5px; margin-top: 5px;}
-			#marker-desc-close:hover {text-decoration:underline;}
-			.drag-handle {border:soild 1px rgb(204,212,223); background: rgb(231,233,236); /*cursor:move;*/ height:2em; }
-			.drag-handle span.float-left { float:left; line-height:0em; padding-left:23px; padding-top:2px;}
-			.drag-handle ul, .drag-handle ul li {padding:0; margin:0; list-style-type:none !important; list-style-image:none !important;}
-			#marker-desc-name p {font-size:125%; font-style:bold; font-weight:bold;  /*#088110;*/}
-			#marker-desc p#marker-name {display:none;} /* prevents marker-name from showing twice */
-			.marker-tab #summary-table {border-collapse:collapse; font-size:75%; white-space:nowrap;}
-			.marker-tab #summary-table th {background: rgb(197,215,239);}
-			#marker-foo {display:none !important;} /* hidden element containing info on active marker */
-			#marker-desc-tab1-content #chart { height: 300px; width: 300px;}
-			.marker-tab-content {overflow:auto; padding:2px;}
-			#marker-desc-tab-selectors {width:275px; position:absolute;}
-			#marker-teaser-window { background: #fff; padding:2px 5px; border: solid 1px rgb(204,212,223);}
-			
-			/* Logo container - holds SWAMP and SFEI logos at bottom of page */
-			#logo-container { padding-left: 20px;}
-			
-			/* Threshold selector popup */
-			#threshold-selector {
-				position:absolute; z-index:99; top:350px; 
-				border:solid 1px rgb(204,212,223); 
-				padding:2px 2px 10px 10px; background: #fff;
-				width: 500px;
-				}
-			#threshold-selector table th { background: #C5D7EF; }
-			#threshold-selector table tr.odd {  }
-			#threshold-selector table tr.even { background: #eee; }
-			
-			.tab_note { font-size: 11px; }
-			
+			ul {	
+				font-weight: normal;
+				list-style-image: url(http://www.waterboards.ca.gov/images/ca_department/arrow_blue.gif);
+				margin-bottom: 0; 
+				margin: 1em 0 1em 1.4em;
+				padding: 0 0 0.5em 1.4em;
+				margin-bottom: 10px;
+			}
+			li {
+				padding: 1px 0 4px;
+				font-weight: normal;
+				list-style-image: url(http://www.waterboards.ca.gov/images/ca_department/arrow_blue.gif);
+				margin-bottom: 0; 
+			}
+			ul ul { 
+				margin: 0 0 0 1.4em; 
+				padding: 0.2em 0 0.2em 1.4em; 
+			}
 		</style>
-		
-		</head>
+	</head>
 	<body onload="">
-	<h1>Data Download Information for Safe To Eat Portal</h1>
-	
-	<p>The information on this page is provided to help end-users better understand data downloaded from the Data and Trends page from the State Waterboard's Safe To Eat Portal. If you have questions or comments, please contact cristina@sfei.org.</p>
-	<p>The data available in the portal have been compiled across a range of studies. They include:</p>
-	<ul>
-		<li>Toxic Substances Monitoring Program RWQCB6 Fish 2002</li>
-		<li>RWB6 Donner Lake Fish Bioaccumulation Status</li>
-		<li>RWB7 Fish Tissue Study 2004</li>
-		<li>RWB2 Lakes Sportfish Contamination Study 2004-2005</li>
-		<li>Fish Mercury Project 2005-2007</li>
-		<li>Statewide Lakes Sportfish Contamination Study 2007-2008</li> 
-		<li>Statewide Coast Sportfish Contamination Study 2009-2010</li>
-		<li>Statewide Rivers Sportfish Contamination Study 2011-2012</li>
-		<li>2009 Regional Monitoring Program Status & Trends</li>
-		
-	</ul>
-	<p>New studies will be added to the Portal as they are made available. </p>
-	<p>Downloaded data exist in a .csv file format. This file format can be opened with Microsoft Excel or other spreadsheet software. Here is a list of all the columns in the data download file and what they represent.</p>
-	<ul>
-		<li><em>CompositeID:</em> A unique identifier for the sample analyzed. Records from the standardized size model have Not Applicable (NA) in this column as they are calculated results.</li>
-		<li><em>StationCode:</em> A unique identifier for the sampling location.</li>
-		<li><em>StationName:</em> The name of the sampling location. Note that two different studies may use identically named sampling locations, but will have different StationCodes.	</li>
-		<li><em>CommonName:</em> The common name of the fish sampled.</li>
-		<li><em>TissueCode:</em> The type of tissue analyzed. Possible values are:</em> FIL = fillet; WHL = whole; WNHTG = whole no head, tail or guts; LIV = liver</li>
-		<li><em>PrepName:</em> How the tissue was prepared for analysis.</li>
-		<li><em>SampleCategory:</em> A value representing whether this is an individual or composite sample. Possible values:</em> Individual = 1 fish; Composite = multiple fish; SuperComposite = a composite of composite samples.</li>
-		<li><em>NumberFishInComposite:</em> The number of fish in the sample.</li>
-		<li><em>AnalyteGroup:</em> The name of the group to which the contaminant analyzed belongs.</li>
-		<li><em>AnalyteName:</em> The name of the contaminant analyzed.</li>
-		<li><em>Result:</em> The concentration of the contaminant analyzed. A blank result reflects a coelution and the result is
-		reported with the coeluting parameter. A 0 represents a non-detect for organics. Inorganic non-detects are represented by half the MDL value.</li>
-		<li><em>SummedResult:</em> The summed concentration of all analytes in the AnalyteGroup.</li>
-		<li><em>Unit:</em> The units and basis in which the concentration is reported.</li>
-		<li><em>NumberOfCongeners:</em> The number of individual contaminants comprising the SummedResult.</li>
-		<li><em>ResQualCode:</em> Any qualifiers applied to the result.</li>
-		<li><em>MDL:</em> The method detection limit of the contaminant analyzed.</li>
-		<li><em>SampleYear:</em> The year in which the sample was collected.</li>
-		<li><em>ProgramCode:</em> The program code of the study.</li>
-		<li><em>ProgramName:</em> The program name of the study.</li>
-		<li><em>ParentProjectCode:</em> The code of the parent project of the study.</li>
-		<li><em>ParentProjectName:</em>  The name of the parent project of the study.</li>
-		<li><em>ProjectCode:</em> The project code of the study. </li>
-		<li><em>ProjectName:</em> The project name of the study.</li>
-		<li><em>TotalLengthAvg:</em> The average total length of the fish in the sample. If sample is an individual, this value is the total length of the fish. </li>
-		<li><em>TotalLengthUnit:</em> The units in which the total length average is reported.</li>
-		<li><em>Comment:</em> Comments pertaining to the sample.</li>
-		<li><em>Latitude:</em> The latitude of the sampling location. Sometimes this is not a precise value, but a generalized one to represent the location of the waterbody. </li>
-		<li><em>Longitude:</em> The longitude of the sampling location. Sometimes this is not a precise value, but a generalized one to represent the location of the waterbody. </li>
-		<li><em>Datum:</em> The datum of the latitude/longitude.</li>
-		
-	</ul>
-	<p>Last Updated: 5/24/2012</p>
+		<h1>Data Download Information for Safe To Eat Portal</h1>
+
+		<p>The information on this page is provided to help end-users better understand data downloaded from the Data and Trends page from the State Waterboard's Safe To Eat Portal. If you have questions or comments, please contact cristina@sfei.org.</p>
+		<p>The data available in the portal have been compiled across a range of studies. They include:</p>
+		<ul>
+			<li>Toxic Substances Monitoring Program RWQCB6 Fish 2002</li>
+			<li>RWB6 Donner Lake Fish Bioaccumulation Status</li>
+			<li>RWB7 Fish Tissue Study 2004</li>
+			<li>RWB2 Lakes Sportfish Contamination Study 2004-2005</li>
+			<li>Fish Mercury Project 2005-2007</li>
+			<li>Statewide Lakes Sportfish Contamination Study 2007-2008</li> 
+			<li>Statewide Coast Sportfish Contamination Study 2009-2010</li>
+			<li>Statewide Rivers Sportfish Contamination Study 2011-2012</li>
+			<li>2009 Regional Monitoring Program Status & Trends</li>
+
+		</ul>
+		<p>New studies will be added to the Portal as they are made available. </p>
+		<p>Downloaded data exist in a .csv file format. This file format can be opened with Microsoft Excel or other spreadsheet software. Here is a list of all the columns in the data download file and what they represent.</p>
+		<ul>
+			<li><em>CompositeID:</em> A unique identifier for the sample analyzed. Records from the standardized size model have Not Applicable (NA) in this column as they are calculated results.</li>
+			<li><em>StationCode:</em> A unique identifier for the sampling location.</li>
+			<li><em>StationName:</em> The name of the sampling location. Note that two different studies may use identically named sampling locations, but will have different StationCodes.	</li>
+			<li><em>CommonName:</em> The common name of the fish sampled.</li>
+			<li><em>TissueCode:</em> The type of tissue analyzed. Possible values are:</em> FIL = fillet; WHL = whole; WNHTG = whole no head, tail or guts; LIV = liver</li>
+			<li><em>PrepName:</em> How the tissue was prepared for analysis.</li>
+			<li><em>SampleCategory:</em> A value representing whether this is an individual or composite sample. Possible values:</em> Individual = 1 fish; Composite = multiple fish; SuperComposite = a composite of composite samples.</li>
+			<li><em>NumberFishInComposite:</em> The number of fish in the sample.</li>
+			<li><em>AnalyteGroup:</em> The name of the group to which the contaminant analyzed belongs.</li>
+			<li><em>AnalyteName:</em> The name of the contaminant analyzed.</li>
+			<li><em>Result:</em> The concentration of the contaminant analyzed. A blank result reflects a coelution and the result is
+			reported with the coeluting parameter. A 0 represents a non-detect for organics. Inorganic non-detects are represented by half the MDL value.</li>
+			<li><em>SummedResult:</em> The summed concentration of all analytes in the AnalyteGroup.</li>
+			<li><em>Unit:</em> The units and basis in which the concentration is reported.</li>
+			<li><em>NumberOfCongeners:</em> The number of individual contaminants comprising the SummedResult.</li>
+			<li><em>ResQualCode:</em> Any qualifiers applied to the result.</li>
+			<li><em>MDL:</em> The method detection limit of the contaminant analyzed.</li>
+			<li><em>SampleYear:</em> The year in which the sample was collected.</li>
+			<li><em>ProgramCode:</em> The program code of the study.</li>
+			<li><em>ProgramName:</em> The program name of the study.</li>
+			<li><em>ParentProjectCode:</em> The code of the parent project of the study.</li>
+			<li><em>ParentProjectName:</em>  The name of the parent project of the study.</li>
+			<li><em>ProjectCode:</em> The project code of the study. </li>
+			<li><em>ProjectName:</em> The project name of the study.</li>
+			<li><em>TotalLengthAvg:</em> The average total length of the fish in the sample. If sample is an individual, this value is the total length of the fish. </li>
+			<li><em>TotalLengthUnit:</em> The units in which the total length average is reported.</li>
+			<li><em>Comment:</em> Comments pertaining to the sample.</li>
+			<li><em>Latitude:</em> The latitude of the sampling location. Sometimes this is not a precise value, but a generalized one to represent the location of the waterbody. </li>
+			<li><em>Longitude:</em> The longitude of the sampling location. Sometimes this is not a precise value, but a generalized one to represent the location of the waterbody. </li>
+			<li><em>Datum:</em> The datum of the latitude/longitude.</li>
+
+		</ul>
+		<p>Last Updated: 5/24/2012</p>
 	</body>
-	</html>
+</html>

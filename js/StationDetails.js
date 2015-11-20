@@ -232,15 +232,15 @@ var StationDetails = function(query) {
 		var advisoryName;
 		var advisoryUrl = this.station.get("advisoryUrl");
 		if(!advisoryUrl) {
-			if(this.station.get("waterType").search(/reservoir|lake/i)) {
-				advisoryName = "View <b>General Guidance of Safe Fish Consumption</b> for Lakes/Reservoirs";
+			if(this.station.get("waterType").search(/reservoir|lake/i) >= 0) {
+				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b> for Lakes/Reservoirs";
 				advisoryUrl = "http://www.oehha.ca.gov/fish/special_reports/advisorylakesres.html";
 			} else {
-				advisoryName = "View <b>General Guidance of Safe Fish Consumption</b>";
+				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b>";
 				advisoryUrl = "http://www.oehha.ca.gov/fish/general/broch.html";
 			}
 		} else {
-			advisoryName = "View <b>Specific Safe Eating Guidelines</b> for this water body";
+			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
 		}
 		var listLinks = $("<ul></ul>");
 		listLinks.append(
@@ -300,6 +300,9 @@ var StationDetails = function(query) {
 			width += 2*this.contentPadding + 2;	// plus 2 from the border
 		}
 		this.element.width(width);
+		// adjust title width (leave room for close button)
+		$("#details-station-name").width(width-45);
+		
 		if(!height || height <= 0) { 
 			height = dialogDiv.height();
 			height += 2*this.contentPadding;
@@ -307,7 +310,7 @@ var StationDetails = function(query) {
 			dialogDiv.height(height);
 			height += 2*this.contentPadding + 2;
 		}
-		this.element.height(height+2*this.containerPadding);
+		this.element.height(height+2*this.containerPadding-1);
 	};
 	
 	this.openTabData = function() {

@@ -86,7 +86,7 @@ function initReport() {
 	mapInit(1);
 	// display station layer
 	loadStationsLayer(data);
-	zoomToStationsExtent();
+	zoomToStations();
 	// fill header information
 	var numResults = data.length;
 	$("#content-header").html(
@@ -99,6 +99,20 @@ function initReport() {
 		var hasResult = data[i].records && data[i].records.length > 0;
 		// add table
 		var table = $("<div id='station-table-" + i + "' class='table'></div>").appendTo(container);
+		// grab advisory link
+		var advisoryName;
+		var advisoryUrl = data[i].advisoryUrl;
+		if(!advisoryUrl) {
+			if(data[i].waterType.search(/reservoir|lake/i) >= 0) {
+				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b> for Lakes/Reservoirs";
+				advisoryUrl = "http://www.oehha.ca.gov/fish/special_reports/advisorylakesres.html";
+			} else {
+				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b>";
+				advisoryUrl = "http://www.oehha.ca.gov/fish/general/broch.html";
+			}
+		} else {
+			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
+		}
 		// title
 		table.append(
 			"<div class='table-row'>" + 
@@ -131,6 +145,14 @@ function initReport() {
 		} else {
 			table.append("<div class='table-row' style='font-size:12px;padding-left:8px;height:30px;line-height:30px;background-color:#eee;'>No records for the selected parameters at this station.</div>");
 		}
+		// add advisory link here
+		table.append(
+			$("<div class='table-row'></div>").html(
+				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + 
+					advisoryName + 
+				"</a>"
+			).css({"font-size": "11px", "border": "none"})
+		);
 	}
 	
 	// add click interactivity

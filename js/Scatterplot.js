@@ -70,6 +70,10 @@ var Scatterplot = {
 				x: parseFloat(options.data[i][options.xValueName]), // ensure numeric type
 				y: parseFloat(options.data[i][options.yValueName])
 			});
+			// check for NaN (from ND)
+			if(isNaN(data[i].y)) {
+				data[i].y = 0;
+			}
 			// get min max values
 			if(!minMax.x) {
 				minMax.x = [data[i].x , data[i].x];

@@ -20,12 +20,16 @@ var defaultErrorMessage = "This site is experiencing some technical difficulties
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857', 	// web mercator wgs84
 	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
-	
+
 var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
 var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
 									// cached for performance
 var stationDetails = null;			// this object handles the pop-up details
-
+var colorMap = [					// the color gradient for symbology
+	[210, 255, 255], 
+	[60, 100, 255], 
+	[95, 0, 180]
+];
 var stationsData,					// raw stations data as array of GeoJSON
 	stations,						// stations data as ol.Collection instance
 	stationLayer;					// layer object
@@ -35,6 +39,7 @@ var countiesUrl = "data/ca_counties.geojson",
 	countyStyles;
 var mpaUrl = "data/mpa_ca.geojson", //"lib/getMPAsAsGeoJSON.php", 
 	mpaLayer,						// marine protected areas
+	mpaColor = [50, 220, 50, 0.5],	// default MPA color
 	mpaStyles;						// array of normal and hover style
 
 //************************************************************************************************************
@@ -82,7 +87,8 @@ function init() {
 			} else {
 				return markerFactory.shapes.diamond;
 			}
-		}
+		},
+		colorMap: colorMap
 	});
 	// init functions
 	mapInit();
@@ -377,7 +383,7 @@ function addMPALayer() {
 			mpaStyles = [
 				new ol.style.Style({
 					fill: new ol.style.Fill({
-						color: [255, 255, 0, 0.5]
+						color: mpaColor
 					}), 
 					stroke: new ol.style.Stroke({
 						color: '#aaa',
@@ -386,7 +392,7 @@ function addMPALayer() {
 				}), 
 				new ol.style.Style({
 					fill: new ol.style.Fill({
-						color: [255, 255, 0, 0.5]
+						color: mpaColor
 					}), 
 					stroke: new ol.style.Stroke({
 						color: '#fff',
