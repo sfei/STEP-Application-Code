@@ -103,6 +103,8 @@ function init() {
 	});
 	addClickInteractions();
 	controlsActivate();
+	// zoom in a bit to start
+	map.getView().setZoom(7);
 	// Technically we can release this variable for garbage collection as once the select dropdown is 
 	// populated, it never changes. It was only global to easily pass between scripts
 	countyNames = null;
@@ -191,11 +193,11 @@ function addClickInteractions() {
 			pixel, 
 			function(feature, layer) { 
 				// for some reason, checking by layer is buggy (often null, even for valid feature), so check
-				// by property
+				// by property which we manually add on layer being loaded
 				var type = feature.get('featType');
 				if(type === 'station') {
 					openStationDetails(feature); 
-					return true;
+					return true;	// make sure to return on match to stop cycling through additional features
 				} else if(type === 'mpa') {
 					newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
 					return true;
