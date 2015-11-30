@@ -10,7 +10,7 @@ function showDownloadDialog() {
 		}
 	}
 	// adjust query and messages
-	var isASpecies = !(query.species === "highest" || species === "lowest");
+	var isASpecies = !(query.species === "highest" || query.species === "lowest");
 	var species = (isASpecies) ? query.species : "all species*";
 	var yearMsg;
 	if(query.startYear === query.endYear) {

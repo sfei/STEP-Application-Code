@@ -15,8 +15,9 @@ function legendInit(container) {
 	$("<div id='legend-content'></div>")
 		.appendTo(legendContainer)
 		  .addClass("inner-container-style")
-		  .append("<div id='legend-table'></div>")
-		  .append("<div id='legend-symbols'><hr/></div>");
+		  .append("<div id='legend-title'></div>")
+		  .append("<div id='legend-symbols'><hr/></div>")
+		  .append("<div id='legend-table'></div>");
 	// dragging cursors
 	addGrabCursorFunctionality(legendContainer);
 	// create the water type symbology
@@ -38,14 +39,14 @@ function createWaterTypeLegend() {
 	    .attr("transform", "translate(5,0)");
 	// circle (for lakes/reservoirs)
 	svg.append("circle")
-		.attr("cx", 10)
+		.attr("cx", 5)
 		.attr("cy", 15)
-		.attr("r", 10)
+		.attr("r", 8)
 		.attr("stroke-width", 2.0)
 		.attr("stroke", "black")
 		.style("fill", "none");
 	svg.append("text")
-		.attr("x", 25)
+		.attr("x", 20)
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
@@ -53,12 +54,12 @@ function createWaterTypeLegend() {
 		.text("Lake/Reservoir");
 	// triangle (for coastal/ocean)
 	svg.append("path")
-		.attr("d", "M 140 25 L 164 25 L 152 5 z")
+		.attr("d", "M 130 22 L 150 22 L 140 7 z")
 		.attr("stroke-width", 2.0)
 		.attr("stroke", "black")
 		.style("fill", "none");
 	svg.append("text")
-		.attr("x", 168)
+		.attr("x", 157)
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
@@ -66,22 +67,22 @@ function createWaterTypeLegend() {
 		.text("Coast/Ocean");
 	// diamond (for rivers and misc)
 	svg.append("rect")
-		.attr("width", 17)
-		.attr("height", 17)
-		.attr("x", 280)
-		.attr("y", 6)
-		.attr("transform", "rotate(45,289,14)")
+		.attr("width", 14)
+		.attr("height", 14)
+		.attr("x", 270)
+		.attr("y", 9)
+		.attr("transform", "rotate(45,279,14)")
 		.attr("stroke-width", 2.0)
 		.attr("stroke", "black")
 		.style("fill", "none");
 	svg.append("text")
-		.attr("x", 307)
+		.attr("x", 294)
 		.attr("y", 15)
 		.attr("dy", ".35em")
 		.style("text-anchor", "start")
 		.style("font-size", "13px")
 		.text("River/Stream");
-	$("#legend-symbols").append("<hr />");
+	$("#legend-symbols");
 }
 
 //************************************************************************************************************
@@ -197,8 +198,9 @@ function updateLegend() {
 		title = lastQuery.contaminant + " Concentrations in " + capitalizeSpecies;
 	}
 	title += " (" + thresholds[0].units + ")";
+	$("#legend-title").html(title);
 	var table = $("#legend-table");
-	table.html("<div class='legend-table-row' style='height:auto;text-align:center;font-size:16px;font-weight:bolder;margin:4px 0px;'>" + title + "</div><hr />");
+	table.html("<hr />");
 	// do legend in descending order
 	for(var i = thresholds.length-1; i >= -1; i--) {
 		var row = "<div class='legend-table-row'>";
@@ -211,6 +213,7 @@ function updateLegend() {
 	}
 	// button to edit thresholds
 	$("<div id='thresholds-controls' style='text-align:center;'></div>").appendTo($("#legend-table"))
+		.append("<hr style='margin-bottom:6px;' />")
 		.append(
 			$("<div id='open-custom-thresholds' class='button'>Edit Thresholds</div>")
 				.css({
@@ -242,7 +245,7 @@ function updateLegend() {
 //************************************************************************************************************
 function showCustomThresholdsPanel(container) {
 	if(!thresholdsContainer) {
-		thresholdsContainer = $("<div id='custom-thresholds-container'>")
+		thresholdsContainer = $("<div id='custom-thresholds-container'></div>")
 			.appendTo(container)
 			  .addClass("container-styled")
 			  .center()
