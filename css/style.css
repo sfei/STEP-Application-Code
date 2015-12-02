@@ -197,14 +197,16 @@ input, select {
 	font-size: 13px;
 }
 .button-tab {
+	border-top-color: #ddd;
 	background: #ddd;
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ddd), to(#eee));
 	background: -webkit-linear-gradient(top, #ddd, #eee);
 	background: -moz-linear-gradient(top, #ddd, #eee);
 	background: -ms-linear-gradient(top, #ddd, #eee);
 	background: -o-linear-gradient(top, #ddd, #eee);
-} 
+}
 .control-tab {
+	border-top-color: #4797d1;
 	color: #fff;
 	background: #4797d1;
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4797d1), to(#2970a3));

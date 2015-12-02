@@ -13,6 +13,10 @@ var thresholdsContainer;
  *    to limit the draggable range of the legend div.
  */
 function legendInit(container) {
+	$("<div id='show-legend-tab'>Show Legend</div>")
+	  .appendTo(container)
+		.click(function() { legendShow(); })
+		.hide();
 	var legendContainer = $("<div id='legend-container'>")
 	  .appendTo(container)
 		.addClass("container-styled")
@@ -241,6 +245,30 @@ function getThresholdColorIndex(value) {
 //************************************************************************************************************
 // Legend UI
 //************************************************************************************************************
+
+function legendShow() {
+	$("#legend-container").show();
+	$("#show-legend-tab").hide("slide", { direction: "down" }, 100);
+}
+
+function legendHide() {
+	$("#legend-container").hide();
+	$("#show-legend-tab").show("slide", { direction: "down" }, 400);
+}
+
+/**
+ * Cross-browser method for automatically adjusting divs with CSS alone is at best buggy, just do it manually.
+ */
+function adjustLegendContainerHeight() {
+	var height = 0;
+	if($("#legend-content").is(":visible")) {
+		height += $("#legend-content").height() + 3;
+	} else {
+		height += 22;	// min height to leave button visible
+	}
+	$("#legend-container").height(height);
+}
+
 /**
  * Update the legend HTML based on the last query and updated thresholds.
  */
@@ -274,7 +302,7 @@ function updateLegend() {
 				.css({
 					'display': 'inline-block', 
 					'margin-left': 'auto', 
-					'width': 120, 
+					'width': 80, 
 					'text-align': 'center'
 				})
 				.click(function() { showCustomThresholdsPanel($("#map-view")); })
@@ -285,14 +313,26 @@ function updateLegend() {
 					'display': 'inline-block', 
 					'margin-left': 15, 
 					'margin-right': 'auto', 
-					'width': 120, 
+					'width': 80, 
 					'text-align': 'center'
 				})
 				.click(function() { resetThresholds(); })
+		)
+		.append(
+			$("<div id='hide-legend' class='button'>Hide Legend</div>").appendTo($("#legend-table"))
+				.css({
+					'display': 'inline-block', 
+					'margin-left': 15, 
+					'margin-right': 'auto', 
+					'width': 80, 
+					'text-align': 'center'
+				})
+				.click(function() { legendHide(); })
 		);
-	$("#legend-container").show();	// only necessary for first load, since legend is hidden until data loaded
-	// getting divs to fit content across all browsers is a pain so just do it manually
-	$("#legend-container").height($("#legend-content").height()+3);
+	// always show legend on update
+	legendShow();
+	// dynamically set height
+	adjustLegendContainerHeight();
 }
 
 //************************************************************************************************************
@@ -302,7 +342,7 @@ function updateLegend() {
 // matching any of the new input values to any existing value with a comment. Otherwise, new or changed values
 // will be commented as "User-Defined Threshold". Any "lost" comment though is lost permanently (e.g. if you 
 // change/remove a value associated with a comment, submit it, then edit it back in as the same value as 
-// before, it  will remain commented as "User-Defined Threshold") until the thresholds are reset or a new 
+// before, it will remain commented as "User-Defined Threshold") until the thresholds are reset or a new 
 // query happens. The validation procedure in updateThresholds() will automatically sort the thresholds and 
 // remove duplicate values or negative values. There must always be a 0-threshold, which keeps its comment as 
 // "Not Detected".
@@ -317,13 +357,11 @@ function showCustomThresholdsPanel(container) {
 		thresholdsContainer = $("<div id='custom-thresholds-container'></div>")
 		  .appendTo(container)
 			.addClass("container-styled")
-			.center()
 			.draggable({containment: "parent"});
 		addGrabCursorFunctionality(thresholdsContainer);
 	} else {
 		thresholdsContainer.html("");
 	}
-  thresholdsContainer.center();
 	var panel = $("<div id='custom-thresholds-content'></div>")
 	  .appendTo(thresholdsContainer)
 		.addClass("inner-container-style");
@@ -373,6 +411,8 @@ function showCustomThresholdsPanel(container) {
 		.append(
 			$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
 		);
+	// center it
+	thresholdsContainer.center();
 	// close functionality
 	$("#custom-thresholds-cancel").click(function() {
 		thresholdsContainer.remove();

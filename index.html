@@ -3,11 +3,13 @@
 	<head>
 		<title>STEP Portal Dev/Test</title>
 		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=0.7">
 		<!-- jQuery -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+		<!-- jQuery extension for mobile interactions -->
+		<script src="js/jquery.ui.touch-punch.min.js"></script>
 		<!-- OpenLayers-3 -->
 		<link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
 		<script src="http://openlayers.org/en/v3.10.1/build/ol-debug.js"></script>
@@ -42,7 +44,9 @@
 		<script src="js/basemaps.js"></script>
 		<script src="js/map.js"></script>
 		<!-- init called here (as opposed to in map.js) so it can be overwritten in other templates -->
-		<script>window.onload = init;</script>
+		<script>
+			window.onload = init;
+		</script>
 	</head>
 	<body>
 		<!-- application container -->
@@ -74,7 +78,7 @@
 						</select>
 						<div class="control-spacer"></div>
 						<div class="control-label">&nbsp;</div>
-						<div id="reset-controls" class="button" style="display:inline-block;width:110px;text-align:center;">Reset Query</div>
+						<div id="reset-controls" class="button" style="display:inline-block;width:160px;text-align:center;">Reset Query</div>
 					</diV>
 					<!-- search by location controls -->
 					<div id="location-controls" class="controls-group">
@@ -90,14 +94,14 @@
 					</div>
 					<!-- map/layer controls -->
 					<div id="map-controls" class="controls-group">
+						<div class="control-label">Base Layer:</div>
+						<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
+						<div class="control-spacer"></div>
 						<div title='California County Subdivisions' class="control-label">Show Counties Layer:</div>
 						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
 						<div class="control-spacer"></div>
 						<div title='Marine Protected Areas in California' class="control-label">Show MPA Layer:</div>
 						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
-						<div class="control-spacer"></div>
-						<div class="control-label">Base Layer:</div>
-						<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
 					</div>
 				</div>
 				<!-- tabs -->

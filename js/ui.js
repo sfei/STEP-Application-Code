@@ -9,29 +9,29 @@ var activeControl = null;	// The active control (i.e. the visible one), which po
 							// the controls object below.
 var controls = {			// Object holding the various control panels and common related variables.
   query: {
-		name: "query", 
-		id: "query-controls",
+		name: 'query', 
+		id: 'query-controls',
 		element: null,
-		tabId: "control-tab-query", 
+		tabId: 'control-tab-query', 
 		tabElement: null
 	}, 
 	location: {
-		name: "station", 
-		id: "location-controls",
+		name: 'station', 
+		id: 'location-controls',
 		element: null,
-		tabId: "control-tab-location", 
+		tabId: 'control-tab-location', 
 		tabElement: null
 	}, 
 	map: {
-		name: "map", 
-		id: "map-controls",
+		name: 'map', 
+		id: 'map-controls',
 		element: null,
-		tabId: "control-tab-map", 
+		tabId: 'control-tab-map', 
 		tabElement: null
 	}
 };
 var controlStageVertPadding = 12;
-var controlStageMinHeight = 0;
+var controlStageMinHeight = 2;
 
 //************************************************************************************************************
 // General and Utility functions
@@ -134,7 +134,7 @@ function controlsInit() {
 			controls[key].tabElement = $("#"+controls[key].tabId);
 		}
 	}
-	setActiveControl("query");
+	setActiveControl(null);
 	// set last query to default
 	resetDefaultQuery();
 }
@@ -255,9 +255,9 @@ function setActiveControlTab() {
  */
 function setActiveControl(controlName) {
 	var stageDiv = $("#controls-stage");
-	if(controls[controlName]) {
-		var newControl = controls[controlName];
-		var closing = newControl == activeControl;
+	var closing = controlName == null || controlName == undefined || controls[controlName] == activeControl;
+	if(closing || controls[controlName]) {
+		var newControl = (!closing) ? controls[controlName] : null;
 		// get height as either closed or height of the new element
 		var oldHeight = stageDiv.height();
 		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
