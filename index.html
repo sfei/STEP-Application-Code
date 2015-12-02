@@ -54,42 +54,50 @@
 				<div id="controls-stage">
 					<!-- query controls -->
 					<div id="query-controls" class="controls-group">
-						<span class="label">Filter by: </span>
+						<div class="control-label">Filter by Species: </div>
 						<select id="species-control" style="width:300px;" disabled>
 							<option>Loading..</option>
 						</select>
-						<select id="contaminant-control" style="width:100px;" disabled>
+						<div class="control-spacer"></div>
+						<div class="control-label">For Contaminant: </div>
+						<select id="contaminant-control" style="width:170px;" disabled>
 							<option>Loading..</option>
 						</select> 
-						<span class="label">&nbsp;From:</span>
-						<select id="start-year-control" style="width:60px;" disabled>
-							<option>Loading..</option>
-						</select> 
-						<span class="label">to</span>
-						<select id="end-year-control" style="width:60px;" disabled>
+						<div class="control-spacer"></div>
+						<div class="control-label">From:</div>
+						<select id="start-year-control" style="width:70px;" disabled>
 							<option>Loading..</option>
 						</select>
-						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
+						<div class="label" style="display:inline-block;width:30px;margin:0 -4px;text-align:center;">to</div>
+						<select id="end-year-control" style="width:70px;" disabled>
+							<option>Loading..</option>
+						</select>
+						<div class="control-spacer"></div>
+						<div class="control-label">&nbsp;</div>
+						<div id="reset-controls" class="button" style="display:inline-block;width:110px;text-align:center;">Reset Query</div>
 					</diV>
 					<!-- search by location controls -->
 					<div id="location-controls" class="controls-group">
-						<span class="label">Zoom to County: </span>
-						<select id="counties-select" data-placeholder="Zoom to County.." style="width:180px;margin-left:4px;" disabled>
+						<div class="control-label">Zoom to County:</div>
+						<select id="counties-select" data-placeholder="Zoom to County.." style="width:390px;margin-left:4px;" disabled>
 							<option>Loading..</option>
 						</select>
-						<span class="label" style="margin-left:30px;">Zoom to Station: </span>
+						<div class="control-spacer"></div>
+						<div class="control-label">Zoom to Station:</div>
 						<select id="station-select" data-placeholder="Select a Location.." style="width:390px;" disabled>
 							<option>Loading..</option>
 						</select>
 					</div>
 					<!-- map/layer controls -->
 					<div id="map-controls" class="controls-group">
-						<div title='California County Subdivisions' class="label">Show Counties Layer</div>
+						<div title='California County Subdivisions' class="control-label">Show Counties Layer:</div>
 						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
-						<div title='Marine Protected Areas in California' class="label">Show MPA Layer</div>
+						<div class="control-spacer"></div>
+						<div title='Marine Protected Areas in California' class="control-label">Show MPA Layer:</div>
 						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
-						<span class="label" style="margin-right:6px;">Base Layer: </span>
-						<div id="base-layer-control-container" style="display:inline-block;"></div>
+						<div class="control-spacer"></div>
+						<div class="control-label">Base Layer:</div>
+						<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
 					</div>
 				</div>
 				<!-- tabs -->

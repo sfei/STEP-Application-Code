@@ -61,6 +61,7 @@ var stationsData,					// raw stations data as array of GeoJSON
 var countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
 	countyNames = [],				// list of county names (for search drop-down)
+	selectedCounty, 
 	countyStyles;
 var mpaUrl = "data/mpa_ca.geojson",	//"lib/getMPAsAsGeoJSON.php", 
 	mpaLayer,						// marine protected areas
@@ -405,8 +406,8 @@ function addCountyLayer() {
 				new ol.style.Style({
 					fill: null, 
 					stroke: new ol.style.Stroke({
-						color: '#ddd',
-						width: 1.5
+						color: '#f0f',
+						width: 2
 					})
 				})
 			];
@@ -424,7 +425,7 @@ function addCountyLayer() {
 									featureProjection: mapProjection
 								})
 				}), 
-				style: countyStyles[0]
+				style: getCountyStyle
 			});
 		}
 	});
@@ -440,6 +441,7 @@ function addCountyLayer() {
  */
 function zoomToCountyByName(countyName) {
 	if(!countyName || countyName < 0) { return; }
+	countyName = countyName.toLowerCase();
 	var counties = countiesLayer.getSource().getFeatures();
 	var selected = null;
 	for(var i = 0; i < counties.length; i++) {
@@ -449,6 +451,9 @@ function zoomToCountyByName(countyName) {
 		}
 	}
 	if(selected) {
+		selectedCounty = countyName;
+		// force style update
+		countiesLayer.changed();
 		// if county layer is not on, turn it on
 		if(!countiesLayer.getVisible()) {
 			countiesLayer.setVisible(true);
@@ -457,6 +462,11 @@ function zoomToCountyByName(countyName) {
 		}
 		map.getView().fit(selected.getGeometry().getExtent(), map.getSize());
 	}
+}
+
+function getCountyStyle(feature) {
+	if(!selectedCounty) { return [countyStyles[0]]; }
+	return [countyStyles[(feature.get("NAME").toLowerCase() === selectedCounty) ? 1 : 0]];
 }
 
 /**

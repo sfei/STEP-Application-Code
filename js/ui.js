@@ -1,13 +1,13 @@
 //************************************************************************************************************
 // Variables
 //************************************************************************************************************
-var speciesList;          // list of available species that keeps original capitalization pattern, easier to  
-                          // use same list that way, but requires you ensure consistency -- i.e. watch for any
-                          // toLowercase() or toUppercase() conflicts, or at least use a case-insenitive 
-                          // comparison function.
-var activeControl = null; // The active control (i.e. the visible one), which points to one of the values in 
-                          // the controls object below.
-var controls = {          // Object holding the various control panels and common related variables.
+var speciesList;			// list of available species that keeps original capitalization pattern, easier to  
+							// use same list that way, but requires you ensure consistency -- i.e. watch for any
+							// toLowercase() or toUppercase() conflicts, or at least use a case-insenitive 
+							// comparison function.
+var activeControl = null;	// The active control (i.e. the visible one), which points to one of the values in 
+							// the controls object below.
+var controls = {			// Object holding the various control panels and common related variables.
   query: {
 		name: "query", 
 		id: "query-controls",
@@ -30,6 +30,8 @@ var controls = {          // Object holding the various control panels and commo
 		tabElement: null
 	}
 };
+var controlStageVertPadding = 12;
+var controlStageMinHeight = 0;
 
 //************************************************************************************************************
 // General and Utility functions
@@ -117,9 +119,12 @@ function setModal(visible, showBackground, content) {
  */
 function controlsInit() {
 	$("#notification-tab").hide();
-	// fancify the big select lists (must be done before hiding the elements)
-	$("#station-select").chosen();
+	// make everything fancy!
 	$("#species-control").chosen();
+	$("#contaminant-control").chosen();
+	$("#start-year-control").chosen();
+	$("#end-year-control").chosen();
+	$("#station-select").chosen();
 	$("#counties-select").chosen();
 	// cache the control groups and tabs, hide the groups
 	for(var key in controls) {
@@ -149,16 +154,20 @@ function controlsActivate() {
 	// add query controls event listeners
 	$("#species-control")
 		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "species"}); });
+		.change(function() { updateQuery({firedBy: "species"}); })
+		.trigger('chosen:updated');
 	$("#contaminant-control")
 		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "contaminant"}); });
+		.change(function() { updateQuery({firedBy: "contaminant"}); })
+		.trigger('chosen:updated');
 	$("#start-year-control")
 		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "startYear"}); });
+		.change(function() { updateQuery({firedBy: "startYear"}); })
+		.trigger('chosen:updated');
 	$("#end-year-control")
 		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "endYear"}); });
+		.change(function() { updateQuery({firedBy: "endYear"}); })
+		.trigger('chosen:updated');
 	$("#reset-controls")
 		.prop('disabled', false)
 		.click(function() {
@@ -182,6 +191,11 @@ function controlsActivate() {
 		.prop('checked', countiesLayer.getVisible())
 		.click(function() {
 			countiesLayer.setVisible(!countiesLayer.getVisible());
+			// if turning off, reset any selected county
+			if(!countiesLayer.getVisible()) {
+				selectedCounty = null;
+				countiesLayer.changed();
+			}
 		});
 	$("#show-mpa-control")
 		.prop('disabled', false)
@@ -240,16 +254,38 @@ function setActiveControlTab() {
  *    specified in global {@link #controls} object, does nothing.
  */
 function setActiveControl(controlName) {
+	var stageDiv = $("#controls-stage");
 	if(controls[controlName]) {
 		var newControl = controls[controlName];
-		if(newControl !== activeControl) {
-			if(activeControl) {
-				activeControl.element.hide();
-			}
+		var closing = newControl == activeControl;
+		// get height as either closed or height of the new element
+		var oldHeight = stageDiv.height();
+		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
+		var padding = (!closing) ? controlStageVertPadding : 0;
+		// hide active element
+		if(activeControl != null) { activeControl.element.hide(); }
+		// animate height change
+		stageDiv
+			.height(oldHeight)
+			.animate(
+				{'height': newHeight + 2*padding}, 
+				'fast', 
+				function() {
+					stageDiv.height('auto');
+					stageDiv.css('padding', padding+'px 0');
+				}
+			);
+		// also animate moving the zoom control
+		$(".ol-zoom").animate({'top': newHeight+60}, 'fast');
+		// show new control (or don't if closing)
+		if(!closing) {
 			newControl.element.show();
 			activeControl = newControl;
-			setActiveControlTab();
-		}
+		} else {
+			activeControl = null;
+		} 
+		// set tabs
+		setActiveControlTab();
 	}
 }
 
@@ -351,13 +387,14 @@ function updateContaminantsSelect(data) {
 	for(var i = 0; i < data.length; i++) {
 		optionsHtml += "<option value=\"" + data[i][0] + "\">" + data[i][0] + "</option>";
 	}
-	$("#contaminant-control")
+	var controlDiv = $("#contaminant-control")
 		.html(optionsHtml)
 		.val(lastQuery.contaminant);
 	// check value, if null, just select first available
-	if(!$("#contaminant-control").val()) {
-		$("#contaminant-control").val(data[0][0]);
+	if(!controlDiv.val()) {
+		controlDiv.val(data[0][0]);
 	}
+	controlDiv.trigger('chosen:updated');
 }
 
 /**
@@ -371,18 +408,20 @@ function updateYearsSelect(data) {
 	for(var i = parseInt(data['min']); i <= parseInt(data['max']); i++) {
 		optionsHtml += "<option value=\"" + i + "\">" + i + "</option>";
 	}
-	$("#start-year-control")
+	var startDiv = $("#start-year-control")
 		.html(optionsHtml)
 		.val(lastQuery.startYear);
-	if(!$("#start-year-control").val()) {
-		$("#start-year-control").val(toString(data['min']));
+	if(!startDiv.val()) {
+		startDiv.val(toString(data['min']));
 	}
-	$("#end-year-control")
+	startDiv.trigger('chosen:updated');
+	var endDiv = $("#end-year-control")
 		.html(optionsHtml)
 		.val(lastQuery.endYear);
-	if(!$("#end-year-control").val()) {
-		$("#end-year-control").val(toString(data['max']));
+	if(!endDiv.val()) {
+		endDiv.val(toString(data['max']));
 	}
+	endDiv.trigger('chosen:updated');
 }
 
 /**
