@@ -7,6 +7,26 @@ a {
 a:hover {
 	text-decoration: underline;
 }
+.label {
+	display:inline;
+	cursor:default;
+}
+input, select {
+	cursor: pointer;
+}
+/* overwrite nouislider styles */
+.noUi-handle {
+	cursor: pointer;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.noUi-active {
+	cursor: pointer;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
 
 #step-container {
 	position: absolute;
@@ -204,4 +224,3 @@ a:hover {
 	color: #eea;
 	font-weight: bolder;
 }
-

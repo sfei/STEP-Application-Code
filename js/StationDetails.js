@@ -1,7 +1,18 @@
 
+/**
+ * The StationDetails object handles the window that opens when you click a station. There is quite a lot of 
+ * functionality provided, which is generally organized into tabs. Only one window may be open at a time, but 
+ * using the {@link #open(query)} call will load the new data into the existing window (or reopen the window 
+ * if it has been closed). A lot can be customized here, but it is not given an easy way to do 
+ * programitically. Instead manually change many of the object variables created in the init function. 
+ * Probably shouldn't ever have two instances either as then much of the element IDs will be duplicated.
+ * @param {Object} query - Query object. Optional.
+ * @returns {StationDetails}
+ */
 var StationDetails = function(query) {
 	
 	this.init = function(query) {
+	var self = this;
 		//****************************************************************************************************
 		// All customizable variables below (but do it by manually coding, not dynamically)
 		//****************************************************************************************************
@@ -23,7 +34,9 @@ var StationDetails = function(query) {
 		// tabs configurations
 		this.tabs = { 
 			data: {
+		label: "Data", 
 				tabId: "details-tab-data", 
+		click: self.openTabData, 
 				headers: ['Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [180, 80, 60, 80, 150], 
 				valueKeys: ['species', 'value', 'sampleYear', 'prepCode', 'sampleType'], 
@@ -40,7 +53,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			trends: {
+		label: "Trends", 
 				tabId: "details-tab-trends", 
+		click: self.openTabTrends, 
 				chartWidth: 640, 
 				chartHeight: 360, 
 				titleFunction: function(query) {
@@ -55,7 +70,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			nearby: {
+		label: "Nearby", 
 				tabId: "details-tab-nearby", 
+		click: self.openTabNearby, 
 				species: null, 
 				headers: ['Location', 'Distance (mi)', 'Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [240, 60, 180, 80, 60, 80, 150], 
@@ -73,8 +90,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
 			}, 
 			report: {
+		label: "Print Report", 
 				tabId: "details-tab-report", 
-				element: null, 
+		click: self.openTabReport, 
 				width: 550,
 				titleFunction: function(query) {
 					return "Generate and Print Summary Report";
@@ -103,6 +121,7 @@ var StationDetails = function(query) {
 	};
 		
 	this.open = function(inputQuery) {
+	if(!inputQuery) { return; }
 		// the query that constructed this
 		this.query = this.copyQuery(inputQuery.query);
 		if(inputQuery.station) {
@@ -178,28 +197,38 @@ var StationDetails = function(query) {
 	};
 	
 	this.createDetailsDialog = function() {
-		$('#' + this.parentId).append(
+		this.element = $(
 			"<div id='details-container" + "' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='details-title' class='grab'></div>" + // title set elsewhere
 					"<div id='details-info'></div>" +
 					"<div id='details-tabs-container'>" + 
-						"<ul id='details-dialog-tabs'>" + 
-							"<li id='" + this.tabs.data.tabId + "' class='details-tab'>Data</li>" + 
-							"<li id='" + this.tabs.trends.tabId + "' class='details-tab'>Trends</li>" + 
-							"<li id='" + this.tabs.nearby.tabId + "' class='details-tab'>Nearby</li>" + 
-							"<li id='" + this.tabs.report.tabId + "' class='details-tab'>Print Report</li>" + 
-						"</ul>" + 
+						"<ul id='details-dialog-tabs'></ul>" + 
 					"</div>" + 
 					"<div id='details-content'></div>" + 
 				"</div>" + 
 			"</div>"
-		);
-		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
-		// appears only on white space parts, but grabbing appears on anywhere.
-		this.element = $("#details-container");
-		var titleElement = this.element.find("#details-title").addClass("grab");
+		).appendTo($('#'+this.parentId));
+	// add tabs programmatically
 		var self = this;
+	var tabsList = this.element.find("#details-dialog-tabs");
+	for(var t in this.tabs) {
+	  if(this.tabs.hasOwnProperty(t)) {
+		$("<li id='" + this.tabs[t].tabId + "' class='details-tab'>" + this.tabs[t].label + "</li>")  
+		  .appendTo(tabsList)
+			.click(
+			  // variable scope in javascript callbacks sure is funky, especially within a loop
+			  function(theTab) { 
+				return function() {
+				  theTab.click.call(self);
+				};
+			  }(this.tabs[t])
+			);
+	  }
+	}
+		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
+		// appears on title bar (just personal prefernce but grab cursor over text looks wierd).
+		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element.hide()
 			.draggable()
 			.mousedown(function(evt) {
@@ -210,11 +239,6 @@ var StationDetails = function(query) {
 				self.element.removeClass("grabbing");
 				titleElement.addClass("grab");
 			});
-		// add click event listeners
-		$("#"+this.tabs.data.tabId).on('click', function() { self.openTabData(); });
-		$("#"+this.tabs.trends.tabId).on('click', function() { self.openTabTrends(); });
-		$("#"+this.tabs.nearby.tabId).on('click', function() { self.openTabNearby(); });
-		$("#"+this.tabs.report.tabId).on('click', function() { self.openTabReport(); });
 	};
 	
 	this.setTitle = function() {

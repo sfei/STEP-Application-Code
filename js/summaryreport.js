@@ -1,4 +1,5 @@
 
+// array of column objects that specify the name, width, and key
 var reportColumns = [
 	{ 
 		name: function() { return "Species"; }, 
@@ -33,7 +34,9 @@ var reportColumns = [
 	}
 ];
 
-// this overrides the init from map.js
+/**
+ * Use this init function to init the report (rather than say, the init in map.js).
+ */
 function initReport() {
 	// adjust page title
 	var titleHtml = query.contaminant + " Contamination Report<br />";
@@ -52,11 +55,11 @@ function initReport() {
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
 			if(watertype.search(/reservoir|lake/i) >= 0) {
-				return markerFactory.shapes.circle;
+				return 'circle';
 			} else if(watertype.search(/coast/i) >= 0) {
-				return markerFactory.shapes.triangle;
+				return 'triangle';
 			} else {
-				return markerFactory.shapes.diamond;
+				return 'diamond';
 			}
 		}, 
 		valueFunction: function(feature) {
@@ -170,7 +173,11 @@ function initReport() {
 		});
 	});
 	
-	// quick style function as first and last columns are a little special
+	/**
+   * Quick style function as first is a little special and it gets repeated a lot
+   * @param {number} i - Column index.
+   * @returns {String} A bit of css style as a string.
+   */ 
 	function getCellStyle(i) {
 		var style = "width:" + reportColumns[i].width + "px;";
 		if(i === 0) {

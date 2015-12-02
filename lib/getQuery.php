@@ -1,4 +1,9 @@
 <?php
+	
+	//********************************************************************************************************
+	// The query script. Fairly involved as it automatically adjusts/corrects the query parameters until at 
+	// least one record is returned.
+	//********************************************************************************************************
 
 	function validateYears(&$query, $minMaxYear) {
 		if($query['startYear'] > $minMaxYear['max']) {

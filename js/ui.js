@@ -1,10 +1,14 @@
 //************************************************************************************************************
 // Variables
 //************************************************************************************************************
-var speciesList;
-var activeControl = null;
-var controls = {
-	query: {
+var speciesList;          // list of available species that keeps original capitalization pattern, easier to  
+                          // use same list that way, but requires you ensure consistency -- i.e. watch for any
+                          // toLowercase() or toUppercase() conflicts, or at least use a case-insenitive 
+                          // comparison function.
+var activeControl = null; // The active control (i.e. the visible one), which points to one of the values in 
+                          // the controls object below.
+var controls = {          // Object holding the various control panels and common related variables.
+  query: {
 		name: "query", 
 		id: "query-controls",
 		element: null,
@@ -30,6 +34,19 @@ var controls = {
 //************************************************************************************************************
 // General and Utility functions
 //************************************************************************************************************
+/**
+ * Custom function to create a new window. Has a lot of useful functionality that gets commonly used, e.g. 
+ * having every new window centered on the monitor, even accounting for dual monitor setups.
+ * @param {event} e - Event object (useful on links where you want to keep the middle-mouse clicks and 
+ *    ctrl+left-clicks as new tabs as those are filtered and ignored).
+ * @param {string} url - Link URL.
+ * @param {string} name - New window name.
+ * @param {number} width - Width in pixels.
+ * @param {number} height - Height in pixels.
+ * @param {boolean} minimal - If true forces hiding of menubar, statusbar, and location (although with many 
+ *    modern browsers this has no effect).
+ * @returns {Window} The new window object.
+ */
 function newWindow(e, url, name, width, height, minimal) {
 	if(!e) e = window.event;
 	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
@@ -58,12 +75,27 @@ function newWindow(e, url, name, width, height, minimal) {
 	}
 }
 
+/**
+ * Create (or destroy) a modal dialog with a default loading message (in this case: "Loading stations..").
+ * @param {boolean} visible - True creates, false removes.
+ * @param {boolean} showBackground - Whether to hve a semi-transparent div over the background (so as to 
+ *    visually signify the modal status). Keep in mind in older browsers that don't support transparency it'll
+ *    just grey out the entire background.
+ */
 function setModalAsLoading(visible, showBackground) {
 	var loadingDialog = $("<div id='loading-dialog'></div>")
 		.html("<img src='images/ajax-loader.gif' alt='loading' /> Loading stations..");
 	setModal(visible, showBackground, loadingDialog);
 }
 
+/**
+ * Create (or destroy) a modal dialog.
+ * @param {boolean} visible - True creates, false removes.
+ * @param {boolean} showBackground - Whether to hve a semi-transparent div over the background (so as to 
+ *    visually signify the modal status). Keep in mind in older browsers that don't support transparency it'll
+ *    just grey out the entire background.
+ * @param {string} content - The HTML content of the modal dialog.
+ */
 function setModal(visible, showBackground, content) {
 	var modalContainer = $("#modal-container-outer");
 	if(!visible) {
@@ -79,6 +111,10 @@ function setModal(visible, showBackground, content) {
 //************************************************************************************************************
 // Init and activate functions
 //************************************************************************************************************
+/**
+ * Initialize map controls. However, it does not activate them as you may want to wait until the rest of the 
+ * application has loaded. Thus follow up with {@link #controlsActivate()} when ready.
+ */
 function controlsInit() {
 	$("#notification-tab").hide();
 	// fancify the big select lists (must be done before hiding the elements)
@@ -98,7 +134,11 @@ function controlsInit() {
 	resetDefaultQuery();
 }
 
-// should be called after all data has loaded and first query has fired successfully (thus loading select data)
+/**
+ * Actives the controls. Should be called after all data has loaded and first query has fired successfully 
+ * (thus loading select data).
+ * @see {@link controlsInit()}
+ */
 function controlsActivate() {
 	// add tabs event listeners
 	for(var key in controls) {
@@ -173,6 +213,11 @@ function controlsActivate() {
 //************************************************************************************************************
 // General UI functions
 //************************************************************************************************************
+/**
+ * Set css to display the proper tab with the active style (and the rest with inactive). Takes no properties. 
+ * Is automatically run on switching tabs with {@link #setActiveControl(controlName)} so does not have to be 
+ * explicitly called.
+ */
 function setActiveControlTab() {
 	for(var key in controls) {
 		if(controls.hasOwnProperty(key)) {
@@ -189,6 +234,11 @@ function setActiveControlTab() {
 	}
 };
 
+/**
+ * Set active control by the control panel's name.
+ * @param {string} controlName - Name of the control to set as active. If no match to any control panel 
+ *    specified in global {@link #controls} object, does nothing.
+ */
 function setActiveControl(controlName) {
 	if(controls[controlName]) {
 		var newControl = controls[controlName];
@@ -203,6 +253,12 @@ function setActiveControl(controlName) {
 	}
 }
 
+/**
+ * Flash the notification tab.
+ * @param {string} message - The notification message.
+ * @param {number} millis - How long the message stays on screen (not including 700 ms to animation the show 
+ *    and hide).
+ */
 function flashNotification(message, millis) {
 	$("#notification-tab")
 	  .html(message)
@@ -215,6 +271,15 @@ function flashNotification(message, millis) {
 //************************************************************************************************************
 // Query ui and controls
 //************************************************************************************************************
+/**
+ * Check query against the last successful query. Generally this is done after a query, using a copy of the 
+ * query object before the query function returns and overwrites the last successful query (which is modified
+ * server-side to be valid). Any changes from the query initially specified are flashed in the appropriate 
+ * query controls (to signify they had to be modified to return a valid query).
+ * @param {Object} query - Query object.
+ * @param {boolean} firstRun - If true, inhibits flashing. Obviously used for the first/initial query which 
+ *    is not user-specified and done to populate the initial map.
+ */
 function flashQueryChanges(query, firstRun) {
 	// store in list so we can fire them fairly simultaneously
 	var elements = [];
@@ -239,6 +304,11 @@ function flashQueryChanges(query, firstRun) {
 	}
 }
 
+/**
+ * Updates {@link #speciesList} from server to grab all unique species and the updates the species control. 
+ * Strings come in their original values (i.e. not standarized in upper/lower case). Really only needs to be 
+ * called once. Asynchronous ajax call.
+ */
 function updateSpeciesList() {
 	$.ajax({
 		url: "lib/getAllSpecies.php", 
@@ -253,6 +323,11 @@ function updateSpeciesList() {
 	});
 }
 
+/**
+ * Update the species control (the select list), including adding highest/lowest average options first. Takes 
+ * no parameters, instead uses {@link #speciesList} global var to population options. Select values are kept 
+ * as is (that is, not upper/lower-cased).
+ */
 function updateSpeciesSelect() {
 	var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
 		+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
@@ -265,6 +340,12 @@ function updateSpeciesSelect() {
 		.trigger("chosen:updated");
 }
 
+/**
+ * Update the contaminants control (the contaminants list).
+ * @param {Object[]} data - Query results for the list of contaminants. Expects an array of single-length 
+ *    arrays. E.g. [ ['Mercury'], ['DDT'] ] as that's just how the raw SQL query is returned. Select values  
+ *    are kept as is (that is, not upper/lower-cased).
+ */
 function updateContaminantsSelect(data) {
 	var optionsHtml = "";
 	for(var i = 0; i < data.length; i++) {
@@ -279,6 +360,12 @@ function updateContaminantsSelect(data) {
 	}
 }
 
+/**
+ * Updates the year controls (start and end year lists).
+ * @param {Object[]} data - Query results for the min and max year.
+ * @param {number} data[].min - Earliest year with data.
+ * @param {number} data[].max - Latest year with data.
+ */
 function updateYearsSelect(data) {
 	var optionsHtml = "";
 	for(var i = parseInt(data['min']); i <= parseInt(data['max']); i++) {
@@ -298,6 +385,10 @@ function updateYearsSelect(data) {
 	}
 }
 
+/**
+ * Update the stations controls (stations list). Takes no parameters. Uses global {@link #stations} to 
+ * populate values. Select values are numeric rather than the station name.
+ */
 function updateStationsSelect() {
 	var optionsHtml = "<option disabled value=' '></option>";
 	for(var i = 0; i < stations.getLength(); i++) {

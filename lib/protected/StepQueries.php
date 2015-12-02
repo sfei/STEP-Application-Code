@@ -3,7 +3,7 @@
 	/** Since this is a common function, write it here outside the class for ease of editing. Safely gets the 
 	 * query contaminants. Query parameters looked for are:
 	 * <ul>
-	 *		<li>(String) <i>species</i> - species name</li>
+	 *		<li>(String) <i>species</i> - species name (which may also be 'highest' or 'lowest')</li>
 	 *		<li>(String) <i>contaminant</i> - contaminant name</li>
 	 *		<li>(int) <i>startYear</i> - start year / min. year</li>
 	 *		<li>(int) <i>endYear</i> - end year / max. year</li>
@@ -472,6 +472,12 @@
 			return $stations;
 		}
 		
+		/** Get any and all existing records for the parameters provided.
+		 * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}. In 
+		*		particular it needs the contaminant, the species (if highest/lowest, grabs all species), and start 
+		*	and end years.
+		* @return array Associative array of records. As this is function is really only used for preparing 
+		*	records for download, the specifics of each column are not specified here. */
 		public function getAllRecords($params) {
 			if($params["species"] == "highest" || $params["species"] == "lowest") {
 				$params["species"] = "all";

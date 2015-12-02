@@ -1,6 +1,11 @@
+
 //************************************************************************************************************
 // Data download ui and functions
 //************************************************************************************************************
+
+/**
+ * Opens up the download data dialog.
+ */
 function showDownloadDialog() {
 	// copy query
 	var query = {};
@@ -68,6 +73,13 @@ function showDownloadDialog() {
 	setModal(true, true, downloadDialog);
 }
 
+/**
+ * Start download automatically (uses iFrame to achieve this), as well as provide updates and manual download
+ * link.
+ * @param {jQuery} container - jQuery object for DOM element in which to display download updates/link. As 
+ *    well, iFrame to create the auto-start download is created in it, so it must be specified correctly.
+ * @param {Object} query - Query/parameter object
+ */
 function downloadQueryData(container, query) {
 	container.html(
 		$("<div id='download-message'></div>")

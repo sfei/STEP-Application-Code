@@ -1,4 +1,8 @@
 <?php
+	//********************************************************************************************************
+	// Script to generate the summary report page. Data is retrieved from the session, so 
+	// prepareSummaryReport.php must have been run recently or the data will have expired.
+	//********************************************************************************************************
 
 	session_start();
 

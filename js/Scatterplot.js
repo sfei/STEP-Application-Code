@@ -1,63 +1,78 @@
 
-// from http://bl.ocks.org/rveciana/5181105
+// start by extending d3.helper with a tooltip function
 d3.helper = {};
+/**
+ * Create a tooltip function.
+ * @param {requestCallback} accessor - callback for determining tooltop text.
+ * @returns {Function} Tooltip function.
+ */
 d3.helper.tooltip = function(accessor){
-    return function(selection){
-        var tooltipDiv;
-        var bodyNode = d3.select('body').node();
-        selection.on("mouseover", function(d, i){
-            // Clean up lost tooltips
-            d3.select('body').selectAll('div.tooltip').remove();
-            // Append tooltip
-            tooltipDiv = d3.select('body').append('div').attr('class', 'scatterplot-tooltip');
-            var absoluteMousePos = d3.mouse(bodyNode);
-            tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
-                .style('top', (absoluteMousePos[1] - 15)+'px')
-                .style('position', 'absolute') 
-                .style('z-index', 1001)
+	// from http://bl.ocks.org/rveciana/5181105
+	return function(selection){
+		var tooltipDiv;
+		var bodyNode = d3.select('body').node();
+		selection.on("mouseover", function(d, i){
+			// Clean up lost tooltips
+			d3.select('body').selectAll('div.tooltip').remove();
+			// Append tooltip
+			tooltipDiv = d3.select('body').append('div').attr('class', 'scatterplot-tooltip');
+			var absoluteMousePos = d3.mouse(bodyNode);
+			tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
+				.style('top', (absoluteMousePos[1] - 15)+'px')
+				.style('position', 'absolute') 
+				.style('z-index', 1001)
 				.style('background-color', '#fff')
 				.style('border', '1px solid #777')
 				.style('border-radius', '4px')
 				.style('padding', '4px 6px')
 				.style('font-family', "'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif")
 				.style('font-size', '12px');
-            // Add text using the accessor function
-            var tooltipText = accessor(d, i) || '';
-            // Crop text arbitrarily
-            //tooltipDiv.style('width', function(d, i){return (tooltipText.length > 80) ? '300px' : null;})
-            //    .html(tooltipText);
-        })
-        .on('mousemove', function(d, i) {
-            // Move tooltip
-            var absoluteMousePos = d3.mouse(bodyNode);
-            tooltipDiv.style('left', (absoluteMousePos[0] + 20)+'px')
-                .style('top', (absoluteMousePos[1])+'px');
-            var tooltipText = accessor(d, i) || '';
-            tooltipDiv.html(tooltipText);
-        })
-        .on("mouseout", function(d, i){
-            // Remove tooltip
-            tooltipDiv.remove();
-        });
-
-    };
+			// Add text using the accessor function
+			var tooltipText = accessor(d, i) || '';
+			// Crop text arbitrarily
+			//tooltipDiv.style('width', function(d, i){return (tooltipText.length > 80) ? '300px' : null;})
+			//	.html(tooltipText);
+		})
+		.on('mousemove', function(d, i) {
+			// Move tooltip
+			var absoluteMousePos = d3.mouse(bodyNode);
+			tooltipDiv.style('left', (absoluteMousePos[0] + 20)+'px')
+				.style('top', (absoluteMousePos[1])+'px');
+			var tooltipText = accessor(d, i) || '';
+			tooltipDiv.html(tooltipText);
+		})
+		.on("mouseout", function(d, i){
+			// Remove tooltip
+			tooltipDiv.remove();
+		});
+	};
 };
 
-/** @parm options
- *		<ul>
- *			<li>container: ID to div that will contain the scatterplot</li>
- *			<li>data: the data to plot as an array of values</li>
- *			<li>dataPointName: data category value to use as unique name for each point</li>
- *			<li>xValueName: data category value to use as x-axis location</li>
- *			<li>yValueName: data category value to use as y-axis location</li>
- *			<li>xAxisLabel: x-axis label</li>
- *			<li>yAxisLabel: y-axis label</li>
- *			<li>width: (optional - defaults to 600px)</li>
- *			<li>height: (optional - defaults to 400px)</li>
- *			<li>margin: (optional - defaults to top-20, right-190, bottom-30, left-40)</li>
- *		</ul> */
+/**
+ * Class for creating a scatterplot. Works much like a static class, has one function and does not have an 
+ * init/constructor.
+ */
 var Scatterplot = {
 	
+	/**
+	 * Create a scatterplot.
+	 * @param {Object[]} options
+	 * @param {jQuery} options[].container - The jQuery object containing the HTML element in which to create 
+	 *	the scatterplot.
+	 * @param {Object[]} options[].data - The plot data as an array of objects. Use the dataPointName, 
+	 *	xValueName, and yValueName parameters to tell the function how to parse the data.
+	 * @param {string} options[].dataPointName - The key name in each data object to retrieve the data point's 
+	 *	name/label.
+	 * @param {string} options[].xValueName - The key name in each data object to retrieve the x-value.
+	 * @param {string} options[].yValueName - The key name in each data object to retrieve the y-value.
+	 * @param {string} xAxisLabel - Name/label of the x-axis.
+	 * @param {string} yAxisLabel - Name/label of the y-axis.
+	 * @param {number} width - Optional width value (defaults to 600px).
+	 * @param {number} height - Optional height value (defaults to 600px).
+	 * @param {Object} margin - Optional margin value (defaults to margin.top = 20, margin.right = 190, 
+	 *	margin.bottom = 30, and margin.left = 40).
+	 * @returns {Scatterplot.create.svg} Scatterplot D3 object.
+	 */
 	create: function(options) {
 		var data = [];
 		var minMax = { x: null, y: null };
@@ -173,11 +188,11 @@ var Scatterplot = {
 	
 		// y-axis
 		var yScale = d3.scale.linear()
-		  .domain(minMax.y)
-		  .range([height, 0]);
+			.domain(minMax.y)
+			.range([height, 0]);
 		var yAxis = d3.svg.axis()
-		  .scale(yScale)
-		  .orient("left");
+			.scale(yScale)
+			.orient("left");
 		svg.append("g")
 			.attr("class", "scatterplot-yaxis")
 			.call(yAxis)
@@ -191,7 +206,7 @@ var Scatterplot = {
 			.text(options.yAxisLabel);
 		
 		// grid
-		svg.append("g")         
+		svg.append("g")
 			.attr("class", "scatterplot-grid")
 			.attr("transform", "translate(0," + height + ")")
 			.style("opacity", 0.7)
@@ -199,7 +214,7 @@ var Scatterplot = {
 				.tickSize(-height, 0, 0)
 				.tickFormat("")
 			);
-		svg.append("g")         
+		svg.append("g")
 			.attr("class", "scatterplot-grid")
 			.attr("opacity", 0.7)
 			.call(yAxis
@@ -217,8 +232,8 @@ var Scatterplot = {
 			.style("fill", 'none')
 			.attr("d",
 				d3.svg.line()
-				  .x(function(coords) { return xScale(coords[0]); })
-				  .y(function(coords) { return yScale(coords[1]); })
+					.x(function(coords) { return xScale(coords[0]); })
+					.y(function(coords) { return yScale(coords[1]); })
 			);
 		
 		// points
@@ -243,16 +258,16 @@ var Scatterplot = {
 			.attr("class", "scatterplot-legend")
 			.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 		legend.append("rect")
-		  .attr("x", width + 5)
-		  .attr("width", 18)
-		  .attr("height", 18)
-		  .style("fill", color);
+			.attr("x", width + 5)
+			.attr("width", 18)
+			.attr("height", 18)
+			.style("fill", color);
 		legend.append("text")
-          .attr("x", width + 28)
-          .attr("y", 9)
-          .attr("dy", ".35em")
-          .style("text-anchor", "start")
-          .text(function(d) { return d; });
+			.attr("x", width + 28)
+			.attr("y", 9)
+			.attr("dy", ".35em")
+			.style("text-anchor", "start")
+			.text(function(d) { return d; });
 		
 		return svg;
 	}

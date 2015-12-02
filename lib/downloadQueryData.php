@@ -16,13 +16,13 @@
 	
 	// filename
 	if($query['species'] == "highest" || $query['species'] == "lowest") {
-       $query['species'] = "allSpecies";
-    }
-    $filename = "step_".date("Ymd")."_".$query['contaminant']."_".$query['species']."_".$query['startYear']."_".$query['endYear'].".csv";
+		$query['species'] = "allSpecies";
+	}
+	$filename = "step_".date("Ymd")."_".$query['contaminant']."_".$query['species']."_".$query['startYear']."_".$query['endYear'].".csv";
 	
 	// CSV headers
 	header("Content-Disposition: attachment; filename=\"$filename\"");
-    header('Content-Type: text/csv');
+	header('Content-Type: text/csv');
 	
 	// metadata information as first row (UPDATE THIS LINK AS NECESSARY)
 	echo "STEP Data Download: Before using this data please view metadata file at: http://eis.sfei.org/cwqmc/step/metadata.html\r\n";
@@ -35,8 +35,8 @@
 		}
 		$values = array();
 		foreach($result[$i] as $key => $value) {
-            $values[] = '"' . str_replace('"', '""', html_entity_decode(strip_tags($value))) . '"';
-        }
+			$values[] = '"' . str_replace('"', '""', html_entity_decode(strip_tags($value))) . '"';
+		}
 		echo implode(',', $values) . "\r\n";
 	}
 	

@@ -2,34 +2,59 @@
 //************************************************************************************************************
 // Common utility functions as extensions to existing prototypes
 //************************************************************************************************************
+/**
+ * Capitalize the first letter of every word. (A word is determined by any string preceded by whitespace, as 
+ * such ignores second word in hyphenated compound words).
+ * @returns {string} Capitalized version of this string.
+ */
 String.prototype.capitalize = function() {
-    return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+	return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
 };
 
+/**
+ * Center itself in the window with absolute positioning.
+ * @returns {jQuery} Itself.
+ */
 jQuery.fn.center = function() {
-    this.css("position","absolute");
-    this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +  $(window).scrollTop()) + "px");
-    this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
-    return this;
+	this.css("position","absolute");
+	this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +  $(window).scrollTop()) + "px");
+	this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
+	return this;
 };
+
+/**
+ * Adds the handling of adding/removing the 'grab' and 'grabbing' css classes on mouse drag events. Original 
+ * for the map (as OpenLayers doesn't do this automatically) but useful for a lot of other stuff, like custom 
+ * dialog boxes/windows.
+ * @param {jQuery} element - jQuery object for element to add functionality to.
+ */
+function addGrabCursorFunctionality(element) {
+	element.addClass("grab");
+	element.mousedown(function() {
+		element.removeClass("grab").addClass("grabbing");
+	}).mouseup(function() {
+		element.removeClass("grabbing").addClass("grab");
+	});
+}
 
 //************************************************************************************************************
 // Variables
 //************************************************************************************************************
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
 var map,							// openlayers map object
-	mapProjection = 'EPSG:3857', 	// web mercator wgs84
-	wgs84 = 'EPSG:4326';			// assumed coordinate-system for any incoming data
+	mapProjection = 'EPSG:3857',	// web mercator wgs84
+	wgs84 = 'EPSG:4326',			// assumed coordinate-system for any incoming data
+	initZoomLevel = 7;				// init zoom level as zoomToStationsExtent() can be a bit too zoomed out
 
 var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
 var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
 									// cached for performance
 var stationDetails = null;			// this object handles the pop-up details
-var colorMap = [					// the color gradient for symbology
-	[210, 255, 255], 
-	[60, 100, 255], 
-	[95, 0, 180]
-];
+var colorMap =  [					// the color gradient for symbology
+				  [210, 255, 255], 
+				  [60, 100, 255], 
+				  [95, 0, 180]
+				];
 var stationsData,					// raw stations data as array of GeoJSON
 	stations,						// stations data as ol.Collection instance
 	stationLayer;					// layer object
@@ -37,7 +62,7 @@ var countiesUrl = "data/ca_counties.geojson",
 	countiesLayer,
 	countyNames = [],				// list of county names (for search drop-down)
 	countyStyles;
-var mpaUrl = "data/mpa_ca.geojson", //"lib/getMPAsAsGeoJSON.php", 
+var mpaUrl = "data/mpa_ca.geojson",	//"lib/getMPAsAsGeoJSON.php", 
 	mpaLayer,						// marine protected areas
 	mpaColor = [50, 220, 50, 0.5],	// default MPA color
 	mpaStyles;						// array of normal and hover style
@@ -60,6 +85,9 @@ var enableHoverInteractions = browserType.isChrome;
 //************************************************************************************************************
 // Initialize functions
 //************************************************************************************************************
+/**
+ * Application init function. Pretty much the only thing the HTML page has to call explicitly.
+ */
 function init() {
 	// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
 	if(browserType.isIE) {
@@ -81,11 +109,11 @@ function init() {
 		shapeFunction: function(feature) {
 			var watertype = feature.get("waterType");
 			if(watertype.search(/reservoir|lake/i) >= 0) {
-				return markerFactory.shapes.circle;
+				return 'circle';
 			} else if(watertype.search(/coast/i) >= 0) {
-				return markerFactory.shapes.triangle;
+				return 'triangle';
 			} else {
-				return markerFactory.shapes.diamond;
+				return 'diamond';
 			}
 		},
 		colorMap: colorMap
@@ -104,12 +132,20 @@ function init() {
 	addClickInteractions();
 	controlsActivate();
 	// zoom in a bit to start
-	map.getView().setZoom(7);
+	map.getView().setZoom(initZoomLevel);
 	// Technically we can release this variable for garbage collection as once the select dropdown is 
 	// populated, it never changes. It was only global to easily pass between scripts
 	countyNames = null;
 }
 
+/**
+ * Functions a little more specific to initializing the map. Does not have to be called explicitly, as it is 
+ * called from {@link #init()}, but if you have a custom init function, this method can be used to do the 
+ * common and less-specific map init. Creates the map object, adds the cursor functionality and a station 
+ * tooltip (hidden and no functionality added to it yet), and finally adds the basemap.
+ * @param {number} baseMapSelect - Index of basemap to set as active on init. If not specified defaults 0, or 
+ *	first base layer on the list. (See basemaps.js)
+ */
 function mapInit(baseMapSelect) {
 	// create map and view
 	map = new ol.Map({ target: "map-view" });
@@ -133,21 +169,23 @@ function mapInit(baseMapSelect) {
 	// initialize tooltip
 	$("<div id='station-tooltip'></div>").appendTo($("#map-view")).hide();
 	// add basemaps
-	addBasemaps(baseMapSelect);
+	addBasemaps(map, baseMapSelect);
 }
 
 //************************************************************************************************************
 // Map functions
 //************************************************************************************************************
-function addGrabCursorFunctionality(element) {
-	element.addClass("grab");
-	element.mousedown(function() {
-		element.removeClass("grab").addClass("grabbing");
-	}).mouseup(function() {
-		element.removeClass("grabbing").addClass("grab");
-	});
-}
 
+/**
+ * Add hover interactions to the map. Specifically adds swapping layers symbols with the highlight style on 
+ * hover and the tooltip with the station name. Should be reset on changing any of the affected layers as the 
+ * interaction object is linked to the layers it interacts with (thus a new interaction object should be 
+ * created if one of the layers is swapped out).
+ * <br /><br />
+ * Important to note that it uses the "featType" attribute of a feature to differentiate which layer the 
+ * feature came from and thus use the appropriate functionality. This is not a default feature attribute, so 
+ * on loading any layer, make sure all features have this value set appropriately.
+ */
 function addHoverInteractions() {
 	hoverInteraction = new ol.interaction.Select({
 		condition: ol.events.condition.pointerMove, 
@@ -186,6 +224,14 @@ function addHoverInteractions() {
 	map.addInteraction(hoverInteraction);
 }
 
+/**
+ * Add click interactions to the map. In this case by opening the station details for stations, and a new 
+ * window to the specific catch/take regulations for MPA polygons.
+ * <br /><br />
+ * Important to note that it uses the "featType" attribute of a feature to differentiate which layer the 
+ * feature came from and thus use the appropriate functionality. This is not a default feature attribute, so 
+ * on loading any layer, make sure all features have this value set appropriately.
+ */
 function addClickInteractions() {
 	$(map.getViewport()).on('click', function(evt) {
 		var pixel = map.getEventPixel(evt.originalEvent);
@@ -210,8 +256,17 @@ function addClickInteractions() {
 //************************************************************************************************************
 // Station layer functionalities
 //************************************************************************************************************
-/** (Re)load stations layers onto the map
- * @param {Array} data Array of the query results */
+/** 
+ * (Re)load stations layers onto the map.
+ * @param {Object[]} data - Array of the query results.
+ * @param {string} data[].name - Station name.
+ * @param {number} data[].lat - Station latitude.
+ * @param {number} data[].long - Station longitude.
+ * @param {String} data[].waterType - The station water type.
+ * @param {number} data[].value - The contaminant value for this station.
+ * @param {String} data[].advisoryName - Specific site advisory name, if it exists.
+ * @param {String} data[].advisoryUrl - Link to specific site advisory page, if it exists.
+ * */
 function loadStationsLayer(data) {
 	// create array of ol.Features from data (since it's not technically geographic)
 	var featArray = new Array();
@@ -259,16 +314,23 @@ function loadStationsLayer(data) {
 	}
 }
 
+/**
+ * Force refreshing of the stations layer. Usually done after a style change. Hopefully this updates in OL3 
+ * soon, right now only way is to force refreshing by deleting/recreating.
+ */
 function refreshStations() {
-	// hopefully this updates in OL3 soon, right now only way is to force refreshing by deleting/recreating
 	loadStationsLayer(stationsData);
 	// note for later, a more direct solution you still need to remember to clear 'mfStyle' cache in feature
 }
 
-function openStationDetails(feature) {
+/**
+ * Opens the more detailed {@link StationDetails} for the given station.
+ * @param {ol.Feature} station - Feature object to option details on.
+ */
+function openStationDetails(station) {
 	var options = {
 		query: lastQuery,
-		station: feature
+		station: station
 	};
 	if(!stationDetails) { 
 		stationDetails = new StationDetails(options);
@@ -276,6 +338,9 @@ function openStationDetails(feature) {
 	stationDetails.open(options);
 }
 
+/**
+ * Zoom to the extent of the entire stations layer.
+ */
 function zoomToStations() {
 	var extent = stationLayer.getSource().getExtent();
 	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
@@ -283,6 +348,10 @@ function zoomToStations() {
 	}
 }
 
+/**
+ * Zoom to a specific station. (Uses zoom level 16, though it can be overruled by max-zoom option in map view)
+ * @param {ol.Feature} station - Feature object to zoom to. (Actually can be any point feature.)
+ */
 function zoomToStation(station) {
 	if(station) {
 		var coords = station.getGeometry().getCoordinates();
@@ -292,6 +361,12 @@ function zoomToStation(station) {
 	}
 }
 
+/** 
+ * Get the ol.Feature object for a station, by its name. While it is case sensitive, it ignores any non
+ * alphanumeric or whitespace character when comparing (as some may be escaped).
+ * @param {string} stationName - The station name.
+ * @returns {ol.Feature} The feature, or null if no match found.
+ */
 function getStationByName(stationName) {
 	// to ease compare, remove any special characters except alphanumeric and spaces, especially since some, 
 	// like quotes, are replaced with character codes
@@ -308,6 +383,9 @@ function getStationByName(stationName) {
 //************************************************************************************************************
 // County and MPA layer functionalities
 //************************************************************************************************************
+/**
+ * Add CA counties layer to the map.
+ */
 function addCountyLayer() {
 	// Done this way due to async nature of OL3 loading and how it doesn't load until set visible (since layer
 	// defaults to hidden at start), but we need to preload the features to create the counties name list.
@@ -355,6 +433,11 @@ function addCountyLayer() {
 	map.addLayer(countiesLayer);
 }
 
+/**
+ * Zoom to the extent of the specific CA county. If the counties layer was not set visible, it will 
+ * automatically be turned on.
+ * @param {string} countyName - Name of county.
+ */
 function zoomToCountyByName(countyName) {
 	if(!countyName || countyName < 0) { return; }
 	var counties = countiesLayer.getSource().getFeatures();
@@ -376,6 +459,9 @@ function zoomToCountyByName(countyName) {
 	}
 }
 
+/**
+ * Add marine protected area layer.
+ */
 function addMPALayer() {
 	$.ajax({
 		async: false, // async must be false as hover interaction must be applied after this is loaded

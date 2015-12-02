@@ -41,53 +41,58 @@
 		<!-- main map script -->
 		<script src="js/basemaps.js"></script>
 		<script src="js/map.js"></script>
-		<!-- init called here so it can be overwritten in other templates -->
+		<!-- init called here (as opposed to in map.js) so it can be overwritten in other templates -->
 		<script>window.onload = init;</script>
 	</head>
 	<body>
+		<!-- application container -->
 		<div id="step-container">
 			<!-- the actual OpenLayers map -->
 			<div id="map-view" title="Click on location icon for details"></div>
 			<!-- layer/data controls -->
 			<div id="controls-container" style="font-size:14px;">
 				<div id="controls-stage">
+					<!-- query controls -->
 					<div id="query-controls" class="controls-group">
-						Filter by: 
+						<span class="label">Filter by: </span>
 						<select id="species-control" style="width:300px;" disabled>
 							<option>Loading..</option>
 						</select>
 						<select id="contaminant-control" style="width:100px;" disabled>
 							<option>Loading..</option>
 						</select> 
-						&nbsp;From:
+						<span class="label">&nbsp;From:</span>
 						<select id="start-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select> 
-						to
+						<span class="label">to</span>
 						<select id="end-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select>
 						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
 					</diV>
+					<!-- search by location controls -->
 					<div id="location-controls" class="controls-group">
-						Zoom to County: 
+						<span class="label">Zoom to County: </span>
 						<select id="counties-select" data-placeholder="Zoom to County.." style="width:180px;margin-left:4px;" disabled>
 							<option>Loading..</option>
 						</select>
-						<span style="margin-left:30px;">Zoom to Station: </span>
+						<span class="label" style="margin-left:30px;">Zoom to Station: </span>
 						<select id="station-select" data-placeholder="Select a Location.." style="width:390px;" disabled>
 							<option>Loading..</option>
 						</select>
 					</div>
+					<!-- map/layer controls -->
 					<div id="map-controls" class="controls-group">
-						Show Counties Layer
+						<div title='California County Subdivisions' class="label">Show Counties Layer</div>
 						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
-						Show MPA Layer
+						<div title='Marine Protected Areas in California' class="label">Show MPA Layer</div>
 						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
-						<span style="margin-right:6px;">Base Layer: </span>
+						<span class="label" style="margin-right:6px;">Base Layer: </span>
 						<div id="base-layer-control-container" style="display:inline-block;"></div>
 					</div>
 				</div>
+				<!-- tabs -->
 				<div id="controls-tabs">
 					<div id="control-tab-query" class="control-tab">Search Query</div>
 					<div id="control-tab-location" class="control-tab">Find by Location</div>

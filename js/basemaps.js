@@ -1,4 +1,5 @@
-// array of loaded baselayers (stored this way for base layers switching)
+
+// array of loaded base layers (stored this way for base layers switching)
 var baseLayers = [
 	{
 		name: "Streets and Topographic", 
@@ -33,8 +34,14 @@ var baseLayers = [
 		})
 	}
 ];
+// array of base layers as a ol.LayerGroup
 var baseLayersGroup;
 
+/**
+ * Adds basemap control to given element.
+ * @param {jQuery} container - jQuery object for DOM element in which to place base layer control.
+ * @param {Object} style - Optional css styles to apply.
+ */
 function addBasemapControl(container, style) {
 	var basemapControl = $("<select id='base-layer-control'></select>");
 	if(style) { basemapControl.css(style); }
@@ -47,7 +54,13 @@ function addBasemapControl(container, style) {
 	basemapControl.on('change', function() { changeBasemap(basemapControl.val()); });
 }
 
-function addBasemaps(baseMapSelect) {
+/**
+ * Add base layers to a map object.
+ * @param {ol.Map} map - Map instance to add base layers to.
+ * @param {number} baseMapSelect - Index of base layer (in baseLayers array) to set as initially active 
+ *    (defaults to 0, or the first base layer).
+ */
+function addBasemaps(map, baseMapSelect) {
 	// first convert to regular array and create a layer group
 	var baseLayersArray = [];
 	for(var i = 0; i < baseLayers.length; i++) {
@@ -63,8 +76,11 @@ function addBasemaps(baseMapSelect) {
 	map.setLayerGroup(baseLayersGroup);
 }
 
-/** Base layers are changed just by comparing to the given index in the base layer group
- * @param {Number} layerIndex */
+/** 
+ * Base layers are swapped by comparing to the given index in the baseLayers array, setting the matching layer
+ * to visible, and setting the rest to invisible.
+ * @param {number} layerIndex - Index of baselayer (in baseLayers array).
+ */
 function changeBasemap(layerIndex) {
 	layerIndex = parseInt(layerIndex);
 	if(!layerIndex || layerIndex < 0 || layerIndex >= baseLayers.length) { 
