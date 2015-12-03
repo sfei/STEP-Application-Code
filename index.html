@@ -4,7 +4,6 @@
 		<title>STEP Portal Dev/Test</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
 		<!-- jQuery -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
@@ -15,91 +14,97 @@
 		<!-- D3 -->
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 		<!-- chosen -->
-		<link rel="stylesheet" href="js/chosen/chosen.min.css" type="text/css" />
+		<link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
 		<script src="js/chosen/chosen.jquery.min.js"></script>
-		
+		<!-- no UI slider -->
+		<link href="css/nouislider.min.css" rel="stylesheet">
+		<script src="js/nouislider/nouislider.min.js"></script>
 		<!-- page CSS -->
-		<link rel="stylesheet" href="default.css" />
+		<link rel="stylesheet" href="css/style.css" />
+		<!-- js for the ui -->
+		<script src="js/ui.js"></script>
+		<!-- query backend and ui scripts -->
+		<script src="js/query.js"></script>
+		<!-- data download scripts -->
+		<script src="js/download.js"></script>
 		<!-- color/marker scripts -->
 		<script src="js/ColorMap.js"></script>
 		<script src="js/MarkerFactory.js"></script>
-		<!-- query backend and ui scripts -->
-		<script src="js/query.js"></script>
 		<!-- map legend scripts -->
+		<link rel="stylesheet" href="css/legend.css" />
 		<script src="js/legend.js"></script>
 		<!-- station details/tabs and scatterplot scripts -->
-		<link rel="stylesheet" href="js/scatterplot.css" />
+		<link rel="stylesheet" href="css/scatterplot.css" />
 		<script src="js/Scatterplot.js"></script>
-		<link rel="stylesheet" href="js/stationdetails.css" />
+		<link rel="stylesheet" href="css/stationdetails.css" />
 		<script src="js/StationDetails.js"></script>
 		<!-- main map script -->
+		<script src="js/basemaps.js"></script>
 		<script src="js/map.js"></script>
+		<!-- init called here (as opposed to in map.js) so it can be overwritten in other templates -->
+		<script>window.onload = init;</script>
 	</head>
 	<body>
-		<div id="map-container">
+		<!-- application container -->
+		<div id="step-container">
 			<!-- the actual OpenLayers map -->
-			<div id="map-view" class="grab"></div>
-			<!-- station details dialog -->
-			<div id="station-details-dialog" title="Unknown"></div>
-			<!-- tooltip -->
-			<div id="station-tooltip"></div>
+			<div id="map-view" title="Click on location icon for details"></div>
 			<!-- layer/data controls -->
 			<div id="controls-container" style="font-size:14px;">
 				<div id="controls-stage">
-					<div id="station-controls" class="controls-group">
-						Select Station by Name: 
-						<select id="station-select" data-placeholder="Select a location.." style="width:460px;" disabled>
-							<option>Loading..</option>
-						</select>
-					</div>
+					<!-- query controls -->
 					<div id="query-controls" class="controls-group">
-						Filter by: 
+						<span class="label">Filter by: </span>
 						<select id="species-control" style="width:300px;" disabled>
 							<option>Loading..</option>
 						</select>
 						<select id="contaminant-control" style="width:100px;" disabled>
 							<option>Loading..</option>
 						</select> 
+						<span class="label">&nbsp;From:</span>
 						<select id="start-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select> 
+						<span class="label">to</span>
 						<select id="end-year-control" style="width:60px;" disabled>
 							<option>Loading..</option>
 						</select>
 						<span id="reset-controls" class="button" style="margin-left:5px;">Reset Query</span>
 					</diV>
+					<!-- search by location controls -->
+					<div id="location-controls" class="controls-group">
+						<span class="label">Zoom to County: </span>
+						<select id="counties-select" data-placeholder="Zoom to County.." style="width:180px;margin-left:4px;" disabled>
+							<option>Loading..</option>
+						</select>
+						<span class="label" style="margin-left:30px;">Zoom to Station: </span>
+						<select id="station-select" data-placeholder="Select a Location.." style="width:390px;" disabled>
+							<option>Loading..</option>
+						</select>
+					</div>
+					<!-- map/layer controls -->
 					<div id="map-controls" class="controls-group">
-						<input type="checkbox" id="show-counties-control" style="float:left;" />
-						<span style="float:left;margin-left:2px;">Show Counties Layer</span>
-						<span>Zoom to County:</span>
-						<select id="counties-select" style="width:280px;margin-left:4px;" disabled>
-							<option>Not yet functional</option>
-						</select>
-						<select id="base-layer-control" onchange="changeBaseLayer()" style="width:160px;float:right;">
-							<option value="0">Landscape</option>
-							<option value="1">Topo</option>
-							<option value="2">Satellite</option>
-						</select>
-						<span style="float:right;margin-right:6px;">Base Layer: </span>
+						<div title='California County Subdivisions' class="label">Show Counties Layer</div>
+						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
+						<div title='Marine Protected Areas in California' class="label">Show MPA Layer</div>
+						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
+						<span class="label" style="margin-right:6px;">Base Layer: </span>
+						<div id="base-layer-control-container" style="display:inline-block;"></div>
 					</div>
 				</div>
+				<!-- tabs -->
 				<div id="controls-tabs">
-					<div id="control-tab-query" class="control-tab">Query Controls</div>
-					<div id="control-tab-station" class="control-tab">Station Controls</div>
-					<div id="control-tab-map" class="control-tab">Map Controls</div>
+					<div id="control-tab-query" class="control-tab">Search Query</div>
+					<div id="control-tab-location" class="control-tab">Find by Location</div>
+					<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
+					<div id="download-tab" class="button-tab">Download Data</div>
+					<div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
+					<div id="notification-tab" class="control-tab">Notifications go here</div>
 				</div>
 			</div>
-			<!-- legend -->
-			<div id="legend-container" class="grab">
-				<div id="legend-table"></div>
-			</div>
-			<!-- a loading dealy -->
-			<div id="loading-box-container-outer">
-				<div id="loading-box-container-inner">
-					<div id="loading-box">
-						<img src="images/ajax-loader.gif" alt="loading" /> Loading stations..
-					</div>
-				</div>
+			<!-- modal blocking (for loading dialog usually) -->
+			<div id="modal-container-outer">
+				<div id="modal-container-inner"></div>
 			</div>
 		</div>
 	</body>

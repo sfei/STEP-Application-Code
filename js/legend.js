@@ -1,39 +1,188 @@
 
+// array of threshold values on which legend fit to
 var thresholds;
+// DOM element container
+var thresholdsContainer;
 
 //************************************************************************************************************
-// Legend and marker style functions (part of them, core of is is in marketFactory.js)
+// Constructor
 //************************************************************************************************************
+/**
+ * Initialize the legend. However the legend is initialized as hidden until thresholds are set.
+ * @param {jQuery} container - jQuery object for element for legend container. Not so much structurally but as
+ *    to limit the draggable range of the legend div.
+ */
+function legendInit(container) {
+	var legendContainer = $("<div id='legend-container'>")
+	  .appendTo(container)
+		.addClass("container-styled")
+		.draggable({containment: "parent"});
+	$("<div id='legend-content'></div>")
+	  .appendTo(legendContainer)
+		.addClass("inner-container-style")
+		.append("<div id='legend-title'></div>")
+		.append("<div id='legend-symbols'><hr/></div>")
+		.append("<div id='legend-table'></div>");
+	// dragging cursors
+	addGrabCursorFunctionality(legendContainer);
+	// create the water type symbology
+	createWaterTypeLegend();
+	// hide on init, show after thresholds loaded
+	legendContainer.hide();
+}
+
+//************************************************************************************************************
+// Symbol legend for water types
+//************************************************************************************************************
+/**
+ * Create the legend for the water type symbols. This is all done in D3/SVG so only needs to be called once as 
+ * it never changes.
+ */
+function createWaterTypeLegend() {
+	// create svg shapes legend
+	var svg = d3.select("#legend-symbols")
+	  .append("svg")
+		.attr("width", 380)
+		.attr("height", 30)
+	  .append("g")
+		.attr("transform", "translate(5,0)");
+	// circle (for lakes/reservoirs)
+	svg.append("circle")
+		.attr("cx", 5)
+		.attr("cy", 15)
+		.attr("r", 8)
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 20)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", "13px")
+		.text("Lake/Reservoir");
+	// triangle (for coastal/ocean)
+	svg.append("path")
+		.attr("d", "M 130 22 L 150 22 L 140 7 z")
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 157)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", "13px")
+		.text("Coast/Ocean");
+	// diamond (for rivers and misc)
+	svg.append("rect")
+		.attr("width", 14)
+		.attr("height", 14)
+		.attr("x", 270)
+		.attr("y", 9)
+		.attr("transform", "rotate(45,279,14)")
+		.attr("stroke-width", 2.0)
+		.attr("stroke", "black")
+		.style("fill", "none");
+	svg.append("text")
+		.attr("x", 294)
+		.attr("y", 15)
+		.attr("dy", ".35em")
+		.style("text-anchor", "start")
+		.style("font-size", "13px")
+		.text("River/Stream");
+	$("#legend-symbols");
+}
+
+//************************************************************************************************************
+// General thresholds functions
+// While separated here as functions used to modify and update the thresholds, it is fairly interlinked with 
+// the {@link markerFactory} global defined in map.js which also defines the symbology for the stations. As 
+// such thresholds must be updated first (to update the MarkerFactory) before redrawing the stations layer.
+//************************************************************************************************************
+/**
+ * Reset the thresholds using the last successful query to get the threshold values for the contaminant. Used 
+ * to clear out the user-defined thresholds.
+ */
+function resetThresholds() {
+	$.ajax({
+		url: 'lib/getThresholds.php', 
+		data: lastQuery, 
+		dataType: 'json', 
+		success: function(data) {
+			updateThresholds(data);
+			refreshStations();
+		}, 
+		error: function(e) {
+			alert(defaultErrorMessage + "(Error Thresholds)");
+		}
+	});
+}
+
+/**
+ * Update the thresholds and accordingly update the legend and style function (specifically the value function
+ * in the MarkerFactory). As such call after getting the returned data from a query but before reloading the 
+ * stations layer.
+ * @param {Object[]} data - The thresholds data returned by the query or the custom thresholds set by the 
+ *    user.
+ * @param {number} data[].value - The threshold value.
+ * @param {string} data[].units - The units.
+ * @param {string} data[].comments - Any associated comments with this thresholds
+ * @param {boolean} validate - If set true (for user-set thresholds), this validates and corrects the input 
+ *   thresholds as necessary.
+ */
 function updateThresholds(data, validate) {
-	thresholds = data;
 	// while it should be encoded properly, ensure proper type conversion
-	for(var i = 0; i < thresholds.length; i++) {
-		thresholds[i].value = parseFloat(thresholds[i].value);
+	for(var i = 0; i < data.length; i++) {
+		data[i].value = parseFloat(data[i].value);
 	}
 	// for user inputs thresholds need to validate
 	if(validate) {
+		if(!data || data.length === 0) { return; }
 		var uniqueValues = [];
-		thresholds = thresholds
+		data = data
 			.filter(function(item) {
 				// values must be positive, non-zero
 				if(item.value <= 0) { return false; }
 				// no duplicate values
 				if(uniqueValues.hasOwnProperty(item.value)) { return false; }
 				uniqueValues[item.value] = true;
-				return;})
+				return true;
+			})
 			.sort(function(a,b) {
 				// ensure ascending order
-				return b.value - a.value;
+				return a.value - b.value;
 			});
-		// remove any comments
-		for(var i = 0; i < thresholds.length; i++) {
-			thresholds[i].comments = "";
+		// match threshold comments with existing ones if they exist
+		for(var i = 0; i < data.length; i++) {
+			// also set the units as same as last
+			data[i].units = thresholds[0].units;
+			// default for custom thresholds
+			var comment = "User-Defined Threshold";
+			// loop through last thresholds (which means comments if lost can't be reattained until reset)
+			for(var j = 0; j < thresholds.length; j++) {
+				if(data[i].value === thresholds[j].value) {
+					comment = thresholds[j].comments;
+					break;
+				} else if(thresholds[j].value > data[i].value) {
+					// since they're in ascending order we can break
+					break;
+				}
+			}
+			data[i].comments = comment;
 		}
 	}
+	thresholds = data;
 	updateThresholdStyles();
 	updateLegend();
 }
-	
+
+/**
+ * Update the colors (both for the legend and the layer symbology) according to the new thresholds. Takes no 
+ * parameters but instead uses the global {@link #thresholds}. Updates the MarkerFactory to do this, which is 
+ * linked to the style function for the stations layer. Does not usually have to be called explicitly as it's 
+ * called in {@link #updateThresholds(data,validate)}.
+ */
 function updateThresholdStyles() {
 	var numThresholds = thresholds.length;
 	var stretchFactor = 3; // for a nice gradient instead of just solid colors
@@ -48,12 +197,30 @@ function updateThresholdStyles() {
 	}
 }
 
+/**
+ * Get the associated color (from the MarkerFactory) of the gradient for the given value and the currently set
+ * thresholds. Note that colors do not scale evenly and linearlly across the entire gradient. See {@link 
+ * #getThresholdColorIndex(value)} for details.
+ * @param {type} value - The value to match to a color in the gradient.
+ * @returns {string} The color as a hex string (with leading '#').
+ */
 function getThresholdColor(value) {
 	var colorIndex = !isNaN(value) ? getThresholdColorIndex(value) : 0;
 	return markerFactory.hexMap[Math.round(colorIndex*markerFactory.resolution)];
 }
 
-// calculate color index
+/**
+ * For a given value, find it's position in the gradient. This is returned as a normalized number from 0-1 
+ * representing the scale of the gradient. Thresholds are scaled evenly across the gradient regardless of 
+ * their actual value. E.g. thresholds with values of 0, 25, and 100 would be placed in the gradient at 
+ * normalized positions of 0.0, 0.5, and 1.0 respectively. Values are first placed between such two thresholds
+ * then interpolated linearally. This often results in a series of linear, but uneven scaling by value to 
+ * position in the color gradient. E.g. going with the previous example, a value of 75 would be placed between 
+ * the 25(0.5) and 100(1.0) threshold, then linearlly interpolated to a normalized gradient value of 0.833
+ * between the two.
+ * @param {type} value - The value to match to a color in the gradient.
+ * @returns {number} The color in the gradient as a normalized value from 0-1.
+ */
 function getThresholdColorIndex(value) {
 	var numThresholds = thresholds.length;
 	var iColor = numThresholds;
@@ -71,6 +238,12 @@ function getThresholdColorIndex(value) {
 	return iColor;
 }
 
+//************************************************************************************************************
+// Legend UI
+//************************************************************************************************************
+/**
+ * Update the legend HTML based on the last query and updated thresholds.
+ */
 function updateLegend() {
 	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
@@ -80,18 +253,153 @@ function updateLegend() {
 		title = lastQuery.contaminant + " Concentrations in " + capitalizeSpecies;
 	}
 	title += " (" + thresholds[0].units + ")";
+	$("#legend-title").html(title);
 	var table = $("#legend-table");
-	table.html("<div class='legend-table-row' style='text-align:center;font-size:16px;font-weight:bolder;margin:4px 0px;'>" + title + "</div><hr />");
+	table.html("<hr />");
 	// do legend in descending order
 	for(var i = thresholds.length-1; i >= -1; i--) {
 		var row = "<div class='legend-table-row'>";
-		var threshold = (i >= 0) ? thresholds[i] : { color:markerFactory.hexMap[0], value:0, units:thresholds[0].units, comments:"None" };
+		var threshold = (i >= 0) ? thresholds[i] : { color:markerFactory.hexMap[0], value:0, units:thresholds[0].units, comments:"Not Detected" };
 		row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
 		row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + ((i === thresholds.length-1) ? "+" : "") + threshold.value + " " + threshold.units + "</div>";
 		row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 		row += "</div>";
 		table.append(row);
 	}
+	// button to edit thresholds
+	$("<div id='thresholds-controls' style='text-align:center;'></div>").appendTo($("#legend-table"))
+		.append("<hr style='margin-bottom:6px;' />")
+		.append(
+			$("<div id='open-custom-thresholds' class='button'>Edit Thresholds</div>")
+				.css({
+					'display': 'inline-block', 
+					'margin-left': 'auto', 
+					'width': 120, 
+					'text-align': 'center'
+				})
+				.click(function() { showCustomThresholdsPanel($("#map-view")); })
+		)
+		.append(
+			$("<div id='reset-thresholds' class='button'>Reset Thresholds</div>").appendTo($("#legend-table"))
+				.css({
+					'display': 'inline-block', 
+					'margin-left': 15, 
+					'margin-right': 'auto', 
+					'width': 120, 
+					'text-align': 'center'
+				})
+				.click(function() { resetThresholds(); })
+		);
+	$("#legend-container").show();	// only necessary for first load, since legend is hidden until data loaded
 	// getting divs to fit content across all browsers is a pain so just do it manually
-	$("#legend-container").height(table.height()+10);
+	$("#legend-container").height($("#legend-content").height()+3);
+}
+
+//************************************************************************************************************
+// Custom Thresholds
+// When creating custom thresholds, the user can only add/remove thresholds and set the value. The units are 
+// defined by the thresholds as they originally came. The threshold comments will be kept if applicable, by 
+// matching any of the new input values to any existing value with a comment. Otherwise, new or changed values
+// will be commented as "User-Defined Threshold". Any "lost" comment though is lost permanently (e.g. if you 
+// change/remove a value associated with a comment, submit it, then edit it back in as the same value as 
+// before, it  will remain commented as "User-Defined Threshold") until the thresholds are reset or a new 
+// query happens. The validation procedure in updateThresholds() will automatically sort the thresholds and 
+// remove duplicate values or negative values. There must always be a 0-threshold, which keeps its comment as 
+// "Not Detected".
+//************************************************************************************************************
+/**
+ * Show/create the custom thresholds panel.
+ * @param {jQuery} container - jQuery object for element to serve as container for custom thresholds panel. 
+ *    Not so much structurally but as to limit the draggable range of the resulting div.
+ */
+function showCustomThresholdsPanel(container) {
+	if(!thresholdsContainer) {
+		thresholdsContainer = $("<div id='custom-thresholds-container'></div>")
+		  .appendTo(container)
+			.addClass("container-styled")
+			.center()
+			.draggable({containment: "parent"});
+		addGrabCursorFunctionality(thresholdsContainer);
+	} else {
+		thresholdsContainer.html("");
+	}
+  thresholdsContainer.center();
+	var panel = $("<div id='custom-thresholds-content'></div>")
+	  .appendTo(thresholdsContainer)
+		.addClass("inner-container-style");
+	var buttonStyle = {
+		'display': 'inline-block',
+		'width': 70, 
+		'margin': "0 auto", 
+		'text-align': 'center'
+	};
+	// add title
+	panel.append("<span style='font-weight:bolder;font-size:16px;'>" + lastQuery.contaminant + " Thresholds</span><hr />");
+	// append threshold inputs
+	var inputs = $("<div id='custom-thresholds-inputs-container'></div>").appendTo(panel);
+	for(var i = 0; i < thresholds.length; i++) {
+		addThresholdControl(inputs, thresholds[thresholds.length-1-i].value);
+	}
+	// add/remove buttons
+	var addThreshold = $("<div id='custom-thresholds-add' class='button'>+</div>")
+	  .appendTo(panel)
+		.css(buttonStyle)
+		.css('font-weight', 'bold')
+		.width(20);
+	var removeThreshold = $("<div id='custom-thresholds-remove' class='button'>−</div>")
+	  .appendTo(panel)
+		.css(buttonStyle)
+		.css('font-weight', 'bold')
+		.width(20);
+	panel.append("<hr />");
+	// add/remove thresholds
+	addThreshold.click(function() {
+		if($(".custom-threshold-control").length < 8) {
+			addThresholdControl(inputs, 0); 
+		}
+	});
+	removeThreshold.click(function() { 
+		if($(".custom-threshold-control").length > 3) {
+			$(".custom-threshold-control").last().remove(); 
+		}
+	});
+	// append buttons
+	$("<div id='custom-thresholds-submit'></div>")
+	  .appendTo(panel)
+		.css({'text-align': 'center'})
+		.append(
+			$("<div id='custom-thresholds-cancel' class='button'>Cancel</div>").css(buttonStyle)
+		)
+		.append(
+			$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
+		);
+	// close functionality
+	$("#custom-thresholds-cancel").click(function() {
+		thresholdsContainer.remove();
+		thresholdsContainer = null;
+	});
+	// submit functionality
+	$("#custom-thresholds-submit").click(function() { 
+		var data = [];
+		$(".custom-threshold-input").each(function(i, element) {
+			data.push({value: element.value});
+		});
+		thresholdsContainer.remove(); 
+		thresholdsContainer = null;
+		updateThresholds(data, true);
+		refreshStations();
+	});
+}
+
+/**
+ * Add an input for a custom threshold value.
+ * @param {jQuery} container - jQuery object for container to append input to.
+ * @param {number} value - Default/start value in input.
+ */
+function addThresholdControl(container, value) {
+	container.append(
+		"<div class='custom-threshold-control'>"  +
+			"<input class='custom-threshold-input' type='number' step='0.1' min='0.01' value='" + value + "' />&nbsp;" + thresholds[0].units + 
+		"</div>"
+	);
 }

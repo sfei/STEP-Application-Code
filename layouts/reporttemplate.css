@@ -1,0 +1,110 @@
+@media print {
+	body { -webkit-print-color-adjust: exact; }
+}
+body {
+	font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
+}
+#container {
+	position: relative;
+	top: 0;
+	left: 0;
+	margin: 0px auto;
+	width: 670px;
+	overflow: visible;
+}
+.button {
+	background-color: #5070aa;
+	background-color: rgba(80, 112, 170, 0.6);
+	padding: 2px 4px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+	color: #fff;
+}
+.button:hover {
+	background-color: #003C88;
+	background-color: rgba(0, 60, 136, 0.6);
+	cursor: pointer;
+}
+#print-button {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	width: 100px;
+	height: 30px;
+	line-height: 30px;
+	text-align: center;
+	font-size: 16px;
+	font-weight: bolder;
+}
+#map-view {
+	position: relative;
+	margin-top: 20px;
+	width: 100%;
+	height: 400px;
+}
+.ol-zoom {
+	//position: absolute;
+	//top: 45px;
+}
+.grab {
+	cursor: move;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.grabbing {
+	cursor: move;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+#station-tooltip {
+	position: absolute;
+	background-color: #000;
+	color: #fff;
+	padding: 1px 4px;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	font-size: 14px;
+}
+#content-header {
+	width: 100%;
+	text-align: left;
+	font-size: 14px;
+}
+#content-container {
+	width: 100%;
+}
+.table {
+	display: block;
+	margin: 25px auto;
+}
+.table-row, .table-header-row {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	border-color: #ddd;
+	border-style: solid;
+	border-width: 0px 0px 1px 0px;
+	padding: 2px 0px;
+}
+.table-header-row {
+	background-color: #D7E8EF;
+}
+.table-cell, .table-header {
+	display: table-cell;
+	vertical-align: bottom;
+	height: 30px;
+	padding: 0px 2px;
+	overflow: hidden;
+	text-align: right;
+	font-size: 12px;
+}
+.table-header {
+	font-weight: bolder;
+	vertical-align: bottom;
+}
+.table-cell {
+	vertical-align: middle;
+}

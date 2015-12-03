@@ -1,16 +1,40 @@
 
+/** 
+ * Group of functions for translating color values and calculating gradients 
+ */
 var ColorMap = {
-	/** Converts RGB values to the hex equivalent
-	 * @param {Array} rgb : array of red, green, and blue values
-	 * @returns {String} hex string (with leading '#') */
+	
+	/** 
+   * Converts RGB values to the hex equivalent
+	 * @param {number[]} rgb - array of red, green, and blue values
+	 * @returns {String} hex string (with leading '#') 
+   */
 	rgb2hex: function(rgb) {
 		return '#' + rgb.map(function(x) { 
 			return ("0" + Math.round(x*255).toString(16)).slice(-2);
 		}).join('');
 	}, 
-	/** Converts HSV values to RGB - adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
-	 * @param {Array} hsv : array of hue, saturation (0-1.0), value (0-1.0) values
-	 * @return {Array} array of red, green, and blue values */
+	
+	/** 
+   * Converts hex string to rgb numeric values
+	 * @param {String} hex - string (with leading '#')
+	 * @returns {number[]} array of red, green, and blue values 
+   */
+	hexTorgb: function(hex) {
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		if(!result) { return [0, 0, 0]; }
+		return [
+			parseInt(result[1], 16),
+			parseInt(result[2], 16),
+			parseInt(result[3], 16)
+		];
+	}, 
+	
+	/** 
+   * Converts HSV values to RGB - adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
+	 * @param {number[]} hsv - array of hue, saturation (0-1.0), value (0-1.0) values
+	 * @return {number[]} array of red, green, and blue values 
+   */
 	hsv2rgb: function(hsv) {
 		var rgb, i, data = [];
 		if(hsv[1] === 0) {
@@ -42,9 +66,12 @@ var ColorMap = {
 		}
 		return rgb;
 	}, 
-	/** Converts RGB values to HSV - adapted from http://www.javascripter.net/faq/rgb2hsv.htm 
-	 * @param {Array[3]} rgb : array of red, green, and blue values from 0-255 
-	 * @return {Array[3]} array of hue, saturation (0-1.0), value (0-1.0) values */
+	
+	/** 
+   * Converts RGB values to HSV - adapted from http://www.javascripter.net/faq/rgb2hsv.htm 
+	 * @param {number[]} rgb - array of red, green, and blue values from 0-255 
+	 * @return {number[]} array of hue, saturation (0-1.0), value (0-1.0) values 
+   */
 	rgb2hsv: function(rgb) {
 		var computedH = 0;
 		var computedS = 0;
@@ -71,13 +98,28 @@ var ColorMap = {
 			maxRGB
 		];
 	}, 
-	/** With color map specified at top, creates an array of hex values as appropriate in a smooth gradient, using 
+	
+	/** 
+   * With color map specified at top, creates an array of hex values as appropriate in a smooth gradient, using 
 	 * HSV transition (rather than trying to RGB gradient it), linearlly interpolated
-	 * @param {Array} colorMap : array of [r,g,b] values array that determines gradient
-	 * @param {Number} resolution : determines the number of discrete colors to create, must be at least equal
+	 * @param {number[][]} colorMap - array of [r,g,b] values array that determines gradient
+	 * @param {number} resolution - determines the number of discrete colors to create, must be at least equal
 	 *		to the length of the colorMap
-	 * @return {Array} array of hex strings representing the color map (with leading '#') */
+	 * @return {string[]} array of hex strings representing the color map (with leading '#') 
+   */
 	createHexColorMap: function(colorMap, resolution) {
+		// convert to decimal RGB values
+		for(var i = 0; i < colorMap.length; i++) {
+			if(Object.prototype.toString.call(colorMap[i]) === '[object Array]') {
+				while(colorMap[i].length < 3) {
+					colorMap[i].push(0);
+				}
+			} else if(typeof colorMap[i] === 'string') {
+				colorMap[i] = hexTorgb(colorMap[i]);
+			} else {
+				colorMap[i] = [0, 0, 0];
+			}
+		}
 		resolution = parseInt(resolution);
 		var hexColors = [];
 		var spread = colorMap.length;
@@ -118,9 +160,9 @@ var ColorMap = {
 					if(twoColors.index < spread) {
 						twoColors.second = hsvColors[twoColors.index];
 					}
-					twoColors.hdiff = hsvColors[1][0] - hsvColors[0][0]; 
-					twoColors.sdiff = hsvColors[1][1] - hsvColors[0][1]; 
-					twoColors.vdiff = hsvColors[1][2] - hsvColors[0][2];
+					twoColors.hdiff = twoColors.second[0] - twoColors.first[0]; 
+					twoColors.sdiff = twoColors.second[1] - twoColors.first[1]; 
+					twoColors.vdiff = twoColors.second[2] - twoColors.first[2];
 				}
 				var pos = (i - interpolatePositions.start) / increment;
 				var hsv = [
@@ -128,6 +170,8 @@ var ColorMap = {
 					twoColors.first[1] + twoColors.sdiff * pos, 
 					twoColors.first[2] + twoColors.vdiff * pos
 				];
+				// adjust hue if it's past max value
+				if(hsv[0] >= 360) { hsv[0] -= 360; }
 				hexColors.push(
 					this.rgb2hex( this.hsv2rgb(hsv) )
 				);
@@ -135,4 +179,5 @@ var ColorMap = {
 		}
 		return hexColors;
 	}
+	
 };
