@@ -82,7 +82,7 @@
 					StepQueries::$pass
 				);
 				if(!StepQueries::$dbconn) {
-					die('Could not connect to data2 server');
+					die('Could not connect to server');
 				}
 			}
 		}
@@ -176,7 +176,7 @@
 		 *		i.e. to get the name, it is usually $array[0][0] or $array[0]['result']. */
 		public function getAllSpecies() {
 			$query = StepQueries::$dbconn->prepare(
-				"SELECT DISTINCT CommonName as result "
+				"SELECT DISTINCT CommonName AS result "
 					. "FROM [dbo].[STEP_Table_AllResults] ORDER BY result"
 			);
 			$query->execute();
@@ -193,7 +193,7 @@
 		 *		$array[0]['result'].*/
 		public function getAvailableSpecies($params) {
 			$query = StepQueries::$dbconn->prepare(
-				"SELECT DISTINCT CommonName as result "
+				"SELECT DISTINCT CommonName AS result "
 					. "FROM [dbo].[STEP_Table_AllResults] "
 					. "WHERE Parameter = '" . $params["contaminant"] . "' AND "
 						. "SampleYear >= " . $params["startYear"] . " AND "
@@ -215,7 +215,7 @@
 		 *		alphabetically. The array is two-deep, i.e. to get the contaminant name, it is usually 
 		 *		$array[0][0] or $array[0]['result'].*/
 		public function getAvailableContaminants($params) {
-			$queryString = "SELECT DISTINCT Parameter as result FROM [dbo].[STEP_Table_AllResults] ";
+			$queryString = "SELECT DISTINCT Parameter AS result FROM [dbo].[STEP_Table_AllResults] ";
 			if($params['isASpecies']) {
 				$queryString .= "WHERE CommonName = '" . $params['species'] . "' ";
 			}
@@ -238,7 +238,8 @@
 		 *			<li>(int) max - Maximum year value found</li>
 		 *		</ul> */
 		public function getAvailableYearSpan($params) {
-			$queryString = "SELECT MIN(SampleYear) as 'min', MAX(SampleYear) as 'max' FROM [dbo].[STEP_Table_AllResults] "
+			$queryString = "SELECT MIN(SampleYear) AS 'min', MAX(SampleYear) AS 'max' "
+				. "FROM [dbo].[STEP_Table_AllResults] "
 				. "WHERE Parameter = '" . $params['contaminant'] . "' ";
 			if($params['isASpecies']) {
 				$queryString .= "AND CommonName = '" . $params['species'] . "'";
@@ -257,7 +258,7 @@
 		 *		contaminant, in ascending order. The array is two-deep, i.e. to get the contaminant name, it is 
 		 *		usually $array[0][0] or $array[0]['result'] */
 		public function getDistinctYears($params) {
-			$queryString = "SELECT DISTINCT SampleYear as result FROM [dbo].[STEP_Table_AllResults] "
+			$queryString = "SELECT DISTINCT SampleYear AS result FROM [dbo].[STEP_Table_AllResults] "
 				. "WHERE Parameter = '" . $params['contaminant'] . "' ";
 			if($params['isASpecies']) {
 				$queryString .= "AND CommonName = '" . $params['species'] . "' ";
@@ -385,8 +386,8 @@
 		public function getNearbyStations($params) {
 			// first the get station info for the selected station
 			$queryString = "SELECT TOP 1 a.WaterType, a.Lat, a.Long, b.AdvisoryURL "
-				. "FROM [dbo].[STEP_Stations] as a " 
-					. "LEFT JOIN [dbo].[STEP_Advisories] as b ON (a.AdvisoryID = b.AdvisoryID) "
+				. "FROM [dbo].[STEP_Stations] AS a " 
+					. "LEFT JOIN [dbo].[STEP_Advisories] AS b ON (a.AdvisoryID = b.AdvisoryID) "
 				. "WHERE a.StationNameRevised = '" . $params["station"] . "'";
 			$query = StepQueries::$dbconn->prepare($queryString);
 			$query->execute();
@@ -412,7 +413,7 @@
 					. "SELECT TOP 1 c.StationNameRevised, c.WaterType, c.Lat, c.Long, c.AdvisoryID "
 					. "FROM [dbo].[STEP_Stations] as c "
 					. "WHERE a.StationName = '" . $params["station"] . "' AND a.StationName_Nearby = c.StationNameRevised"
-				. ") as b "
+				. ") AS b "
 				. "LEFT JOIN [dbo].[STEP_Advisories] as d "
 					. "ON (b.AdvisoryID = d.AdvisoryID) "
 				. "WHERE a.Distance_Miles <= " . $params["radiusMiles"] . " "

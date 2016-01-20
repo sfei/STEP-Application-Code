@@ -12,7 +12,7 @@
 var StationDetails = function(query) {
 	
 	this.init = function(query) {
-	var self = this;
+		var self = this;
 		//****************************************************************************************************
 		// All customizable variables below (but do it by manually coding, not dynamically)
 		//****************************************************************************************************
@@ -34,9 +34,9 @@ var StationDetails = function(query) {
 		// tabs configurations
 		this.tabs = { 
 			data: {
-		label: "Data", 
+				label: "Data", 
 				tabId: "details-tab-data", 
-		click: self.openTabData, 
+				click: self.openTabData, 
 				headers: ['Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [180, 80, 60, 80, 150], 
 				valueKeys: ['species', 'value', 'sampleYear', 'prepCode', 'sampleType'], 
@@ -53,9 +53,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			trends: {
-		label: "Trends", 
+				label: "Trends", 
 				tabId: "details-tab-trends", 
-		click: self.openTabTrends, 
+				click: self.openTabTrends, 
 				chartWidth: 640, 
 				chartHeight: 360, 
 				titleFunction: function(query) {
@@ -70,9 +70,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
 			}, 
 			nearby: {
-		label: "Nearby", 
+				label: "Nearby", 
 				tabId: "details-tab-nearby", 
-		click: self.openTabNearby, 
+				click: self.openTabNearby, 
 				species: null, 
 				headers: ['Location', 'Distance (mi)', 'Species', 'Contaminant', 'Sample Year', 'Prep Code', 'SampleType'], 
 				colWidths: [240, 60, 180, 80, 60, 80, 150], 
@@ -90,9 +90,9 @@ var StationDetails = function(query) {
 				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
 			}, 
 			report: {
-		label: "Print Report", 
+				label: "Print Report", 
 				tabId: "details-tab-report", 
-		click: self.openTabReport, 
+				click: self.openTabReport, 
 				width: 550,
 				titleFunction: function(query) {
 					return "Generate and Print Summary Report";
@@ -121,7 +121,7 @@ var StationDetails = function(query) {
 	};
 		
 	this.open = function(inputQuery) {
-	if(!inputQuery) { return; }
+		if(!inputQuery) { return; }
 		// the query that constructed this
 		this.query = this.copyQuery(inputQuery.query);
 		if(inputQuery.station) {
@@ -209,25 +209,23 @@ var StationDetails = function(query) {
 				"</div>" + 
 			"</div>"
 		).appendTo($('#'+this.parentId));
-	// add tabs programmatically
+		// add tabs programmatically
 		var self = this;
-	var tabsList = this.element.find("#details-dialog-tabs");
-	for(var t in this.tabs) {
-	  if(this.tabs.hasOwnProperty(t)) {
-		$("<li id='" + this.tabs[t].tabId + "' class='details-tab'>" + this.tabs[t].label + "</li>")  
-		  .appendTo(tabsList)
-			.click(
-			  // variable scope in javascript callbacks sure is funky, especially within a loop
-			  function(theTab) { 
-				return function() {
-				  theTab.click.call(self);
-				};
-			  }(this.tabs[t])
-			);
-	  }
-	}
+		var tabsList = this.element.find("#details-dialog-tabs");
+		for(var t in this.tabs) {
+			if(this.tabs.hasOwnProperty(t)) {
+				$("<li id='" + this.tabs[t].tabId + "' class='details-tab'>" + this.tabs[t].label + "</li>")  
+					.appendTo(tabsList)
+					.click(
+						// variable scope in javascript callbacks sure is funky, especially within a loop
+						function(theTab) { 
+							return function() { theTab.click.call(self); };
+						}(this.tabs[t])
+					);
+			}
+		}
 		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
-		// appears on title bar (just personal prefernce but grab cursor over text looks wierd).
+		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element.hide()
 			.draggable()

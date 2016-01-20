@@ -62,7 +62,7 @@
 			$query['startYear'] = $query['endYear'] = $years[0]['result'];
 		} else {
 			// find the minimum distance
-			$minDist = array( 'dist'=>9999, 'change'=>'startYear', 'to'=>1900 );
+			$minDist = array('dist'=>9999, 'change'=>'startYear', 'to'=>1900);
 			forEach($years as $y) {
 				$dist = abs($query['startYear'] - $y['result']);
 				if($dist < $minDist['dist']) {

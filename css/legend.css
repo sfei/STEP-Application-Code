@@ -2,12 +2,12 @@
 	position: absolute;
 	bottom: 0px;
 	left: 20px;
-	background: #4797d1;
-	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4797d1), to(#2970a3));
-	background: -webkit-linear-gradient(top, #4797d1, #2970a3);
-	background: -moz-linear-gradient(top, #4797d1, #2970a3);
-	background: -ms-linear-gradient(top, #4797d1, #2970a3);
-	background: -o-linear-gradient(top, #4797d1, #2970a3);	
+	background: #47D19E;
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#47D19E), to(#29A376));
+	background: -webkit-linear-gradient(top, #47D19E, #29A376);
+	background: -moz-linear-gradient(top, #47D19E, #29A376);
+	background: -ms-linear-gradient(top, #47D19E, #29A376);
+	background: -o-linear-gradient(top, #47D19E, #29A376);	
 	color: #fff;
 	cursor: pointer;
 	margin: 0px 2px;
