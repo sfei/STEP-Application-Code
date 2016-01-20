@@ -60,9 +60,11 @@ var stationsData,					// raw stations data as array of GeoJSON
 	stationLayer;					// layer object
 var countiesUrl = "data/ca_counties.geojson", 
 	countiesLayer,
+	highlightCountiesLayer, 
 	countyNames = [],				// list of county names (for search drop-down)
 	selectedCounty, 
-	countyStyles;
+	countyStyle,
+	highlightCountyStyle;
 var mpaUrl = "data/mpa_ca.geojson",	//"lib/getMPAsAsGeoJSON.php", 
 	mpaLayer,						// marine protected areas
 	mpaColor = [50, 220, 50, 0.5],	// default MPA color
@@ -104,7 +106,7 @@ function init() {
 	}
 	setModalAsLoading(true, false);
 	// add basemap control dynamically (easier to change the basemaps later without changing all related code)
-	addBasemapControl($("#base-layer-control-container"), {width: 200});
+	addBasemapControl($("#base-layer-control-container"), {width: 220});
 	// create marker factory
 	markerFactory = new MarkerFactory({
 		shapeFunction: function(feature) {
@@ -307,7 +309,7 @@ function loadStationsLayer(data) {
 			return markerFactory.createLayerStyle(feature);
 		}
 	});
-	stationLayer.setZIndex(2);
+	stationLayer.setZIndex(3);
 	map.addLayer(stationLayer);
 	// hover interaction
 	if(enableHoverInteractions || featArray.length < 200) {
@@ -395,14 +397,16 @@ function addCountyLayer() {
 		dataType: "json", 
 		url: countiesUrl, 
 		success: function(json) {
-			countyStyles = [
+			countyStyle = [
 				new ol.style.Style({
 					fill: null, 
 					stroke: new ol.style.Stroke({
 						color: '#222',
 						width: 1.5
 					})
-				}), 
+				})
+			];
+			highlightCountyStyle = [
 				new ol.style.Style({
 					fill: null, 
 					stroke: new ol.style.Stroke({
@@ -425,13 +429,28 @@ function addCountyLayer() {
 									featureProjection: mapProjection
 								})
 				}), 
-				style: getCountyStyle
+				style: countyStyle
+			});
+			highlightCountiesLayer = new ol.layer.Vector({
+				title: 'CA Counties', 
+				source: new ol.source.Vector({
+					features: (new ol.format.GeoJSON())
+								.readFeatures(json, {
+									// json is technically in NAD83 but right now OL3 only supports WGS84 for datums
+									dataProjection: wgs84, 
+									featureProjection: mapProjection
+								})
+				}), 
+				style: getHighlightCountyStyle
 			});
 		}
 	});
 	countiesLayer.setZIndex(1);
+	highlightCountiesLayer.setZIndex(2);
 	countiesLayer.setVisible(false);
+	highlightCountiesLayer.setVisible(false);
 	map.addLayer(countiesLayer);
+	map.addLayer(highlightCountiesLayer);
 }
 
 /**
@@ -453,20 +472,27 @@ function zoomToCountyByName(countyName) {
 	if(selected) {
 		selectedCounty = countyName;
 		// force style update
-		countiesLayer.changed();
-		// if county layer is not on, turn it on
+		highlightCountiesLayer.changed();
+		// if county layers are not on, turn it on
 		if(!countiesLayer.getVisible()) {
 			countiesLayer.setVisible(true);
+			highlightCountiesLayer.setVisible(true);
 			$("#show-counties-control").prop('checked', true);
 			flashNotification("CA counties layer turned on", 2000);
+		} else if(!highlightCountiesLayer.getVisible()) {
+			highlightCountiesLayer.setVisible(true);
 		}
 		map.getView().fit(selected.getGeometry().getExtent(), map.getSize());
 	}
 }
 
-function getCountyStyle(feature) {
-	if(!selectedCounty) { return [countyStyles[0]]; }
-	return [countyStyles[(feature.get("NAME").toLowerCase() === selectedCounty) ? 1 : 0]];
+function getHighlightCountyStyle(feature) {
+	if(!selectedCounty) { return null; }
+	if(feature.get("NAME").toLowerCase() === selectedCounty) {
+		return highlightCountyStyle;
+	} else {
+		return null;
+	}
 }
 
 /**

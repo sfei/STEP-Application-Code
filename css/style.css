@@ -241,3 +241,9 @@ input, select {
 	background: rgba(80, 112, 170, 0.8);
 	color: #eea;
 }
+#base-layer-control {
+	font-size: 15px;
+}
+.chosen-container {
+	font-size: 15px;
+}

@@ -194,7 +194,8 @@ function controlsActivate() {
 			// if turning off, reset any selected county
 			if(!countiesLayer.getVisible()) {
 				selectedCounty = null;
-				countiesLayer.changed();
+				highlightCountiesLayer.setVisible(false);
+				highlightCountiesLayer.changed();
 			}
 		});
 	$("#show-mpa-control")
