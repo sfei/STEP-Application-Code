@@ -1,0 +1,249 @@
+body {
+	font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
+}
+a {
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+.label {
+	display:inline;
+	cursor:default;
+}
+input, select {
+	cursor: pointer;
+}
+/* overwrite nouislider styles */
+.noUi-handle {
+	cursor: pointer;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.noUi-active {
+	cursor: pointer;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+
+#step-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	min-width: 680px;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* generic button style */
+.button {
+	background-color: #5070aa;
+	background-color: rgba(80, 112, 170, 0.6);
+	padding: 2px 4px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+	color: #fff;
+}
+.button:hover {
+	background-color: #003C88;
+	background-color: rgba(0, 60, 136, 0.6);
+	cursor: pointer;
+}
+
+/* generic styles for various common divs */
+.container-styled {
+	overflow: visible;
+	padding: 2px;
+	background-color: #777;
+	border: 1px solid #555;
+	border-radius: 4px;
+}
+.inner-container-style {
+	position: relative;
+	display: block;
+	background-color: #fff;
+	border: 1px solid #555;
+	border-radius: 2px;
+	font-size: 12px;
+}
+
+/* loading dialog related */
+#modal-container-outer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	/*background-color: rgba(200, 200, 200, 0.4);*/
+	display: table;
+	margin: auto;
+	overflow: hidden;
+	z-index: 9999;
+}
+#modal-container-inner {
+	display: table-cell;
+	vertical-align: middle;
+}
+#loading-dialog {
+	position: relative;
+	width: 220px;
+	height: 35px;
+	margin: 0 auto;
+	padding-top: 20px;
+	background-color: #fff;
+	border: 2px #777 solid;
+	border-radius: 6px;
+	text-align: center;
+	font-weight: bolder;
+	z-index: 9999;
+}
+#download-confirm {
+	position: relative;
+	width: 290px;
+	margin: 0 auto;
+	z-index: 9999;
+}
+#download-dialog {
+	padding: 8px 4px;
+}
+
+/* map related */
+#map-view {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+.ol-zoom {
+	top: 100px;
+	/* should be dynamically moved by tabs/ui control */
+}
+#station-tooltip {
+	position: absolute;
+	background-color: #000;
+	color: #fff;
+	padding: 1px 4px;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	font-size: 14px;
+}
+.grab {
+	cursor: move;
+	cursor: url(grab.cur);
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.grabbing {
+	cursor: move;
+	cursor: url(grabbing.cur);
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+
+/* layers controls related */
+#controls-container {
+	position: absolute;
+	top: 0px;
+	width: 100%;
+}
+#controls-stage {
+	display: block;
+	min-height: 2px;
+	background: #000;
+	/* padding is set dynamically so when minimized it is much thinner */
+	box-sizing: border-box;
+	color: #fff;
+	text-align: left;
+	font-size: 15px;
+}
+.control-label {
+	display:inline-block;
+	width: 175px;
+	cursor: default;
+	text-align: right;
+	margin-right: 4px;
+}
+.controls-group {
+	display: block;
+}
+.control-spacer {
+	display: block;
+	width: 0;
+	margin-bottom: 8px;
+}
+#controls-tabs {
+	width: 100%;
+	vertical-align: top;
+	border-top: 1px solid #999;
+	padding-left: 10px;
+}
+.chosen-results {
+	text-align: left;
+}
+.control-tab, .control-tab-active, .button-tab {
+	display: inline-block;
+	cursor: pointer;
+	margin: 0px 2px;
+	margin-top: -1px;
+	border: 1px solid #999;
+	border-top-color: #999;
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	padding: 5px 10px;
+	font-size: 13px;
+}
+.button-tab {
+	border-top-color: #999;
+	background: #ddd;
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ddd), to(#eee));
+	background: -webkit-linear-gradient(top, #ddd, #eee);
+	background: -moz-linear-gradient(top, #ddd, #eee);
+	background: -ms-linear-gradient(top, #ddd, #eee);
+	background: -o-linear-gradient(top, #ddd, #eee);
+}
+.control-tab {
+	color: #fff;
+	background: #4797d1;
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#2970a3), to(#4797d1));
+	background: -webkit-linear-gradient(top, #2970a3, #4797d1);
+	background: -moz-linear-gradient(top, #2970a3, #4797d1);
+	background: -ms-linear-gradient(top, #2970a3, #4797d1);
+	background: -o-linear-gradient(top, #2970a3, #4797d1);	
+}
+.control-tab:hover {
+	cursor: pointer;
+}
+.control-tab-active {
+	border-top-color: #000;
+	background-color: #000;
+	color: #fff;
+	font-weight: bolder;
+}
+#download-tab {
+	margin-right: 20px;
+	float: right;
+}
+#zoom-stations-tab {
+	float: right;
+}
+#notification-tab {
+	position: absolute;
+	top: 0;
+	right: -10px;
+	padding-right: 20px;
+	overflow: hidden;
+	min-width: 100px;
+	background: #5070aa;
+	background: rgba(80, 112, 170, 0.8);
+	color: #eea;
+}
+#base-layer-control {
+	font-size: 15px;
+}
+.chosen-container {
+	font-size: 15px;
+}
