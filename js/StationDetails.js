@@ -495,7 +495,7 @@ var StationDetails = function(query) {
 				if(title.toLowerCase() === "contaminant" && hasResult) {
 					title = this.query.contaminant;
 					if(hasResult) { 
-						title += " (" + this.stationData[0].units + ")"; 
+						title += " (" + this.nearbyData[0].units + ")"; 
 					}
 				}
 				var cell = $("<div></div>").appendTo(headers)

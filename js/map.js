@@ -210,7 +210,6 @@ function addHoverInteractions() {
 	// hover tooltip
 	hoverInteraction.on("select", function(evt) {
 		var features = evt.selected;
-		console.log(features);
 		if(features[0]) {
 			$("#map-view").css("cursor", "pointer");
 			var name = 'unidentified';
