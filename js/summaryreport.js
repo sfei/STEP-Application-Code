@@ -88,7 +88,8 @@ function initReport() {
 	// query and legend initalizations removed (which also removes associated color styling)
 	mapInit(1);
 	// display station layer
-	loadStationsLayer(data);
+	initStationsLayer(data);
+	//updateStations(data);
 	zoomToStations();
 	// fill header information
 	var numResults = data.length;
@@ -158,6 +159,8 @@ function initReport() {
 		);
 	}
 	
+	// hover interactions
+	addHoverInteractions();
 	// add click interactivity
 	$(map.getViewport()).on('click', function(evt) {
 		var pixel = map.getEventPixel(evt.originalEvent);

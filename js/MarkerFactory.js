@@ -28,49 +28,59 @@ var MarkerFactory = function(options) {
 	
 	this.init = function(options) {
 		// some default values which can be manually changed or change in the style options
-		this.resolution     = 10;
-		this.colorMap       = [[20, 75, 200],  [240, 80, 0]];
-		this.radius         = 7;
-		this.strokeWidth    = 1.5;
-		this.strokeColor    = 'black';
+		this.resolution		= 10;
+		this.colorMap		= [[20, 75, 200],  [240, 80, 0]];
+		this.radius			= 7;
+		this.strokeWidth	= 1.5;
+		this.strokeColor	= 'black';
 		this.highlightColor	= 'white';
 		
-		this.stroke         = new ol.style.Stroke({color: this.strokeColor, width: this.strokeWidth}); 
+		this.stroke			= new ol.style.Stroke({color: this.strokeColor, width: this.strokeWidth}); 
 		this.strokeHighlight= new ol.style.Stroke({color: this.highlightColor, width: this.strokeWidth});
 		// styles caches in shape-specific dictionaries by color (integer 0 to 10) then stroke (normal or highlight)
-		this.shapes         = {
-                            square: [], 
-                            diamond: [], 
-                            triangle: [], 
-                            circle: [], 
-                            cross: [],
-                            x: []
-                          };
-		// since setStyle(null) doesn't appear to work, just have a specific style with no fill/stroke
-		this.nullStyle      = new ol.style.Style({
-                            image: new ol.style.RegularShape({
-                              fill: null,
-                              stroke: null,
-                              points: 0,
-                              radius: 0,
-                              angle: 0
-                            })
-                          });
+		this.shapes			= {
+								square: [], 
+								diamond: [], 
+								triangle: [], 
+								circle: [], 
+								cross: [],
+								x: []
+							};
+		// null values and style
+		this.nullValue		= -99;
+		this.nullFill		= null;
+		this.nullStyles		= {
+								square: null, 
+								diamond: null, 
+								triangle: null, 
+								circle: null, 
+								cross: null,
+								x: null
+							};
+		this.nullStyle		= new ol.style.Style({
+								image: new ol.style.RegularShape({
+									fill: null,
+									stroke: null,
+									points: 0,
+									radius: 0,
+									angle: 0
+								})
+							});
 		// set style, override as necessary with provided options
 		this.setStyle(options);
 	};
 	
 	/** 
-   * Determine text to label the feature with.
+	 * Determine text to label the feature with.
 	 * @callback MarkerFactory~textFunction
 	 * @param {OpenLayers.Feature} feature - can accept an OpenLayers feature, thus allowing you to use some 
 	 *		inherent property of to determine the resulting label.
 	 * @returns {string} Some text (by default returns null - or no label) 
-   */
+	 */
 	this.textFunction = null;
 	
 	/** 
-   * Determine the normalized value (i.e. 0-1) which in turns determines the color from the gradient to 
+	 * Determine the normalized value (i.e. 0-1) which in turns determines the color from the gradient to 
 	 * use.
 	 * @callback MarkerFactory~normalizeValue
 	 * @param {OpenLayers.Feature} feature - can accept an OpenLayers feature, thus allowing you to use some 
@@ -82,39 +92,39 @@ var MarkerFactory = function(options) {
 	};
 	
 	/** 
-   * Determine the shape to be used by the style for the input feature.
+	 * Determine the shape to be used by the style for the input feature.
 	 * @callback MarkerFactory~determineShape
 	 * @param {OpenLayers.Feature} feature - can accept an OpenLayers feature, thus allowing you to use some 
 	 *		inherent property of to determine shape.
 	 * @returns {(Array|string)} Should return one of the values in this MarkerFactory instance's shapes array 
 	 *		or a string name for a shape (currently supported are 'circle', 'square', 'triangle', 'diamond', 
 	 *		'cross', and 'x'). By default (if left unchanged) returns the circle shape.
-   */
+	 */
 	this.determineShape = function(feature) {
-		return this.shapes.circle;
+		return "circle";
 	};
 	
 	/** 
-   * Change the style options. If necessary will reset the styles cache.
+	 * Change the style options. If necessary will reset the styles cache.
 	 * @param {Object[]} options - optional options to customize style
 	 * @param {number} options[].resolution - Sets the number of discreet breaks in gradient. The larger the 
-   *    number, the  smoother the gradient, however the more styles that need to be created.
+	 *		number, the  smoother the gradient, however the more styles that need to be created.
 	 * @param {number[][]} options[].colorMap - Array of [r,g,b] values that determines gradient.
 	 * @param {number} options[].radius - the size/radius of the shapes.
 	 * @param {number} options[].strokeWidth - the size/width of the stroke.
 	 * @param {(ol.Color|string)} options[].strokeColor - the color of the stroke.
 	 * @param {(ol.Color|string)} options[].highlightColor - the color of the stroke when highlighted (i.e. on 
-   *    hover).
+	 *		hover).
 	 * @param {MarkerFactory~determineShape} options[].shapeFunction - A callback function to overwrite the 
-   *    default shape-determining function. Can have an OpenLayers feature as an incoming argument. Should 
-   *    return  one of the values in this MarkerFactory instance's shapes array or a string name for a shape 
-   *    (currently supported are 'circle', 'square', 'triangle', 'diamond', 'cross', and 'x').
+	 *		default shape-determining function. Can have an OpenLayers feature as an incoming argument. Should 
+	 *		return  one of the values in this MarkerFactory instance's shapes array or a string name for a shape 
+	 *		(currently supported are 'circle', 'square', 'triangle', 'diamond', 'cross', and 'x').
 	 * @param {MarkerFactory~normalizeValue} options[].valueFunction - A callback function to determine the 
-   *    color on the gradient to use.
+	 *		color on the gradient to use.
 	 * @param {MarkerFactory~textFunction} options[].textFunction - A callback function to determine the text 
-   *    label.
+	 *		label.
 	 * @returns {MarkerFactory} instance of MarkerFactory 
-   */
+	 */
 	this.setStyle = function(options) {
 		var clearCache = false;
 		// gradient options
@@ -193,7 +203,7 @@ var MarkerFactory = function(options) {
 	};
 	
 	this.createShape = function(shape, fill, thestroke) {
-		if(shape == this.shapes.square) {
+		if(shape === this.shapes.square || shape === "square") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
 					fill: fill,
@@ -203,7 +213,7 @@ var MarkerFactory = function(options) {
 					angle: Math.PI/4
 				})
 			});
-		} else if(shape == this.shapes.diamond) {
+		} else if(shape === this.shapes.diamond || shape === "diamond") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
 					fill: fill,
@@ -213,7 +223,7 @@ var MarkerFactory = function(options) {
 					angle: 0
 				})
 			});
-		} else if(shape == this.shapes.triangle) {
+		} else if(shape === this.shapes.triangle || shape === "triangle") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
 					fill: fill,
@@ -224,7 +234,7 @@ var MarkerFactory = function(options) {
 					angle: 0
 				})
 			});
-		} else if(shape == this.shapes.circle) {
+		} else if(shape === this.shapes.circle || shape === "circle") {
 			return new ol.style.Style({
 				image: new ol.style.Circle({
 					fill: fill,
@@ -232,7 +242,7 @@ var MarkerFactory = function(options) {
 					radius: this.radius-1
 				})
 			});
-		} else if(shape == this.shapes.cross) {
+		} else if(shape === this.shapes.cross || shape === "cross") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
 					fill: fill, 
@@ -243,7 +253,7 @@ var MarkerFactory = function(options) {
 					angle: 0
 				})
 			});
-		} else if(shape == this.shapes.x) {
+		} else if(shape === this.shapes.x || shape === "x") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
 					fill: fill, 
@@ -258,54 +268,58 @@ var MarkerFactory = function(options) {
 		return null;
 	};
 	
-  /**
-   * Find the appropriate style for the given feature, default to the highlight style.
-   * @param {ol.Feature} feature - The feature object the style is being created for.
-   * @returns {ol.style.Style[]} The computed highlight style. The style is returned in a single-length array.
-   */
+	 /**
+	 * Find the appropriate style for the given feature, default to the highlight style.
+	 * @param {ol.Feature} feature - The feature object the style is being created for.
+	 * @returns {ol.style.Style[]} The computed highlight style. The style is returned in a single-length array.
+	 */
 	this.createHighlightStyle = function(feature) {
 		return this.createLayerStyle(feature, true);
 	};
 	
-  /**
-   * Find the appropriate style for the given feature.
-   * @param {ol.Feature} feature - The feature object the style is being created for.
-   * @param {boolean} highlight - Whether to get the default or highlight style.
-   * @returns {ol.style.Style[]} The computed style. The style is returned in a single-length array.
-   */
+	 /**
+	 * Find the appropriate style for the given feature.
+	 * @param {ol.Feature} feature - The feature object the style is being created for.
+	 * @param {boolean} highlight - Whether to get the default or highlight style.
+	 * @returns {ol.style.Style[]} The computed style. The style is returned in a single-length array.
+	 */
 	this.createLayerStyle = function(feature, highlight) {
 		var styles = feature.get("mfStyle");
 		if(!styles) {
 			// determine the shape (by index)
 			var shape = this.determineShape(feature);
-			// if shape not a value in shapes array, try using it as a key
-			var isShapeObject = false;
-			for(var s in this.shapes) {
-				if(this.shapes.hasOwnProperty(s) && this.shapes[s] === shape) {
-					isShapeObject = true;
-					break;
-				}
-			}
-			if(!isShapeObject) { shape = this.shapes[shape]; }
 			// if no shape object exists, return null
-			if(!shape) { return null; }
-			// determine the color index
-			var iColor = this.normalizeValue(feature);
-			if(iColor > 1.0) {
-				iColor = 1.0;
-			} else if(iColor < 0) {
-				iColor = 0;
+			if(!this.shapes[shape]) { return null; }
+			// check feature value is not null first
+			value = feature.get("value");
+			if(value > this.nullValue) {
+				// determine the color index
+				var iColor = this.normalizeValue(feature);
+				if(iColor > 1.0) {
+					iColor = 1.0;
+				} else if(iColor < 0) {
+					iColor = 0;
+				}
+				iColor = Math.round(iColor*this.resolution);
+				// if nothing in cache, create the styles
+				if(!this.shapes[shape][iColor]) {
+					var fill = this.fills[iColor];
+					this.shapes[shape][iColor] = {
+						normal: this.createShape(shape, fill, this.stroke), 
+						highlight: this.createShape(shape, fill, this.strokeHighlight)
+					};
+				}
+				styles = this.shapes[shape][iColor];
+			} else {
+				// return null style
+				if(!this.nullStyles[shape]) {
+					this.nullStyles[shape] = {
+						normal: this.createShape(shape, this.nullFill, this.stroke), 
+						highlight: this.createShape(shape, this.nullFill, this.strokeHighlight)
+					};
+				}
+				styles = this.nullStyles[shape];
 			}
-			iColor = Math.round(iColor*this.resolution);
-			// if nothing in cache, create the styles
-			if(!shape[iColor]) {
-				var fill = this.fills[iColor];
-				shape[iColor] = {
-					normal: this.createShape(shape, fill, this.stroke), 
-					highlight: this.createShape(shape, fill, this.strokeHighlight)
-				};
-			}
-			styles = shape[iColor];
 			// store in feature data as styles are incredibly taxing on speed it looks like
 			feature.set("mfStyle", styles);
 		}

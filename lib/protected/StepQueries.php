@@ -130,6 +130,48 @@
 			return $thresholds;
 		}
 		
+		/** Get list of all stations.
+		 * @return array Associative array of stations with keys/values:
+		 *		<ul>
+		 *			<li>(String) name - station name</li>
+		 *			<li>(String) waterType - station water type (e.g. river, coast, lake, etc.)</li>
+		 *			<li>(float) lat -latitude coordinates</li>
+		 *			<li>(float) long -longitude coordinates</li>
+		 *			<li>(String) advisoryName - regional name for where advisories are issues (or null)</li>
+		 *			<li>(String) advisoryUrl - link to site-specific advisory webpage if it exists</li>
+		 *		</ul> */
+		public function getAllStations() {
+			$query = StepQueries::$dbconn->prepare(
+				"Select * FROM [STEPDEV].[dbo].[STEP_StationGroup] AS a "
+					. "CROSS APPLY ("
+						. "SELECT TOP 1 b.WaterType, b.AdvisoryID "
+						. "FROM [STEPDEV].[dbo].[STEP_Stations] AS b "
+						. "WHERE a.StationGroupID = b.StationGroupID"
+					. ") AS c "
+					. "LEFT JOIN [dbo].[STEP_Advisories] AS d "
+						. "ON c.AdvisoryID = d.AdvisoryID "
+					. "ORDER BY StationGroupName ASC"
+			);
+			$query->execute();
+			if($query->errorCode() != 0) {
+				die("Query Error: " . $query->errorCode());
+			}
+			$raw = $query->fetchAll(PDO::FETCH_ASSOC);
+			
+			$stations = array();
+			for($i = 0; $i < count($raw); $i++) {
+				$stations[] = array(
+					"name" => $raw[$i]['StationGroupName'], 
+					"waterType" => $raw[$i]['WaterType'], 
+					"lat" => $raw[$i]['StationGroupLat'], 
+					"long" => $raw[$i]['StationGroupLong'], 
+					"advisoryName" => $raw[$i]['AdvisoryName'], 
+					"advisoryUrl" => $raw[$i]['AdvisoryURL']
+				);
+			}
+			return $stations;
+		}
+		
 		/** Get station data the matches the given query parameters of species, contaminant, and years.
 		 * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}.
 		 * @return array Associative array of stations in alphabetical order with keys/values:
@@ -403,7 +445,8 @@
 				"waterType" => $result['WaterType'], 
 				"lat" => $result['Lat'], 
 				"long" => $result['Long'], 
-				"advisoryUrl" => $result['AdvisoryURL']
+				"advisoryUrl" => $result['AdvisoryURL'], 
+				'value' => 0	// so it doesn't appear as no data value on init
 			);
 			
 			// then fill in the data for nearby stations
@@ -432,7 +475,8 @@
 					"waterType" => $raw[$i]['WaterType'], 
 					"lat" => $raw[$i]['Lat'], 
 					"long" => $raw[$i]['Long'], 
-					"advisoryUrl" => $raw[$i]['AdvisoryURL']
+					"advisoryUrl" => $raw[$i]['AdvisoryURL'], 
+					'value' => 0	// so it doesn't appear as no data value on init
 				);
 			}
 			return $records;

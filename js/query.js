@@ -14,7 +14,7 @@
     // The default query to start or when resetting. Start year is 1900 and end year is the current year. This
     // is fine as submitting the query will return a corrected version that fits the data.
 var defaultQuery = {
-                      species: 'highest', 
+                      species: 'Largemouth Bass', 
                       contaminant: 'Mercury',
                       // query will automatically adjust years to min/max year
                       startYear: 1900,
@@ -84,7 +84,7 @@ function updateQuery(options) {
 			// update thresholds
 			updateThresholds(data.thresholds);
 			// update stations to match query
-			loadStationsLayer(data.stations);
+			updateStations(data.stations);
 			// change inputs options down hierarchy as necessary depending on what select fired the query
 			if(options.firedBy === 'species') {
 				updateContaminantsSelect(data.contaminants);
@@ -97,7 +97,7 @@ function updateQuery(options) {
 				updateContaminantsSelect(data.contaminants);
 				updateYearsSelect(data.years);
 			}
-			updateStationsSelect();
+			//updateStationsSelect();
 			// flash changes, set zoom to fit new extent
 			flashQueryChanges(options.query, options.firstRun);
 			if(options.firstRun) {

@@ -125,6 +125,8 @@ function init() {
 	mapInit();
 	addCountyLayer();
 	addMPALayer();
+	initStationsLayer();
+	updateStationsSelect();
 	controlsInit();
 	legendInit($("#map-view"));
 	// activate functions -- start by populating query options and loading stations by firing an initial query
@@ -133,6 +135,9 @@ function init() {
 		firstRun: true	// special option, basically disabled async
 	});
 	addClickInteractions();
+	if(enableHoverInteractions) {
+		addHoverInteractions();
+	}
 	controlsActivate();
 	// zoom in a bit to start
 	map.getView().setZoom(initZoomLevel);
@@ -205,6 +210,7 @@ function addHoverInteractions() {
 	// hover tooltip
 	hoverInteraction.on("select", function(evt) {
 		var features = evt.selected;
+		console.log(features);
 		if(features[0]) {
 			$("#map-view").css("cursor", "pointer");
 			var name = 'unidentified';
@@ -259,8 +265,62 @@ function addClickInteractions() {
 //************************************************************************************************************
 // Station layer functionalities
 //************************************************************************************************************
+function initStationsLayer(data) {
+	if(!data) {
+		$.ajax({
+			async: false,
+			url: "lib/getAllStations.php", 
+			dataType: "json", 
+			success: function(json) {
+				data = json;
+			},
+			failure: function(e) {
+				alert(defaultErrorMessage + "(Error Loading Stations)");
+			}
+		});
+	}
+	if(data) {
+		// create array of ol.Features from data (since it's not technically geographic)
+		var featArray = new Array();
+		for(var i = 0; i < data.length; i++) {
+			featArray.push(
+				new ol.Feature({
+					geometry: new ol.geom.Point(
+						ol.proj.fromLonLat(
+							[parseFloat(data[i].long), parseFloat(data[i].lat)], 
+							mapProjection
+						)
+					),
+					name: (data[i].name) ? data[i].name : data[i].station,
+					waterType: data[i].waterType, 
+					value: (typeof data[i].value !== "undefined") ? data[i].value : -99, 
+					advisoryName: data[i].advisoryName, 
+					advisoryUrl: data[i].advisoryUrl, 
+					featType: 'station',
+					mfStyle: null
+				})
+			);
+		}
+		// update stations data
+		stationsData = data;
+		stations = new ol.Collection(featArray);
+		// load and add features
+		stationLayer = new ol.layer.Vector({
+			title: 'Stations', 
+			source: new ol.source.Vector({
+				features: stations
+			}), 
+			style: function(feature) {
+				return markerFactory.createLayerStyle(feature);
+			}
+		});
+		stationLayer.setZIndex(3);
+		map.addLayer(stationLayer);
+	}
+}
+
 /** 
- * (Re)load stations layers onto the map.
+ * Update data for stations
  * @param {Object[]} data - Array of the query results.
  * @param {string} data[].name - Station name.
  * @param {number} data[].lat - Station latitude.
@@ -270,51 +330,30 @@ function addClickInteractions() {
  * @param {String} data[].advisoryName - Specific site advisory name, if it exists.
  * @param {String} data[].advisoryUrl - Link to specific site advisory page, if it exists.
  * */
-function loadStationsLayer(data) {
-	// create array of ol.Features from data (since it's not technically geographic)
-	var featArray = new Array();
-	for(var i = 0; i < data.length; i++) {
-		featArray.push(
-			new ol.Feature({
-				geometry: new ol.geom.Point(
-					ol.proj.fromLonLat(
-						[parseFloat(data[i].long), parseFloat(data[i].lat)], 
-						mapProjection
-					)
-				),
-				name: ((data[i].name) ? data[i].name : data[i].station), // station name can come one of two ways
-				waterType: data[i].waterType, 
-				value: data[i].value, 
-				advisoryName: data[i].advisoryName, 
-				advisoryUrl: data[i].advisoryUrl, 
-				featType: 'station'
-			})
-		);
-	}
+function updateStations(data) {
 	// update stations data
 	stationsData = data;
-	// remove existing (if applicable)
-	if(stationLayer !== null) {
-		map.removeLayer(stationLayer);
-		map.removeInteraction(hoverInteraction);
-	}
-	stations = new ol.Collection(featArray);
-	// load and add features
-	stationLayer = new ol.layer.Vector({
-		title: 'Stations', 
-		source: new ol.source.Vector({
-			features: stations
-		}), 
-		style: function(feature) {
-			return markerFactory.createLayerStyle(feature);
+	// loop through stations
+	stations.forEach(function(feature) {
+		//console.log(feature);
+		var name = feature.get("name");
+		// reset style
+		feature.set("mfStyle", null);
+		// try and find matching data point
+		var matchedResult = null;
+		for(var i = 0; i < data.length; i++) {
+			if(name === data[i].name) {
+				matchedResult = data[i];
+				break;
+			}
 		}
+		if(matchedResult) {
+			feature.set("value", matchedResult.value);
+		} else {
+			feature.set("value", -99);
+		}
+		feature.changed();
 	});
-	stationLayer.setZIndex(3);
-	map.addLayer(stationLayer);
-	// hover interaction
-	if(enableHoverInteractions || featArray.length < 200) {
-		addHoverInteractions();
-	}
 }
 
 /**
