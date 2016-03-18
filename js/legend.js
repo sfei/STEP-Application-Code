@@ -210,7 +210,8 @@ function updateThresholds(data, custom) {
 			// adjust comments in specific thresholds
 			if(group !== "standard") {
 				data[i].fullComments = data[i].comments;
-				data[i].comments = data[i].comments.split("-").pop().trim();
+				var cparts = data[i].comments.split("-");
+				data[i].comments = cparts[0] + "-" + cparts.pop();
 			}
 			// sort by thresholds group
 			if(group in dataByGroup) {

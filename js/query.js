@@ -11,18 +11,21 @@
 // particularly StepQueries.php which holds all the core query functions.
 //************************************************************************************************************
 
-    // The default query to start or when resetting. Start year is 1900 and end year is the current year. This
-    // is fine as submitting the query will return a corrected version that fits the data.
+	// The default query to start or when resetting. Start year is 1900 and end year is the current year. This
+	// is fine as submitting the query will return a corrected version that fits the data.
 var defaultQuery = {
-                      species: 'Largemouth Bass', 
-                      contaminant: 'Mercury',
-                      // query will automatically adjust years to min/max year
-                      startYear: 1900,
-                      endYear: new Date().getFullYear()
-                    }, 
-    // The last successful query. This is usually not the submitted query but the returned (and corrected) 
-    // query from the submitted.
-    lastQuery;
+						species: 'Largemouth Bass', 
+						contaminant: 'Mercury',
+						// query will automatically adjust years to min/max year
+						startYear: 1900,
+						endYear: new Date().getFullYear()
+					}, 
+	// The last successful query. This is usually not the submitted query but the returned (and corrected) 
+	// query from the submitted.
+	lastQuery,
+	// odd var but we need to know when this is the query directly after the first query, since that's when we
+	// turn off showing no-data stations
+	prepSecondQuery = false;
 
 //************************************************************************************************************
 // Query and data update functions
@@ -55,6 +58,7 @@ function resetDefaultQuery() {
  *    update the query on change). This simply tells which controls don't needd to be updated. For example, if 
  *    the species was changed, the contaminants and years must be updated. If the contaminants paramter was 
  *    changed, only the year controls have to be updated. Leave undefined to update all query controls.
+ * @param {string} options.flashMessage - Optional message to flash after completeing query.
  */
 function updateQuery(options) {
 	if(!options.query) {
@@ -70,6 +74,8 @@ function updateQuery(options) {
 	setModalAsLoading(true, false);
 	$("#species-control").prop('disabled', true);
 	$("#station-select").prop('disabled', true);
+	var updateMessage = options.flashMessage;
+	var updateMessageTime = 3000;
 	
 	$.ajax({
 		async: !options.firstRun,
@@ -81,6 +87,16 @@ function updateQuery(options) {
 			//console.log(data);
 			// update last successful query
 			lastQuery = data.query;
+			// turn off showing of no-data stations after first user-submitted query
+			if(options.firstRun) {
+				prepSecondQuery = true;
+			} else if(prepSecondQuery && showNoData) {
+				toggleNoDataDisplay(false, true);
+				updateMessage = "Stations with no data matching filters will not be displayed.<br />"+
+					"To turn back on, see Map/Layer Options.";
+				updateMessageTime = 5000;
+				prepSecondQuery = false;
+			}
 			// update thresholds
 			updateThresholds(data.thresholds);
 			// update stations to match query
@@ -99,12 +115,16 @@ function updateQuery(options) {
 			}
 			//updateStationsSelect();
 			// flash changes, set zoom to fit new extent
-			flashQueryChanges(options.query, options.firstRun);
-			if(options.firstRun) {
-				zoomToStations();
+			var queryChanged = flashQueryChanges(options.query, options.firstRun);
+			if(queryChanged) {
+				updateMessage = "Filters updated to match query results.";
+			}
+			if(!options.firstRun && stationDetails && stationDetails.isOpen) {
+				stationDetails.reload(lastQuery);
 			}
 		}, 
 		error: function(e) {
+			updateMessage = "Error updating filters.";
 			alert(defaultErrorMessage + "(Error Query)");
 		}, 
 		complete: function() {
@@ -113,6 +133,9 @@ function updateQuery(options) {
 			$("#species-control").prop('disabled', false);
 			// for some reason the trigger doesn't work in the updateStationsSelect() function but works here
 			$("#station-select").prop('disabled', false).trigger('chosen:updated');
+			if(updateMessage) {
+				flashNotification(updateMessage, updateMessageTime);
+			}
 		}
 	});
 }

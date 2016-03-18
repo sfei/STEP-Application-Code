@@ -117,6 +117,7 @@ var StationDetails = function(query) {
 			this.element = $("#details-container");
 		}
 		// open data/query
+		this.isOpen = false;
 		this.open(query);
 	};
 		
@@ -134,6 +135,7 @@ var StationDetails = function(query) {
 		this.setTitle();
 		this.openLoadingMessage();
 		this.element.show();
+		this.isOpen = true;
 		// nearby data is left null until specifically requested
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
@@ -154,6 +156,13 @@ var StationDetails = function(query) {
 				//self.openErrorMessage();
 				alert(defaultErrorMessage + "(Error StationData)");
 			}
+		});
+	};
+	
+	this.reload = function(newQueryOnly) {
+		this.open({
+			station: this.station, 
+			query: newQueryOnly
 		});
 	};
 	
@@ -248,6 +257,7 @@ var StationDetails = function(query) {
 		// close button
 		var self = this;
 		this.element.find("#details-dialog-close").click(function() {
+			self.isOpen = false;
 			self.element.hide();
 		});
 		// advisory link

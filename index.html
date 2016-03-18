@@ -80,7 +80,9 @@
 						</select>
 						<div class="control-spacer"></div>
 						<div class="control-label">&nbsp;</div>
-						<div id="reset-controls" class="button" style="display:inline-block;width:180px;text-align:center;">Reset Query</div>
+						<div id="reset-controls" class="button" style="display:inline-block;width:180px;text-align:center;">
+							Reset Filters/Display
+						</div>
 					</diV>
 					<!-- search by location controls -->
 					<div id="location-controls" class="controls-group">
@@ -99,11 +101,14 @@
 						<div class="control-label">Base Layer:</div>
 						<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
 						<div class="control-spacer"></div>
+						<div title='Display Stations Without Data Matching Filter' class="control-label">Show Filtered Data:</div>
+						<input type="checkbox" id="show-no-data-control" style="position:relative;top:3px;" disabled />
+						<div class="control-spacer"></div>
 						<div title='California County Subdivisions' class="control-label">Show Counties Layer:</div>
-						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;"/>
+						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;" disabled />
 						<div class="control-spacer"></div>
 						<div title='Marine Protected Areas in California' class="control-label">Show MPA Layer:</div>
-						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;"/>
+						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;" disabled />
 					</div>
 				</div>
 				<!-- tabs -->

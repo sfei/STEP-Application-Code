@@ -315,6 +315,9 @@ var MarkerFactory = function(options) {
 				}
 				styles = this.shapes[shape][iColor];
 			} else {
+				if(!this.showNulls) {
+					return null;
+				}
 				// return null style
 				if(!this.nullStyles[shape]) {
 					this.nullStyles[shape] = {

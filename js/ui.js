@@ -94,7 +94,13 @@ function controlsActivate() {
 	$("#reset-controls")
 		.prop('disabled', false)
 		.click(function() {
-			updateQuery({query: defaultQuery});
+			// reset to show no-data symbology
+			toggleNoDataDisplay(true, true);
+			updateQuery({
+				query: defaultQuery,
+				firstRun: true, 
+				flashMessage: "Filters and display settings reset to default."
+			});
 		});
 	$("#station-select")
 		.prop('disabled', false)
@@ -126,6 +132,17 @@ function controlsActivate() {
 		.prop('checked', mpaLayer.getVisible())
 		.click(function() {
 			mpaLayer.setVisible(!mpaLayer.getVisible());
+		});
+	$("#show-no-data-control")
+		.prop('disabled', false)
+		.prop('checked', showNoData)
+		.click(function() {
+			if(prepSecondQuery) {
+				// this disables able setting no-data display to false when doing the query immediately after,
+				// the first, since user already discovered how to toggle this on/off
+				prepSecondQuery = false;
+			}
+			toggleNoDataDisplay();
 		});
 	// fill counties select
 	var countiesSelect = $("#counties-select");
@@ -242,7 +259,9 @@ function flashNotification(message, millis) {
  * query controls (to signify they had to be modified to return a valid query).
  * @param {Object} query - Query object.
  * @param {boolean} firstRun - If true, inhibits flashing. Obviously used for the first/initial query which 
- *    is not user-specified and done to populate the initial map.
+ *		is not user-specified and done to populate the initial map.
+ * @return {boolean} true if one or more queries had to be corrected and the element was flashed to indicate 
+ *		change
  */
 function flashQueryChanges(query, firstRun) {
 	// store in list so we can fire them fairly simultaneously
@@ -262,10 +281,9 @@ function flashQueryChanges(query, firstRun) {
 			el.animate({backgroundColor: "#5070aa"}, 200)
 				.animate({backgroundColor: "#fff"}, 500);
 		});
-		// throw an alert
-		var msg = "Filters updated to match query results.";
-		flashNotification(msg, 3000);
+		return true;
 	}
+	return false;
 }
 
 /**

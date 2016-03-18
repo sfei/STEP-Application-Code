@@ -133,6 +133,9 @@ function mapInit(baseMapSelect) {
 	addBasemaps(map, baseMapSelect);
 }
 
+//************************************************************************************************************
+// Symbologu functionalities
+//************************************************************************************************************
 /**
  * Create the marker factory. Done as sometimes reset with no data color available or not
  */
@@ -151,8 +154,19 @@ function createMarkerFactory() {
 		colorMap: colorMap,
 		showNoData: showNoData, 
 		noDataValue: noDataValue,
-		noDataColor: noDataColor
+		noDataColor: noDataColor, 
+		resolution: (markerFactory) ? markerFactory.resolution : undefined, 
+		valueFunction: (markerFactory) ? markerFactory.normalizeValue : undefined
 	});
+}
+
+function toggleNoDataDisplay(displayNoData, supressUpdate) {
+	showNoData = (typeof displayNoData !== "undefined") ? (displayNoData == true) : !showNoData;
+	createMarkerFactory();
+	if(!supressUpdate) {
+		refreshStations();
+	}
+	$("#show-no-data-control").prop("checked", showNoData);
 }
 
 //************************************************************************************************************
@@ -374,7 +388,31 @@ function openStationDetails(station) {
  * Zoom to the extent of the entire stations layer.
  */
 function zoomToStations() {
-	var extent = stationLayer.getSource().getExtent();
+	var extent = null;
+	stations.forEach(function(feature) {
+		// zoom only to stations with values
+		if(feature.get("value") !== noDataValue) {
+			var coords = feature.getGeometry().getCoordinates();
+			if(!extent) {
+				extent = [coords[0], coords[1], coords[0], coords[1]];
+			} else {
+				if(coords[0] < extent[0]) {
+					extent[0] = coords[0];
+				} else if(coords[0] > extent[2]) {
+					extent[2] = coords[0];
+				}
+				if(coords[1] < extent[1]) {
+					extent[1] = coords[1];
+				} else if(coords[1] > extent[3]) {
+					extent[3] = coords[1];
+				}
+			}
+		}
+	});
+	// if no stations showed up, zoom to whole thing
+	if(!extent) {
+		extent = stationLayer.getSource().getExtent();
+	}
 	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
 		map.getView().fit(extent, map.getSize());
 	}
