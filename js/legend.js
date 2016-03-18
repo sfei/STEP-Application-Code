@@ -41,6 +41,9 @@ function legendInit(container) {
 			"</div>"
 		)
 		.append("<div id='legend-table'></div>");
+	$("<div id='hide-legend-tab'>Hide Legend</div>")
+	  .appendTo(legendContainer)
+		.on('click', legendHide);
 	// dragging cursors
 	addGrabCursorFunctionality(legendContainer);
 	// create the water type symbology
@@ -388,8 +391,8 @@ function updateLegend() {
 		table.append(row);
 	}
 	// button to edit thresholds
-	$("<div id='thresholds-controls' style='text-align:center;'></div>").appendTo($("#legend-table"))
-		.append("<hr style='margin-bottom:6px;' />")
+//	$("<div id='thresholds-controls' style='text-align:center;'></div>").appendTo($("#legend-table"))
+//		.append("<hr style='margin-bottom:6px;' />")
 //		.append(
 //			$("<div id='open-custom-thresholds' class='button'>Edit Thresholds</div>")
 //				.css({
@@ -411,16 +414,16 @@ function updateLegend() {
 //				})
 //				.click(function() { resetThresholds(); })
 //		)
-		.append(
-			$("<div id='hide-legend' class='button'>Hide Legend</div>").appendTo($("#legend-table"))
-				.css({
-					'display': 'inline-block', 
-					'width': 120, 
-					'margin-bottom': 8, 
-					'text-align': 'center'
-				})
-				.click(function() { legendHide(); })
-		);
+//		.append(
+//			$("<div id='hide-legend' class='button'>Hide Legend</div>").appendTo($("#legend-table"))
+//				.css({
+//					'display': 'inline-block', 
+//					'width': 120, 
+//					'margin-bottom': 8, 
+//					'text-align': 'center'
+//				})
+//				.click(function() { legendHide(); })
+//		);
 	// always show legend on update
 	legendShow();
 	// dynamically set height

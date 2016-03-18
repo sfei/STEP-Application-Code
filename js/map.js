@@ -81,7 +81,7 @@ function init() {
 	initStationsLayer();
 	updateStationsSelect();
 	controlsInit();
-	legendInit($("#map-view"));
+	legendInit($("#step-container"));
 	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 

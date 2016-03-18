@@ -149,6 +149,8 @@ input, select {
 	position: absolute;
 	top: 0px;
 	width: 100%;
+	font-size: 14px;
+	z-index: 999;
 }
 #controls-stage {
 	display: block;
@@ -179,7 +181,7 @@ input, select {
 	width: 100%;
 	vertical-align: top;
 	border-top: 1px solid #999;
-	padding-left: 10px;
+	padding-left: 50px;
 }
 .chosen-results {
 	text-align: left;

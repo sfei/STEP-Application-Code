@@ -56,9 +56,9 @@
 			<!-- the actual OpenLayers map -->
 			<div id="map-view" title="Click on location icon for details"></div>
 			<!-- layer/data controls -->
-			<div id="controls-container" style="font-size:14px;">
+			<div id="controls-container">
 				<div id="controls-stage">
-					<!-- query controls -->
+					<!-- filter/query controls -->
 					<div id="query-controls" class="controls-group">
 						<div class="control-label">Filter by Species: </div>
 						<select id="species-control" style="width:340px;" disabled>
@@ -100,15 +100,15 @@
 						<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
 						<div class="control-spacer"></div>
 						<div title='California County Subdivisions' class="control-label">Show Counties Layer:</div>
-						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;margin-right:25px;"/>
+						<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;"/>
 						<div class="control-spacer"></div>
 						<div title='Marine Protected Areas in California' class="control-label">Show MPA Layer:</div>
-						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;margin-right:40px;"/>
+						<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;"/>
 					</div>
 				</div>
 				<!-- tabs -->
 				<div id="controls-tabs">
-					<div id="control-tab-query" class="control-tab">Search Query</div>
+					<div id="control-tab-query" class="control-tab">Filter Stations</div>
 					<div id="control-tab-location" class="control-tab">Find by Location</div>
 					<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
 					<div id="download-tab" class="button-tab">Download Data</div>

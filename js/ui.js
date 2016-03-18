@@ -57,7 +57,7 @@ function controlsInit() {
 			controls[key].tabElement = $("#"+controls[key].tabId);
 		}
 	}
-	setActiveControl(null);
+	setActiveControl('query');
 	// set last query to default
 	resetDefaultQuery();
 }
