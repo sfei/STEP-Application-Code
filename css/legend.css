@@ -37,6 +37,24 @@
 	font-weight: bolder;
 	margin: 4px 0px;
 }
+#legend-symbols {
+	margin-top: 10px;
+	text-align: center;
+}
+#thresholds-control {
+	margin-bottom: 8px;
+	text-align: center;
+}
+#threshold-group-select {
+	width: 96%;
+	height: 25px;
+	border: 1px solid #5ae;
+	border-radius: 5px;
+	margin-top: 8px;
+	font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
+	background:#555;
+	color:#fff;
+}
 #legend-table {
 	display: block;
 	overflow: hidden;
@@ -58,15 +76,9 @@
 	margin: 2px;
 	overflow: hidden;
 }
-#legend-symbols {
-	margin-top: 10px;
-	text-align: center;
-}
-
-#thresholds-controls {
-	margin-bottom: 8px;
-}
 #custom-thresholds-content {
+	width: 200px;
+	margin: auto;
 	padding: 4px;
 	text-align: center;
 }

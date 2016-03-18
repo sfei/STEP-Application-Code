@@ -230,16 +230,28 @@ input, select {
 #zoom-stations-tab {
 	float: right;
 }
-#notification-tab {
+#notification-container {
 	position: absolute;
-	top: 0;
-	right: -10px;
-	padding-right: 20px;
+	bottom: -40px;
+	left: 0;
+	width: 100%;
+	text-align:center;
+}
+#notification-tab {
+/*	position: absolute;
+	bottom: -20px;
+	left: 50%;
+	transform: translateX(-50%);*/
+	display: inline-block;
 	overflow: hidden;
 	min-width: 100px;
 	background: #5070aa;
-	background: rgba(80, 112, 170, 0.8);
+	background: rgba(80, 112, 170, 0.9);
+	border: 1px solid #999;
+	border-radius: 4px;
+	padding: 5px 10px;
 	color: #eea;
+	font-size: 14px;
 }
 #base-layer-control {
 	font-size: 15px;

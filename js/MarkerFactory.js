@@ -6,23 +6,8 @@
  * cache with both its normal and highlight style. If you wish to reset the style, you must also clear this 
  * attribute in all affected features, as this uses that value first and skips the other steps if that cache 
  * exists for a given feature.
- * @param {Object[]} options - optional options to customize style
- * @param {number} options[].resolution - Sets the number of discreet breaks in gradient. The larger the 
- *    number, the smoother the gradient, however the more styles that need to be created.
- * @param {number[][]} options[].colorMap - Array of [r,g,b] values that determines gradient.
- * @param {number} options[].radius - the size/radius of the shapes.
- * @param {number} options[].strokeWidth - the size/width of the stroke.
- * @param {(ol.Color|string)} options[].strokeColor - the color of the stroke. 
- * @param {(ol.Color|string)} options[].highlightColor - the color of the stroke when highlighted (i.e. on 
- *    hover).
- * @param {MarkerFactory~determineShape} options[].shapeFunction - A callback function to overwrite the 
- *    default shape-determining function. Can have an OpenLayers feature as an incoming argument. Should 
- *    return  one of the values in this MarkerFactory instance's shapes array or a string name for a shape 
- *    (currently supported are 'circle', 'square', 'triangle', 'diamond', 'cross', and 'x').
- * @param {MarkerFactory~normalizeValue} options[].valueFunction - A callback function to determine the 
- *    color on the gradient to use.
- * @param {MarkerFactory~textFunction} options[].textFunction - A callback function to determine the text 
- *    label.
+ * @param {Object[]} options - optional options to customize style, for more details on available options, see
+ *		MarkerFactory.setStyle()
  */
 var MarkerFactory = function(options) {
 	
@@ -34,9 +19,12 @@ var MarkerFactory = function(options) {
 		this.strokeWidth	= 1.5;
 		this.strokeColor	= 'black';
 		this.highlightColor	= 'white';
-		
 		this.stroke			= new ol.style.Stroke({color: this.strokeColor, width: this.strokeWidth}); 
 		this.strokeHighlight= new ol.style.Stroke({color: this.highlightColor, width: this.strokeWidth});
+		// null values and style
+		this.showNulls		= true;
+		this.nullValue		= -99;
+		this.nullFill		= null;
 		// styles caches in shape-specific dictionaries by color (integer 0 to 10) then stroke (normal or highlight)
 		this.shapes			= {
 								square: [], 
@@ -46,9 +34,6 @@ var MarkerFactory = function(options) {
 								cross: [],
 								x: []
 							};
-		// null values and style
-		this.nullValue		= -99;
-		this.nullFill		= null;
 		this.nullStyles		= {
 								square: null, 
 								diamond: null, 
@@ -115,6 +100,10 @@ var MarkerFactory = function(options) {
 	 * @param {(ol.Color|string)} options[].strokeColor - the color of the stroke.
 	 * @param {(ol.Color|string)} options[].highlightColor - the color of the stroke when highlighted (i.e. on 
 	 *		hover).
+	 * @param {boolean} showNoData - whether to show null symbols.
+	 * @param {number} options[].noDataValue - the no data value. Anything at or lower than this value is 
+	 *		considered no data.
+	 * @param {(ol.Color|string)} options[].noDataColor - the fill color of no data markers.
 	 * @param {MarkerFactory~determineShape} options[].shapeFunction - A callback function to overwrite the 
 	 *		default shape-determining function. Can have an OpenLayers feature as an incoming argument. Should 
 	 *		return  one of the values in this MarkerFactory instance's shapes array or a string name for a shape 
@@ -172,6 +161,20 @@ var MarkerFactory = function(options) {
 			this.stroke			= new ol.style.Stroke({color: this.strokeColor, width: this.strokeWidth}); 
 			this.strokeHighlight= new ol.style.Stroke({color: this.highlightColor, width: this.strokeWidth});
 			clearCache = true;
+		}
+		// no data value and styles
+		if(typeof options.showNoData !== "undefined") {
+			this.showNulls = options.showNoData;
+		}
+		if(options.noDataValue) {
+			this.nullValue = options.noDataValue;
+		}
+		if(typeof options.noDataColor !== "undefined") {
+			if(options.noDataColor === null) {
+				this.nullFill = null;
+			} else {
+				this.nullFill = new ol.style.Fill({ color: options.noDataColor });
+			}
 		}
 		// callbacks
 		if(options.shapeFunction) {
@@ -284,13 +287,14 @@ var MarkerFactory = function(options) {
 	 * @returns {ol.style.Style[]} The computed style. The style is returned in a single-length array.
 	 */
 	this.createLayerStyle = function(feature, highlight) {
+		// first check the cache
 		var styles = feature.get("mfStyle");
 		if(!styles) {
-			// determine the shape (by index)
+			// determine the shape via shape function
 			var shape = this.determineShape(feature);
 			// if no shape object exists, return null
 			if(!this.shapes[shape]) { return null; }
-			// check feature value is not null first
+			// check feature value is not no data value first
 			value = feature.get("value");
 			if(value > this.nullValue) {
 				// determine the color index

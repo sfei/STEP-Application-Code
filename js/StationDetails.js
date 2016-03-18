@@ -670,25 +670,28 @@ var StationDetails = function(query) {
 			}
 			// open loading message after getting parameters
 			self.openLoadingMessage();
-			// ajax call to gather data (held in session until ready)
+			// ajax call to gather data (use async to keep new window call shallower and hopefull avoid popup blocking)
+			var success = false;
 			$.ajax({
+				async: false, 
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) {
-					if(self.reportWindow && !self.reportWindow.closed) {
-						// close if it already exists (reopening is only way to bring into focus with new browsers)
-						self.reportWindow.close();
-					}
-					// open new window with data (which will be stored in session)
-					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
-					// reset tab html but carry over the last report query
-					self.openTabReport(reportQuery);
-				},
-				error: function(e) {
-					contentDiv.html(defaultErrorMessage + "(Report Query Error)");
-				}
+				success: function(response) { success = true; },
+				error: function(e) { }
 			});
+			if(success) {
+				if(self.reportWindow && !self.reportWindow.closed) {
+					// close if it already exists (reopening is only way to bring into focus with new browsers)
+					self.reportWindow.close();
+				}
+				// open new window with data (which will be stored in session)
+				self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
+				// reset tab html but carry over the last report query
+				self.openTabReport(reportQuery);
+			} else {
+				contentDiv.html(defaultErrorMessage + "(Report Query Error)");
+			}
 		});
 		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.report);

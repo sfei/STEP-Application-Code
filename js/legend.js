@@ -3,6 +3,14 @@
 var thresholds;
 // DOM element container
 var thresholdsContainer;
+// threshold group key
+var selectedThresholdGroup = "standard";
+var thresholdGroups = {
+	"standard": "Non-Specific Thresholds", 
+	"oehha-women-1845-children": "Women Aged 18-45 Years and Children Aged 1-17 Years",
+	"oehha-men-women-over-45": "Women Over 45 Years and Men", 
+	"custom": "User Defined Thresholds"
+};
 
 //************************************************************************************************************
 // Constructor
@@ -26,6 +34,12 @@ function legendInit(container) {
 		.addClass("inner-container-style")
 		.append("<div id='legend-title'></div>")
 		.append("<div id='legend-symbols'><hr/></div>")
+		.append(
+			"<div id='thresholds-control'>" + 
+				"<hr />" + 
+				"<select id='threshold-group-select'></select>" + 
+			"</div>"
+		)
 		.append("<div id='legend-table'></div>");
 	// dragging cursors
 	addGrabCursorFunctionality(legendContainer);
@@ -33,6 +47,17 @@ function legendInit(container) {
 	createWaterTypeLegend();
 	// hide on init, show after thresholds loaded
 	legendContainer.hide();
+	// add functionality to threshold group select here
+	$("#threshold-group-select")
+		.on('change', function() {
+			var group = $("#threshold-group-select option:selected").val();
+			if(group === "customize") {
+				showCustomThresholdsPanel($("#map-view"));
+			} else {
+				selectedThresholdGroup = group;
+				thresholdsChanged();
+			}
+		});
 }
 
 //************************************************************************************************************
@@ -105,6 +130,43 @@ function createWaterTypeLegend() {
 // such thresholds must be updated first (to update the MarkerFactory) before redrawing the stations layer.
 //************************************************************************************************************
 /**
+ * Update the selection options for thresholds
+ */
+function updateThresholdGroupSelect() {
+	// default selected threshold group (try to carry over last)
+	if(!selectedThresholdGroup || !(selectedThresholdGroup in thresholds)) {
+		selectedThresholdGroup = "select";
+		if(!(selectedThresholdGroup in thresholds)) {
+			for(var group in thresholds) {
+				if(group !== "custom") {
+					selectedThresholdGroup = group;
+					break;
+				}
+			}
+		}
+	}
+	// append custom option
+	thresholds.custom = [];
+	// empty and fill select
+	var selectElem = $("#threshold-group-select").html("");
+	for(var group in thresholds) {
+		var option = $("<option></option>")
+		  .appendTo(selectElem)
+			.attr("value", group)
+			.text((group in thresholdGroups) ? thresholdGroups[group] : group);
+		// custom option is hidden (only programatically selected after defining custom thresholds)
+		if(group === "custom") {
+			option.prop("disabled", true).css("display", "none");
+		}
+	}
+	// to customize, there is an option specifically to customize (thus it can be reselected)
+	$("<option></option>")
+	  .appendTo(selectElem)
+		.attr("value", "customize")
+		.text("Customize Thresholds");
+}
+
+/**
  * Reset the thresholds using the last successful query to get the threshold values for the contaminant. Used 
  * to clear out the user-defined thresholds.
  */
@@ -115,7 +177,6 @@ function resetThresholds() {
 		dataType: 'json', 
 		success: function(data) {
 			updateThresholds(data);
-			refreshStations();
 		}, 
 		error: function(e) {
 			alert(defaultErrorMessage + "(Error Thresholds)");
@@ -132,25 +193,50 @@ function resetThresholds() {
  * @param {number} data[].value - The threshold value.
  * @param {string} data[].units - The units.
  * @param {string} data[].comments - Any associated comments with this thresholds
- * @param {boolean} validate - If set true (for user-set thresholds), this validates and corrects the input 
+ * @param {boolean} custom - If set true (for user-set thresholds), this validates and corrects the input 
  *   thresholds as necessary.
  */
-function updateThresholds(data, validate) {
-	// while it should be encoded properly, ensure proper type conversion
-	for(var i = 0; i < data.length; i++) {
-		data[i].value = parseFloat(data[i].value);
-	}
-	// for user inputs thresholds need to validate
-	if(validate) {
-		if(!data || data.length === 0) { return; }
+function updateThresholds(data, custom) {
+	// convert to numeric type
+	if(!custom) {
+		var dataByGroup = {};
+		for(var i = 0; i < data.length; i++) {
+			// ensure numeric type
+			data[i].value = parseFloat(data[i].value);
+			var group = data[i].group;
+			// adjust comments in specific thresholds
+			if(group !== "standard") {
+				data[i].fullComments = data[i].comments;
+				data[i].comments = data[i].comments.split("-").pop().trim();
+			}
+			// sort by thresholds group
+			if(group in dataByGroup) {
+				dataByGroup[group].push(data[i]);
+			} else {
+				dataByGroup[group] = [data[i]];
+			}
+		}
+		// sort each grou
+		for(var group in dataByGroup) {
+			dataByGroup[group].sort(function(a,b) {
+				return a.value - b.value;
+			});
+		}
+		thresholds = dataByGroup;
+		updateThresholdGroupSelect();
+	} else {
+		// for user inputs thresholds need to validate
+		if(!data || data.length === 0) { return false; }
 		var uniqueValues = [];
-		data = data
-			.filter(function(item) {
+		data = data.filter(function(item) {
+				item.value = parseFloat(item.value);
 				// values must be positive, non-zero
 				if(item.value <= 0) { return false; }
 				// no duplicate values
-				if(uniqueValues.hasOwnProperty(item.value)) { return false; }
-				uniqueValues[item.value] = true;
+				if($.inArray(uniqueValues, item.value) >= 0) {
+					return false;
+				}
+				uniqueValues.push(item.value);
 				return true;
 			})
 			.sort(function(a,b) {
@@ -158,27 +244,32 @@ function updateThresholds(data, validate) {
 				return a.value - b.value;
 			});
 		// match threshold comments with existing ones if they exist
+		var lastThresholds = thresholds[selectedThresholdGroup];
 		for(var i = 0; i < data.length; i++) {
 			// also set the units as same as last
-			data[i].units = thresholds[0].units;
+			data[i].units = lastThresholds[0].units;
 			// default for custom thresholds
 			var comment = "User-Defined Threshold";
-			// loop through last thresholds (which means comments if lost can't be reattained until reset)
-			for(var j = 0; j < thresholds.length; j++) {
-				if(data[i].value === thresholds[j].value) {
-					comment = thresholds[j].comments;
-					break;
-				} else if(thresholds[j].value > data[i].value) {
-					// since they're in ascending order we can break
+			// loop through last thresholds (which means comments if lost can't be reattained until reset
+			for(var j = 0; j < lastThresholds.length; j++) {
+				if(data[i].value === lastThresholds[j].value) {
+					comment = lastThresholds[j].comments;
 					break;
 				}
 			}
 			data[i].comments = comment;
 		}
+		thresholds.custom = data;
+		selectedThresholdGroup = "custom";
 	}
-	thresholds = data;
+	thresholdsChanged();
+	return true;
+}
+
+function thresholdsChanged() {
 	updateThresholdStyles();
 	updateLegend();
+	refreshStations();
 }
 
 /**
@@ -188,7 +279,8 @@ function updateThresholds(data, validate) {
  * called in {@link #updateThresholds(data,validate)}.
  */
 function updateThresholdStyles() {
-	var numThresholds = thresholds.length;
+	var thresholdsData = thresholds[selectedThresholdGroup];
+	var numThresholds = thresholdsData.length;
 	var stretchFactor = 3; // for a nice gradient instead of just solid colors
 	// set the style function (see MarkerFactory.js)
 	markerFactory.setStyle({
@@ -197,7 +289,7 @@ function updateThresholdStyles() {
 	});
 	// get the color values for each threshold
 	for(var i = 0; i < numThresholds; i++) {
-		thresholds[i].color = markerFactory.hexMap[(1+i)*stretchFactor];
+		thresholdsData[i].color = markerFactory.hexMap[(1+i)*stretchFactor];
 	}
 }
 
@@ -226,14 +318,15 @@ function getThresholdColor(value) {
  * @returns {number} The color in the gradient as a normalized value from 0-1.
  */
 function getThresholdColorIndex(value) {
-	var numThresholds = thresholds.length;
+	var thresholdsData = thresholds[selectedThresholdGroup];
+	var numThresholds = thresholdsData.length;
 	var iColor = numThresholds;
 	for(var i = 0; i < numThresholds; i++) {
-		if(value <= thresholds[i].value) {
+		if(value <= thresholdsData[i].value) {
 			if(i === 0) {
-				iColor = value/thresholds[i].value;
+				iColor = value/thresholdsData[i].value;
 			} else {
-				iColor = i + (value - thresholds[i-1].value)/(thresholds[i].value - thresholds[i-1].value);
+				iColor = i + (value - thresholdsData[i-1].value)/(thresholdsData[i].value - thresholdsData[i-1].value);
 			}
 			break;
 		}
@@ -273,6 +366,7 @@ function adjustLegendContainerHeight() {
  * Update the legend HTML based on the last query and updated thresholds.
  */
 function updateLegend() {
+	var thresholdsData = thresholds[selectedThresholdGroup];
 	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
 	if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
@@ -280,16 +374,15 @@ function updateLegend() {
 	} else {
 		title = lastQuery.contaminant + " Concentrations in " + capitalizeSpecies;
 	}
-	title += " (" + thresholds[0].units + ")";
+	title += " (" + thresholdsData[0].units + ")";
 	$("#legend-title").html(title);
-	var table = $("#legend-table");
-	table.html("<hr />");
+	var table = $("#legend-table").html("");
 	// do legend in descending order
-	for(var i = thresholds.length-1; i >= -1; i--) {
+	for(var i = thresholdsData.length-1; i >= -1; i--) {
 		var row = "<div class='legend-table-row'>";
-		var threshold = (i >= 0) ? thresholds[i] : { color:markerFactory.hexMap[0], value:0, units:thresholds[0].units, comments:"Not Detected" };
+		var threshold = (i >= 0) ? thresholdsData[i] : { color:markerFactory.hexMap[0], value:0, units:thresholdsData[0].units, comments:"Not Detected" };
 		row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-		row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + ((i === thresholds.length-1) ? "+" : "") + threshold.value + " " + threshold.units + "</div>";
+		row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + ((i === thresholdsData.length-1) ? "+" : "") + threshold.value + " " + threshold.units + "</div>";
 		row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 		row += "</div>";
 		table.append(row);
@@ -297,34 +390,33 @@ function updateLegend() {
 	// button to edit thresholds
 	$("<div id='thresholds-controls' style='text-align:center;'></div>").appendTo($("#legend-table"))
 		.append("<hr style='margin-bottom:6px;' />")
-		.append(
-			$("<div id='open-custom-thresholds' class='button'>Edit Thresholds</div>")
-				.css({
-					'display': 'inline-block', 
-					'margin-left': 'auto', 
-					'width': 80, 
-					'text-align': 'center'
-				})
-				.click(function() { showCustomThresholdsPanel($("#map-view")); })
-		)
-		.append(
-			$("<div id='reset-thresholds' class='button'>Reset Thresholds</div>").appendTo($("#legend-table"))
-				.css({
-					'display': 'inline-block', 
-					'margin-left': 15, 
-					'margin-right': 'auto', 
-					'width': 80, 
-					'text-align': 'center'
-				})
-				.click(function() { resetThresholds(); })
-		)
+//		.append(
+//			$("<div id='open-custom-thresholds' class='button'>Edit Thresholds</div>")
+//				.css({
+//					'display': 'inline-block', 
+//					'margin-left': 'auto', 
+//					'width': 80, 
+//					'text-align': 'center'
+//				})
+//				.click(function() { showCustomThresholdsPanel($("#map-view")); })
+//		)
+//		.append(
+//			$("<div id='reset-thresholds' class='button'>Reset Thresholds</div>").appendTo($("#legend-table"))
+//				.css({
+//					'display': 'inline-block', 
+//					'margin-left': 15, 
+//					'margin-right': 'auto', 
+//					'width': 80, 
+//					'text-align': 'center'
+//				})
+//				.click(function() { resetThresholds(); })
+//		)
 		.append(
 			$("<div id='hide-legend' class='button'>Hide Legend</div>").appendTo($("#legend-table"))
 				.css({
 					'display': 'inline-block', 
-					'margin-left': 15, 
-					'margin-right': 'auto', 
-					'width': 80, 
+					'width': 120, 
+					'margin-bottom': 8, 
 					'text-align': 'center'
 				})
 				.click(function() { legendHide(); })
@@ -353,17 +445,18 @@ function updateLegend() {
  *    Not so much structurally but as to limit the draggable range of the resulting div.
  */
 function showCustomThresholdsPanel(container) {
-	if(!thresholdsContainer) {
-		thresholdsContainer = $("<div id='custom-thresholds-container'></div>")
-		  .appendTo(container)
-			.addClass("container-styled")
-			.draggable({containment: "parent"});
-		addGrabCursorFunctionality(thresholdsContainer);
-	} else {
-		thresholdsContainer.html("");
-	}
+	var thresholdsData = thresholds[selectedThresholdGroup];
+//	if(!thresholdsContainer) {
+//		thresholdsContainer = $("<div id='custom-thresholds-container'></div>")
+//		  .appendTo(container)
+//			.addClass("container-styled")
+//			.draggable({containment: "parent"});
+//		addGrabCursorFunctionality(thresholdsContainer);
+//	} else {
+//		thresholdsContainer.html("");
+//	}
 	var panel = $("<div id='custom-thresholds-content'></div>")
-	  .appendTo(thresholdsContainer)
+	  //.appendTo(thresholdsContainer)
 		.addClass("inner-container-style");
 	var buttonStyle = {
 		'display': 'inline-block',
@@ -372,12 +465,13 @@ function showCustomThresholdsPanel(container) {
 		'text-align': 'center'
 	};
 	// add title
-	panel.append("<span style='font-weight:bolder;font-size:16px;'>" + lastQuery.contaminant + " Thresholds</span><hr />");
+	panel.append("<span style='font-weight:bolder;font-size:16px;'>Customize " + lastQuery.contaminant + " Thresholds</span><hr />");
 	// append threshold inputs
 	var inputs = $("<div id='custom-thresholds-inputs-container'></div>").appendTo(panel);
-	for(var i = 0; i < thresholds.length; i++) {
-		addThresholdControl(inputs, thresholds[thresholds.length-1-i].value);
-	}
+	var i = thresholdsData.length;
+	while(i-- > 0) {
+		addThresholdControl(inputs, thresholdsData[i].value);
+	};
 	// add/remove buttons
 	var addThreshold = $("<div id='custom-thresholds-add' class='button'>+</div>")
 	  .appendTo(panel)
@@ -402,7 +496,7 @@ function showCustomThresholdsPanel(container) {
 		}
 	});
 	// append buttons
-	$("<div id='custom-thresholds-submit'></div>")
+	$("<div id='custom-thresholds-buttons'></div>")
 	  .appendTo(panel)
 		.css({'text-align': 'center'})
 		.append(
@@ -412,22 +506,32 @@ function showCustomThresholdsPanel(container) {
 			$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
 		);
 	// center it
-	thresholdsContainer.center();
+	//thresholdsContainer.center();
+	setModal(true, true, panel);
 	// close functionality
 	$("#custom-thresholds-cancel").click(function() {
-		thresholdsContainer.remove();
-		thresholdsContainer = null;
+		hideModal();
+		//thresholdsContainer.remove();
+		//thresholdsContainer = null;
+		$("#threshold-group-select").val(selectedThresholdGroup);
 	});
 	// submit functionality
-	$("#custom-thresholds-submit").click(function() { 
+	$("#custom-thresholds-submit").click(function(evt) {
 		var data = [];
 		$(".custom-threshold-input").each(function(i, element) {
 			data.push({value: element.value});
 		});
-		thresholdsContainer.remove(); 
-		thresholdsContainer = null;
-		updateThresholds(data, true);
-		refreshStations();
+		hideModal();
+		//thresholdsContainer.remove(); 
+		//thresholdsContainer = null;
+		var updated = updateThresholds(data, true);
+		if(updated) {
+			// set to hidden custom option
+			$("#threshold-group-select").val("custom");
+		} else {
+			// on failure return to last selection
+			$("#threshold-group-select").val(selectedThresholdGroup);
+		}
 	});
 }
 
@@ -439,7 +543,8 @@ function showCustomThresholdsPanel(container) {
 function addThresholdControl(container, value) {
 	container.append(
 		"<div class='custom-threshold-control'>"  +
-			"<input class='custom-threshold-input' type='number' step='0.1' min='0.01' value='" + value + "' />&nbsp;" + thresholds[0].units + 
+			"<input class='custom-threshold-input' type='number' step='0.1' min='0.01' value='" + value + "' />" + 
+			"&nbsp;" + thresholds[selectedThresholdGroup][0].units + 
 		"</div>"
 	);
 }

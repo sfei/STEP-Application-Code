@@ -23,6 +23,8 @@
 		<script src="js/nouislider/nouislider.min.js"></script>
 		<!-- page CSS -->
 		<link rel="stylesheet" href="css/style.css" />
+		<!-- helper/utility functions -->
+		<script src="js/helper.js"></script>
 		<!-- js for the ui -->
 		<script src="js/ui.js"></script>
 		<!-- query backend and ui scripts -->
@@ -111,12 +113,15 @@
 					<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
 					<div id="download-tab" class="button-tab">Download Data</div>
 					<div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
-					<div id="notification-tab" class="control-tab">Notifications go here</div>
 				</div>
 			</div>
 			<!-- modal blocking (for loading dialog usually) -->
 			<div id="modal-container-outer">
 				<div id="modal-container-inner"></div>
+			</div>
+			<!-- notification popup thingamajig -->
+			<div id="notification-container">
+				<div id="notification-tab">Notifications go here</div>
 			</div>
 		</div>
 	</body>
