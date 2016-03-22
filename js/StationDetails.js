@@ -237,7 +237,7 @@ var StationDetails = function(query) {
 		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element.hide()
-			.draggable()
+			.draggable({containment: "#"+this.parentId})
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");

@@ -97,8 +97,10 @@ function updateQuery(options) {
 				updateMessageTime = 5000;
 				prepSecondQuery = false;
 			}
-			// update thresholds
-			updateThresholds(data.thresholds, options.selectThresholdGroup);
+			// update thresholds only if contaminant changed
+			if(options.firstRun || options.query.contaminant !== lastQuery.contaminant) {
+				updateThresholds(data.thresholds, options.selectThresholdGroup);
+			}
 			// update stations to match query
 			updateStations(data.stations);
 			// change inputs options down hierarchy as necessary depending on what select fired the query
@@ -119,7 +121,7 @@ function updateQuery(options) {
 			if(queryChanged) {
 				updateMessage = "Filters updated to match query results.";
 			}
-			if(!options.firstRun && stationDetails && stationDetails.isOpen) {
+			if(stationDetails && stationDetails.isOpen) {
 				stationDetails.reload(lastQuery);
 			}
 		}, 

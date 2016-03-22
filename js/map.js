@@ -116,7 +116,7 @@ function mapInit(baseMapSelect, mapOptions) {
 	map = new ol.Map(mapOptions);
 	map.setView(
 		new ol.View({
-			center: ol.proj.fromLonLat([-119, 38]),
+			center: ol.proj.fromLonLat([-120, 37.5]),
 			zoom: 7,
 			minZoom: 6,
 			// past this zoom, many areas of the ESRI Oceans Basemap have no tiles

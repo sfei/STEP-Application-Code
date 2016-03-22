@@ -257,12 +257,12 @@ function updateThresholds(data, selectThresholdGroup, custom) {
 			// default for custom thresholds
 			var comment = "User-Defined Threshold";
 			// loop through last thresholds (which means comments if lost can't be reattained until reset
-			for(var j = 0; j < lastThresholds.length; j++) {
-				if(data[i].value === lastThresholds[j].value) {
-					comment = lastThresholds[j].comments;
-					break;
-				}
-			}
+//			for(var j = 0; j < lastThresholds.length; j++) {
+//				if(data[i].value === lastThresholds[j].value) {
+//					comment = lastThresholds[j].comments;
+//					break;
+//				}
+//			}
 			data[i].comments = comment;
 		}
 		thresholds.custom = data;
@@ -375,12 +375,13 @@ function updateLegend() {
 	var thresholdsData = thresholds[selectedThresholdGroup];
 	var title;
 	var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + lastQuery.species + "</span>";
+	var yearString = (lastQuery.startYear === lastQuery.endYear) ? lastQuery.startYear : (lastQuery.startYear + "-" + lastQuery.endYear);
 	if(lastQuery.species === 'highest' || lastQuery.species === 'lowest') {
-		title = capitalizeSpecies + " Average " + lastQuery.contaminant + " Concentration for Any Species"; 
+		title = capitalizeSpecies + " Average " + lastQuery.contaminant + " Concentration for Any Species";
 	} else {
 		title = lastQuery.contaminant + " Concentrations in " + capitalizeSpecies;
 	}
-	title += " (" + thresholdsData[0].units + ")";
+	title += " (" + thresholdsData[0].units + ") " + yearString;
 	$("#legend-title").html(title);
 	var table = $("#legend-table").html("");
 	// do legend in descending order
