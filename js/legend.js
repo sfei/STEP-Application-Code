@@ -162,6 +162,7 @@ function updateThresholdGroupSelect() {
 			option.prop("disabled", true).css("display", "none");
 		}
 	}
+	selectElem.val(selectedThresholdGroup);
 	// to customize, there is an option specifically to customize (thus it can be reselected)
 	$("<option></option>")
 	  .appendTo(selectElem)
@@ -199,7 +200,7 @@ function resetThresholds() {
  * @param {boolean} custom - If set true (for user-set thresholds), this validates and corrects the input 
  *   thresholds as necessary.
  */
-function updateThresholds(data, custom) {
+function updateThresholds(data, selectThresholdGroup, custom) {
 	// convert to numeric type
 	if(!custom) {
 		var dataByGroup = {};
@@ -227,6 +228,7 @@ function updateThresholds(data, custom) {
 			});
 		}
 		thresholds = dataByGroup;
+		selectedThresholdGroup = selectThresholdGroup;
 		updateThresholdGroupSelect();
 	} else {
 		// for user inputs thresholds need to validate
@@ -280,7 +282,7 @@ function thresholdsChanged() {
  * Update the colors (both for the legend and the layer symbology) according to the new thresholds. Takes no 
  * parameters but instead uses the global {@link #thresholds}. Updates the MarkerFactory to do this, which is 
  * linked to the style function for the stations layer. Does not usually have to be called explicitly as it's 
- * called in {@link #updateThresholds(data,validate)}.
+ * called in {@link #updateThresholds(data,selectThresholdGroup,validate)}.
  */
 function updateThresholdStyles() {
 	var thresholdsData = thresholds[selectedThresholdGroup];
@@ -528,7 +530,7 @@ function showCustomThresholdsPanel(container) {
 		hideModal();
 		//thresholdsContainer.remove(); 
 		//thresholdsContainer = null;
-		var updated = updateThresholds(data, true);
+		var updated = updateThresholds(data, null, true);
 		if(updated) {
 			// set to hidden custom option
 			$("#threshold-group-select").val("custom");

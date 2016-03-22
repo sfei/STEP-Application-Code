@@ -98,7 +98,7 @@ function updateQuery(options) {
 				prepSecondQuery = false;
 			}
 			// update thresholds
-			updateThresholds(data.thresholds);
+			updateThresholds(data.thresholds, options.selectThresholdGroup);
 			// update stations to match query
 			updateStations(data.stations);
 			// change inputs options down hierarchy as necessary depending on what select fired the query

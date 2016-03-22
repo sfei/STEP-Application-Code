@@ -62,6 +62,14 @@ function newWindow(e, url, name, width, height, minimal) {
 	}
 }
 
+function getUrlGetVars() {
+	var vars = {};
+	window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+		vars[key] = value;
+	});
+	return vars;
+}
+
 //************************************************************************************************************
 // Common/utility functions that require some CSS or precreated divs
 //************************************************************************************************************

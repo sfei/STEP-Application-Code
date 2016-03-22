@@ -68,6 +68,7 @@ function init() {
 			return;
 		}
 	}
+	var getVars = getUrlGetVars();
 	setModalAsLoading(true, false);
 	// add basemap control dynamically (easier to change the basemaps later without changing all related code)
 	addBasemapControl($("#base-layer-control-container"), {width: 220});
@@ -85,6 +86,7 @@ function init() {
 	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 
+		selectThresholdGroup: getVars.tgroup, 
 		firstRun: true	// special option, basically disabled async
 	});
 	addClickInteractions();
@@ -107,9 +109,11 @@ function init() {
  * @param {number} baseMapSelect - Index of basemap to set as active on init. If not specified defaults 0, or 
  *		first base layer on the list. (See basemaps.js)
  */
-function mapInit(baseMapSelect) {
+function mapInit(baseMapSelect, mapOptions) {
+	if(!mapOptions) { mapOptions = {}; }
+	mapOptions.target = "map-view";
 	// create map and view
-	map = new ol.Map({ target: "map-view" });
+	map = new ol.Map(mapOptions);
 	map.setView(
 		new ol.View({
 			center: ol.proj.fromLonLat([-119, 38]),

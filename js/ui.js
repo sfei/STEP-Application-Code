@@ -267,19 +267,25 @@ function flashQueryChanges(query, firstRun) {
 	// store in list so we can fire them fairly simultaneously
 	var elements = [];
 	if(query.contaminant !== lastQuery.contaminant) {
-		elements.push($("#contaminant-control"));
+		//elements.push($("#contaminant-control"));
+		elements.push($("#contaminant_control_chosen a span"));
 	}
 	if(query.startYear !== lastQuery.startYear) {
-		elements.push($("#start-year-control"));
+		//elements.push($("#start-year-control"));
+		elements.push($("#start_year_control_chosen a span"));
 	}
 	if(query.endYear !== lastQuery.endYear) {
-		elements.push($("#end-year-control"));
+		//elements.push($("#end-year-control"));
+		elements.push($("#end_year_control_chosen a span"));
 	}
 	if(elements.length > 0 && !firstRun) {
-		// flash select boxes
+		// flash select boxes (with chosen it's bit harder so just flash the text color twice)
 		elements.forEach(function(el) {
-			el.animate({backgroundColor: "#5070aa"}, 200)
-				.animate({backgroundColor: "#fff"}, 500);
+			el.animate({color: "#3376E9"}, 400)
+			.animate({color: "#000"}, 200)
+			.animate({color: "#3376E9"}, 400)
+			.animate({color: "#000"}, 200)
+			.removeAttr('style', '');
 		});
 		return true;
 	}
