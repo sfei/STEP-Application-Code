@@ -196,31 +196,31 @@ function setActiveControlTab() {
  */
 function setActiveControl(controlName) {
 	var stageDiv = $("#controls-stage");
-	var closing = controlName == null || controlName == undefined || controls[controlName] == activeControl;
+	var closing = !controlName || controls[controlName] === activeControl;
 	if(closing || controls[controlName]) {
 		var newControl = (!closing) ? controls[controlName] : null;
 		// get height as either closed or height of the new element
-		var oldHeight = stageDiv.height();
-		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
-		var padding = (!closing) ? controlStageVertPadding : 0;
+//		var oldHeight = stageDiv.height();
+//		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
+//		var padding = (!closing) ? controlStageVertPadding : 0;
 		// hide active element
-		if(activeControl != null) { activeControl.element.hide(); }
+		if(activeControl) { activeControl.element.slideUp(); }
 		// animate height change
-		stageDiv
-			.height(oldHeight)
-			.animate(
-				{'height': newHeight + 2*padding}, 
-				'fast', 
-				function() {
-					stageDiv.height('auto');
-					stageDiv.css('padding', padding+'px 0');
-				}
-			);
+//		stageDiv
+//			.height(oldHeight)
+//			.animate(
+//				{'height': newHeight + 2*padding}, 
+//				'fast', 
+//				function() {
+//					stageDiv.height('auto');
+//					stageDiv.css('padding', padding+'px 0');
+//				}
+//			);
 		// also animate moving the zoom control
-		$(".ol-zoom").animate({'top': newHeight+60}, 'fast');
+//		$(".ol-zoom").animate({'top': newHeight+60}, 'fast');
 		// show new control (or don't if closing)
 		if(!closing) {
-			newControl.element.show();
+			newControl.element.slideDown();
 			activeControl = newControl;
 		} else {
 			activeControl = null;
