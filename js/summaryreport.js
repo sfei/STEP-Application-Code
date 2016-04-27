@@ -94,7 +94,7 @@ function initReport() {
 	// fill header information
 	var numResults = data.length;
 	$("#content-header").html(
-		"<b>" + (numResults-1) + "</b> location" + (numResults>0?"s":"") + " within <b>" + query.radiusMiles + "</b> miles of: <b>" + query.station + "</b>"
+		"<b>" + query.station + "</b> and its 10 nearest stations."
 	);
 	
 	var container = $("#content-container");

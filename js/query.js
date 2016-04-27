@@ -98,7 +98,6 @@ function updateQuery(options) {
 				prepSecondQuery = false;
 			}
 			// update thresholds only if contaminant changed
-			console.log(options.firedBy);
 			if(options.firstRun || options.firedBy === 'contaminant') {
 				updateThresholds(data.thresholds, options.selectThresholdGroup);
 			}

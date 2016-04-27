@@ -611,8 +611,7 @@ var StationDetails = function(query) {
 			)
 			// Miles select
 			.append(
-				"Within a distance of <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
-				"<b>" + reportQuery.station + "</b><br />"
+				"For <b>" + reportQuery.station + "</b> and its 10 nearest stations.<br />"
 			)
 			// Submit button
 			.append(
@@ -657,21 +656,10 @@ var StationDetails = function(query) {
 				}
 			}
 		});
-		// append select options
-		var selectMiles = this.element.find("#report-select-miles")
-			.append("<option value=5>5</option>")
-			.append("<option value=10>10</option>")
-			.append("<option value=15>15</option>")
-			.append("<option value=20>20</option>")
-			.append("<option value=25>25</option>")
-			.append("<option value=30>30</option>")
-			.val(reportQuery.radiusMiles);
-		if(!selectMiles.val()) { selectMiles.val(10); }
+		
 		// add click functionality
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			// grab parameters from options
-			reportQuery.radiusMiles = selectMiles.val();
 			if(yearSlider) {
 				// if no slider, leave as default query, which should've already been adjusted for years available
 				var yearRange = yearSlider.get();
@@ -681,16 +669,16 @@ var StationDetails = function(query) {
 			// open loading message after getting parameters
 			self.openLoadingMessage();
 			// ajax call to gather data (use async to keep new window call shallower and hopefull avoid popup blocking)
-			var success = false;
+			var onSuccess = false;
 			$.ajax({
 				async: false, 
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) { success = true; },
+				success: function(response) { onSuccess = true; },
 				error: function(e) { }
 			});
-			if(success) {
+			if(onSuccess) {
 				if(self.reportWindow && !self.reportWindow.closed) {
 					// close if it already exists (reopening is only way to bring into focus with new browsers)
 					self.reportWindow.close();
