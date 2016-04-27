@@ -98,7 +98,8 @@ function updateQuery(options) {
 				prepSecondQuery = false;
 			}
 			// update thresholds only if contaminant changed
-			if(options.firstRun || options.query.contaminant !== lastQuery.contaminant) {
+			console.log(options.firedBy);
+			if(options.firstRun || options.firedBy === 'contaminant') {
 				updateThresholds(data.thresholds, options.selectThresholdGroup);
 			}
 			// update stations to match query
@@ -107,7 +108,7 @@ function updateQuery(options) {
 			if(options.firedBy === 'species') {
 				updateContaminantsSelect(data.contaminants);
 				updateYearsSelect(data.years);
-			} else if(options.firedBy === 'contaminants') {
+			} else if(options.firedBy === 'contaminant') {
 				updateYearsSelect(data.years);
 			} else {
 				// if unknown or undefined firing event, just update everything

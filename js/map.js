@@ -64,7 +64,7 @@ function init() {
 		}
 		// Edge returns NaN value
 		if(!isNaN(browserType.ieVersion) && browserType.ieVersion <= 8) {
-			alert("This application is not compatible with Internet Explorer version 8 or below, please upgrade your browser.");
+			alert("This application is not compatible with Internet Explorer version 8 or below.");
 			return;
 		}
 	}

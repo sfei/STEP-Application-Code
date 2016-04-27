@@ -104,7 +104,7 @@ class StepQueries {
 	public function getThresholds($params) {
 		$query = StepQueries::$dbconn->prepare(
 			"SELECT Threshold, Units, ThresholdGroup, Comments "
-				. "FROM [dbo].[STEP_Thresholds] "
+				. "FROM [dbo].[STEP_Thresholds_v2] "
 				. "WHERE Parameter = '" . $params['contaminant'] . "' ORDER BY SortOrder ASC"
 		);
 		$query->execute();
