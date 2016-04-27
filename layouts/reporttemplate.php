@@ -17,6 +17,8 @@
 		<script src="http://openlayers.org/en/v3.10.1/build/ol-debug.js"></script>
 		<!-- page CSS -->
 		<link rel="stylesheet" href="../layouts/reporttemplate.css" />
+		<!-- helper/utility functions -->
+		<script src="../js/helper.js"></script>
 		<!-- color/marker scripts -->
 		<script src="../js/ColorMap.js"></script>
 		<script src="../js/MarkerFactory.js"></script>

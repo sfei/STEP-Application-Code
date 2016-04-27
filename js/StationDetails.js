@@ -117,6 +117,7 @@ var StationDetails = function(query) {
 			this.element = $("#details-container");
 		}
 		// open data/query
+		this.isOpen = false;
 		this.open(query);
 	};
 		
@@ -134,6 +135,7 @@ var StationDetails = function(query) {
 		this.setTitle();
 		this.openLoadingMessage();
 		this.element.show();
+		this.isOpen = true;
 		// nearby data is left null until specifically requested
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
@@ -154,6 +156,13 @@ var StationDetails = function(query) {
 				//self.openErrorMessage();
 				alert(defaultErrorMessage + "(Error StationData)");
 			}
+		});
+	};
+	
+	this.reload = function(newQueryOnly) {
+		this.open({
+			station: this.station, 
+			query: newQueryOnly
 		});
 	};
 	
@@ -228,7 +237,7 @@ var StationDetails = function(query) {
 		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element.hide()
-			.draggable()
+			.draggable({containment: "#"+this.parentId})
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");
@@ -248,6 +257,7 @@ var StationDetails = function(query) {
 		// close button
 		var self = this;
 		this.element.find("#details-dialog-close").click(function() {
+			self.isOpen = false;
 			self.element.hide();
 		});
 		// advisory link
@@ -670,25 +680,28 @@ var StationDetails = function(query) {
 			}
 			// open loading message after getting parameters
 			self.openLoadingMessage();
-			// ajax call to gather data (held in session until ready)
+			// ajax call to gather data (use async to keep new window call shallower and hopefull avoid popup blocking)
+			var success = false;
 			$.ajax({
+				async: false, 
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) {
-					if(self.reportWindow && !self.reportWindow.closed) {
-						// close if it already exists (reopening is only way to bring into focus with new browsers)
-						self.reportWindow.close();
-					}
-					// open new window with data (which will be stored in session)
-					self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
-					// reset tab html but carry over the last report query
-					self.openTabReport(reportQuery);
-				},
-				error: function(e) {
-					contentDiv.html(defaultErrorMessage + "(Report Query Error)");
-				}
+				success: function(response) { success = true; },
+				error: function(e) { }
 			});
+			if(success) {
+				if(self.reportWindow && !self.reportWindow.closed) {
+					// close if it already exists (reopening is only way to bring into focus with new browsers)
+					self.reportWindow.close();
+				}
+				// open new window with data (which will be stored in session)
+				self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
+				// reset tab html but carry over the last report query
+				self.openTabReport(reportQuery);
+			} else {
+				contentDiv.html(defaultErrorMessage + "(Report Query Error)");
+			}
 		});
 		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab(this.tabs.report);

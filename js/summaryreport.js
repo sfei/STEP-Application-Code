@@ -86,7 +86,7 @@ function initReport() {
 		});
 	addBasemapControl(layerControls, { width: 200 });
 	// query and legend initalizations removed (which also removes associated color styling)
-	mapInit(1);
+	mapInit(1, { interactions: ol.interaction.defaults({mouseWheelZoom:false}) });
 	// display station layer
 	initStationsLayer(data);
 	//updateStations(data);
@@ -177,10 +177,10 @@ function initReport() {
 	});
 	
 	/**
-   * Quick style function as first is a little special and it gets repeated a lot
-   * @param {number} i - Column index.
-   * @returns {String} A bit of css style as a string.
-   */ 
+	* Quick style function as first is a little special and it gets repeated a lot
+	* @param {number} i - Column index.
+	* @returns {String} A bit of css style as a string.
+	*/ 
 	function getCellStyle(i) {
 		var style = "width:" + reportColumns[i].width + "px;";
 		if(i === 0) {

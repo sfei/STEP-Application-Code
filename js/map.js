@@ -1,45 +1,4 @@
 
-//************************************************************************************************************
-// Common utility functions as extensions to existing prototypes
-//************************************************************************************************************
-/**
- * Capitalize the first letter of every word. (A word is determined by any string preceded by whitespace, as 
- * such ignores second word in hyphenated compound words).
- * @returns {string} Capitalized version of this string.
- */
-String.prototype.capitalize = function() {
-	return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
-};
-
-/**
- * Center itself in the window with absolute positioning.
- * @returns {jQuery} Itself.
- */
-jQuery.fn.center = function() {
-	this.css("position","absolute");
-	this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) +  $(window).scrollTop()) + "px");
-	this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
-	return this;
-};
-
-/**
- * Adds the handling of adding/removing the 'grab' and 'grabbing' css classes on mouse drag events. Original 
- * for the map (as OpenLayers doesn't do this automatically) but useful for a lot of other stuff, like custom 
- * dialog boxes/windows.
- * @param {jQuery} element - jQuery object for element to add functionality to.
- */
-function addGrabCursorFunctionality(element) {
-	element.addClass("grab");
-	element.mousedown(function() {
-		element.removeClass("grab").addClass("grabbing");
-	}).mouseup(function() {
-		element.removeClass("grabbing").addClass("grab");
-	});
-}
-
-//************************************************************************************************************
-// Variables
-//************************************************************************************************************
 var defaultErrorMessage = "This site is experiencing some technical difficulties. Please try again later. ";
 var map,							// openlayers map object
 	mapProjection = 'EPSG:3857',	// web mercator wgs84
@@ -47,22 +6,25 @@ var map,							// openlayers map object
 	initZoomLevel = 7;				// init zoom level as zoomToStationsExtent() can be a bit too zoomed out
 
 var hoverInteraction;				// hover interactions stored globally so it can be removed/reapplied
+var showNoData = true,				// whether to show no data values on map
+	noDataValue = -99,				// no data value (all values <= are considered no data as well)
+	noDataColor = null;				// fill color for no data markers
 var markerFactory;					// more dynamic handling of creating/assigning styles, as they must be 
 									// cached for performance
-var stationDetails = null;			// this object handles the pop-up details
-var colorMap =  [					// the color gradient for symbology
-				  [210, 255, 255], 
-				  [60, 100, 255], 
-				  [95, 0, 180]
+var colorMap =	[					// the color gradient for symbology
+					[210, 255, 255], 
+					[60, 100, 255], 
+					[95, 0, 180]
 				];
 var stationsData,					// raw stations data as array of GeoJSON
 	stations,						// stations data as ol.Collection instance
 	stationLayer;					// layer object
+var stationDetails = null;			// this object handles the pop-up details
 var countiesUrl = "data/ca_counties.geojson", 
-	countiesLayer,
-	highlightCountiesLayer, 
+	countiesLayer,					// layer for all counties
+	highlightCountiesLayer,			// layer for highlighted county
 	countyNames = [],				// list of county names (for search drop-down)
-	selectedCounty, 
+	selectedCounty,					// name of highlighted county
 	countyStyle,
 	highlightCountyStyle;
 var mpaUrl = "data/mpa_ca.geojson",	//"lib/getMPAsAsGeoJSON.php", 
@@ -89,7 +51,9 @@ var enableHoverInteractions = browserType.isChrome;
 // Initialize functions
 //************************************************************************************************************
 /**
- * Application init function. Pretty much the only thing the HTML page has to call explicitly.
+ * Application init function. Pretty much the only thing the HTML page has to call explicitly. Separated from 
+ * mapInit() as sub pages (such as summary report) can override this portion of init while still calling 
+ * common mapInit() function.
  */
 function init() {
 	// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
@@ -100,27 +64,17 @@ function init() {
 		}
 		// Edge returns NaN value
 		if(!isNaN(browserType.ieVersion) && browserType.ieVersion <= 8) {
-			alert("This application is not compatible with Internet Explorer version 8 or below, please upgrade your browser.");
+			alert("This application is not compatible with Internet Explorer version 8 or below.");
 			return;
 		}
 	}
+	var getVars = getUrlGetVars();
 	setModalAsLoading(true, false);
 	// add basemap control dynamically (easier to change the basemaps later without changing all related code)
 	addBasemapControl($("#base-layer-control-container"), {width: 220});
-	// create marker factory
-	markerFactory = new MarkerFactory({
-		shapeFunction: function(feature) {
-			var watertype = feature.get("waterType");
-			if(watertype.search(/reservoir|lake/i) >= 0) {
-				return 'circle';
-			} else if(watertype.search(/coast/i) >= 0) {
-				return 'triangle';
-			} else {
-				return 'diamond';
-			}
-		},
-		colorMap: colorMap
-	});
+	// create marker factory - value function is not set here, but instead set when updating thresholds (see 
+	// legend.js) which is triggered by a query return.
+	createMarkerFactory();
 	// init functions
 	mapInit();
 	addCountyLayer();
@@ -128,10 +82,11 @@ function init() {
 	initStationsLayer();
 	updateStationsSelect();
 	controlsInit();
-	legendInit($("#map-view"));
+	legendInit($("#step-container"));
 	// activate functions -- start by populating query options and loading stations by firing an initial query
 	updateQuery({
 		query: defaultQuery, 
+		selectThresholdGroup: getVars.tgroup, 
 		firstRun: true	// special option, basically disabled async
 	});
 	addClickInteractions();
@@ -152,14 +107,16 @@ function init() {
  * common and less-specific map init. Creates the map object, adds the cursor functionality and a station 
  * tooltip (hidden and no functionality added to it yet), and finally adds the basemap.
  * @param {number} baseMapSelect - Index of basemap to set as active on init. If not specified defaults 0, or 
- *	first base layer on the list. (See basemaps.js)
+ *		first base layer on the list. (See basemaps.js)
  */
-function mapInit(baseMapSelect) {
+function mapInit(baseMapSelect, mapOptions) {
+	if(!mapOptions) { mapOptions = {}; }
+	mapOptions.target = "map-view";
 	// create map and view
-	map = new ol.Map({ target: "map-view" });
+	map = new ol.Map(mapOptions);
 	map.setView(
 		new ol.View({
-			center: ol.proj.fromLonLat([-119, 38]),
+			center: ol.proj.fromLonLat([-120, 37.5]),
 			zoom: 7,
 			minZoom: 6,
 			// past this zoom, many areas of the ESRI Oceans Basemap have no tiles
@@ -178,6 +135,42 @@ function mapInit(baseMapSelect) {
 	$("<div id='station-tooltip'></div>").appendTo($("#map-view")).hide();
 	// add basemaps
 	addBasemaps(map, baseMapSelect);
+}
+
+//************************************************************************************************************
+// Symbologu functionalities
+//************************************************************************************************************
+/**
+ * Create the marker factory. Done as sometimes reset with no data color available or not
+ */
+function createMarkerFactory() {
+	markerFactory = new MarkerFactory({
+		shapeFunction: function(feature) {
+			var watertype = feature.get("waterType");
+			if(watertype.search(/reservoir|lake/i) >= 0) {
+				return 'circle';
+			} else if(watertype.search(/coast/i) >= 0) {
+				return 'triangle';
+			} else {
+				return 'diamond';
+			}
+		},
+		colorMap: colorMap,
+		showNoData: showNoData, 
+		noDataValue: noDataValue,
+		noDataColor: noDataColor, 
+		resolution: (markerFactory) ? markerFactory.resolution : undefined, 
+		valueFunction: (markerFactory) ? markerFactory.normalizeValue : undefined
+	});
+}
+
+function toggleNoDataDisplay(displayNoData, supressUpdate) {
+	showNoData = (typeof displayNoData !== "undefined") ? (displayNoData == true) : !showNoData;
+	createMarkerFactory();
+	if(!supressUpdate) {
+		refreshStations();
+	}
+	$("#show-no-data-control").prop("checked", showNoData);
 }
 
 //************************************************************************************************************
@@ -264,6 +257,21 @@ function addClickInteractions() {
 //************************************************************************************************************
 // Station layer functionalities
 //************************************************************************************************************
+/**
+ * Create stations layer. By default data does not have to be provided, function will automatically request a 
+ * list of all stations from getAllStations.php. However, since those results do not have a value (default no 
+ * data value will be set for all points), if you do want to initialize with pre-existing data, it can be 
+ * supplied.
+ * @param {Object[]} data - Array of the query results. If not provided, it will ajax request a list of all 
+ *		stations automatically.
+ * @param {string} data[].name - Station name.
+ * @param {number} data[].lat - Station latitude.
+ * @param {number} data[].long - Station longitude.
+ * @param {String} data[].waterType - The station water type.
+ * @param {number} data[].value - The contaminant value for this station. (Optional)
+ * @param {String} data[].advisoryName - Specific site advisory name, if it exists.
+ * @param {String} data[].advisoryUrl - Link to specific site advisory page, if it exists.
+ */
 function initStationsLayer(data) {
 	if(!data) {
 		$.ajax({
@@ -292,7 +300,7 @@ function initStationsLayer(data) {
 					),
 					name: (data[i].name) ? data[i].name : data[i].station,
 					waterType: data[i].waterType, 
-					value: (typeof data[i].value !== "undefined") ? data[i].value : -99, 
+					value: (typeof data[i].value !== "undefined") ? data[i].value : noDataValue, 
 					advisoryName: data[i].advisoryName, 
 					advisoryUrl: data[i].advisoryUrl, 
 					featType: 'station',
@@ -336,9 +344,10 @@ function updateStations(data) {
 	stations.forEach(function(feature) {
 		//console.log(feature);
 		var name = feature.get("name");
-		// reset style
+		// reset style cache (otherwise it will never change)
 		feature.set("mfStyle", null);
-		// try and find matching data point
+		// try and find matching data point. this can probably be optimized rather than straightforward array
+		// search. perhaps by forcing results to be alphabetically sorted and using a cut search.
 		var matchedResult = null;
 		for(var i = 0; i < data.length; i++) {
 			if(name === data[i].name) {
@@ -349,7 +358,7 @@ function updateStations(data) {
 		if(matchedResult) {
 			feature.set("value", matchedResult.value);
 		} else {
-			feature.set("value", -99);
+			feature.set("value", noDataValue);
 		}
 		feature.changed();
 	});
@@ -360,7 +369,7 @@ function updateStations(data) {
  * soon, right now only way is to force refreshing by deleting/recreating.
  */
 function refreshStations() {
-	loadStationsLayer(stationsData);
+	updateStations(stationsData);
 	// note for later, a more direct solution you still need to remember to clear 'mfStyle' cache in feature
 }
 
@@ -383,7 +392,31 @@ function openStationDetails(station) {
  * Zoom to the extent of the entire stations layer.
  */
 function zoomToStations() {
-	var extent = stationLayer.getSource().getExtent();
+	var extent = null;
+	stations.forEach(function(feature) {
+		// zoom only to stations with values
+		if(feature.get("value") !== noDataValue) {
+			var coords = feature.getGeometry().getCoordinates();
+			if(!extent) {
+				extent = [coords[0], coords[1], coords[0], coords[1]];
+			} else {
+				if(coords[0] < extent[0]) {
+					extent[0] = coords[0];
+				} else if(coords[0] > extent[2]) {
+					extent[2] = coords[0];
+				}
+				if(coords[1] < extent[1]) {
+					extent[1] = coords[1];
+				} else if(coords[1] > extent[3]) {
+					extent[3] = coords[1];
+				}
+			}
+		}
+	});
+	// if no stations showed up, zoom to whole thing
+	if(!extent) {
+		extent = stationLayer.getSource().getExtent();
+	}
 	if(extent && isFinite(extent[0]) && isFinite(extent[1]) && isFinite(extent[2]) && isFinite(extent[3])) {
 		map.getView().fit(extent, map.getSize());
 	}

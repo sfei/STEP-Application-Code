@@ -32,83 +32,6 @@ var controls = {			// Object holding the various control panels and common relat
 };
 var controlStageVertPadding = 12;
 var controlStageMinHeight = 2;
-
-//************************************************************************************************************
-// General and Utility functions
-//************************************************************************************************************
-/**
- * Custom function to create a new window. Has a lot of useful functionality that gets commonly used, e.g. 
- * having every new window centered on the monitor, even accounting for dual monitor setups.
- * @param {event} e - Event object (useful on links where you want to keep the middle-mouse clicks and 
- *    ctrl+left-clicks as new tabs as those are filtered and ignored).
- * @param {string} url - Link URL.
- * @param {string} name - New window name.
- * @param {number} width - Width in pixels.
- * @param {number} height - Height in pixels.
- * @param {boolean} minimal - If true forces hiding of menubar, statusbar, and location (although with many 
- *    modern browsers this has no effect).
- * @returns {Window} The new window object.
- */
-function newWindow(e, url, name, width, height, minimal) {
-	if(!e) e = window.event;
-	if(e === undefined || !(e.which === 2 || (e.which === 1 && e.ctrlKey))) {
-		// center window, from http://www.xtf.dk/2011/08/center-new-popup-window-even-on.html
-		// Fixes dual-screen position                         Most browsers      Firefox
-		var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
-		var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
-		var winWidth = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
-		var winHeight = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
-		var left = ((winWidth / 2) - (width / 2)) + dualScreenLeft;
-		var top = ((winHeight / 2) - (height / 2)) + dualScreenTop;
-		var options = "width=" + width + ", height=" + height + ", left=" + left + ", top=" + top;
-		if(minimal) {
-			options += ", scrollbars=yes, menubar=no, statusbar=no, location=no";
-		} else {
-			options += ", scrollbars=yes, menubar=yes, statusbar=yes, location=yes";
-		}
-		var newWin = window.open(url, '', options);
-		if(!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-			alert("Could not open new window, to view '" + name + "' allow an exception for this domain in your pop-up blocker's settings.");
-			return null;
-		} else {
-			if(newWin) { newWin.focus(); }
-			return newWin;
-		}
-	}
-}
-
-/**
- * Create (or destroy) a modal dialog with a default loading message (in this case: "Loading stations..").
- * @param {boolean} visible - True creates, false removes.
- * @param {boolean} showBackground - Whether to hve a semi-transparent div over the background (so as to 
- *    visually signify the modal status). Keep in mind in older browsers that don't support transparency it'll
- *    just grey out the entire background.
- */
-function setModalAsLoading(visible, showBackground) {
-	var loadingDialog = $("<div id='loading-dialog'></div>")
-		.html("<img src='images/ajax-loader.gif' alt='loading' /> Loading stations..");
-	setModal(visible, showBackground, loadingDialog);
-}
-
-/**
- * Create (or destroy) a modal dialog.
- * @param {boolean} visible - True creates, false removes.
- * @param {boolean} showBackground - Whether to hve a semi-transparent div over the background (so as to 
- *    visually signify the modal status). Keep in mind in older browsers that don't support transparency it'll
- *    just grey out the entire background.
- * @param {string} content - The HTML content of the modal dialog.
- */
-function setModal(visible, showBackground, content) {
-	var modalContainer = $("#modal-container-outer");
-	if(!visible) {
-		modalContainer.hide();
-	} else {
-		modalContainer.find("#modal-container-inner").html(content);
-		modalContainer
-			.css('background-color', showBackground ? 'rgba(200, 200, 200, 0.4)' : 'transparent')
-			.show();
-	}
-}
 	
 //************************************************************************************************************
 // Init and activate functions
@@ -118,7 +41,7 @@ function setModal(visible, showBackground, content) {
  * application has loaded. Thus follow up with {@link #controlsActivate()} when ready.
  */
 function controlsInit() {
-	$("#notification-tab").hide();
+	//$("#notification-tab").hide();
 	// make everything fancy!
 	$("#species-control").chosen();
 	$("#contaminant-control").chosen();
@@ -134,7 +57,7 @@ function controlsInit() {
 			controls[key].tabElement = $("#"+controls[key].tabId);
 		}
 	}
-	setActiveControl(null);
+	setActiveControl('query');
 	// set last query to default
 	resetDefaultQuery();
 }
@@ -171,7 +94,13 @@ function controlsActivate() {
 	$("#reset-controls")
 		.prop('disabled', false)
 		.click(function() {
-			updateQuery({query: defaultQuery});
+			// reset to show no-data symbology
+			toggleNoDataDisplay(true, true);
+			updateQuery({
+				query: defaultQuery,
+				firstRun: true, 
+				flashMessage: "Filters and display settings reset to default."
+			});
 		});
 	$("#station-select")
 		.prop('disabled', false)
@@ -203,6 +132,17 @@ function controlsActivate() {
 		.prop('checked', mpaLayer.getVisible())
 		.click(function() {
 			mpaLayer.setVisible(!mpaLayer.getVisible());
+		});
+	$("#show-no-data-control")
+		.prop('disabled', false)
+		.prop('checked', showNoData)
+		.click(function() {
+			if(prepSecondQuery) {
+				// this disables able setting no-data display to false when doing the query immediately after,
+				// the first, since user already discovered how to toggle this on/off
+				prepSecondQuery = false;
+			}
+			toggleNoDataDisplay();
 		});
 	// fill counties select
 	var countiesSelect = $("#counties-select");
@@ -256,31 +196,31 @@ function setActiveControlTab() {
  */
 function setActiveControl(controlName) {
 	var stageDiv = $("#controls-stage");
-	var closing = controlName == null || controlName == undefined || controls[controlName] == activeControl;
+	var closing = !controlName || controls[controlName] === activeControl;
 	if(closing || controls[controlName]) {
 		var newControl = (!closing) ? controls[controlName] : null;
 		// get height as either closed or height of the new element
-		var oldHeight = stageDiv.height();
-		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
-		var padding = (!closing) ? controlStageVertPadding : 0;
+//		var oldHeight = stageDiv.height();
+//		var newHeight = (!closing) ? newControl.element.height() : controlStageMinHeight;
+//		var padding = (!closing) ? controlStageVertPadding : 0;
 		// hide active element
-		if(activeControl != null) { activeControl.element.hide(); }
+		if(activeControl) { activeControl.element.slideUp(); }
 		// animate height change
-		stageDiv
-			.height(oldHeight)
-			.animate(
-				{'height': newHeight + 2*padding}, 
-				'fast', 
-				function() {
-					stageDiv.height('auto');
-					stageDiv.css('padding', padding+'px 0');
-				}
-			);
+//		stageDiv
+//			.height(oldHeight)
+//			.animate(
+//				{'height': newHeight + 2*padding}, 
+//				'fast', 
+//				function() {
+//					stageDiv.height('auto');
+//					stageDiv.css('padding', padding+'px 0');
+//				}
+//			);
 		// also animate moving the zoom control
-		$(".ol-zoom").animate({'top': newHeight+60}, 'fast');
+//		$(".ol-zoom").animate({'top': newHeight+60}, 'fast');
 		// show new control (or don't if closing)
 		if(!closing) {
-			newControl.element.show();
+			newControl.element.slideDown();
 			activeControl = newControl;
 		} else {
 			activeControl = null;
@@ -297,11 +237,15 @@ function setActiveControl(controlName) {
  *    and hide).
  */
 function flashNotification(message, millis) {
+	$("#notification-container")
+		.css('bottom', -40);
 	$("#notification-tab")
-	  .html(message)
-	  .slideDown(200);
+		.html(message)
+		.css('display', 'inline-block');
+	$("#notification-container")
+		.animate({bottom: 30}, 500);
 	setTimeout(function() {
-		$("#notification-tab").slideUp(500);
+		$("#notification-tab").fadeOut();
 	}, millis);
 }
 
@@ -315,30 +259,37 @@ function flashNotification(message, millis) {
  * query controls (to signify they had to be modified to return a valid query).
  * @param {Object} query - Query object.
  * @param {boolean} firstRun - If true, inhibits flashing. Obviously used for the first/initial query which 
- *    is not user-specified and done to populate the initial map.
+ *		is not user-specified and done to populate the initial map.
+ * @return {boolean} true if one or more queries had to be corrected and the element was flashed to indicate 
+ *		change
  */
 function flashQueryChanges(query, firstRun) {
 	// store in list so we can fire them fairly simultaneously
 	var elements = [];
 	if(query.contaminant !== lastQuery.contaminant) {
-		elements.push($("#contaminant-control"));
+		//elements.push($("#contaminant-control"));
+		elements.push($("#contaminant_control_chosen a span"));
 	}
 	if(query.startYear !== lastQuery.startYear) {
-		elements.push($("#start-year-control"));
+		//elements.push($("#start-year-control"));
+		elements.push($("#start_year_control_chosen a span"));
 	}
 	if(query.endYear !== lastQuery.endYear) {
-		elements.push($("#end-year-control"));
+		//elements.push($("#end-year-control"));
+		elements.push($("#end_year_control_chosen a span"));
 	}
 	if(elements.length > 0 && !firstRun) {
-		// flash select boxes
+		// flash select boxes (with chosen it's bit harder so just flash the text color twice)
 		elements.forEach(function(el) {
-			el.animate({backgroundColor: "#5070aa"}, 200)
-				.animate({backgroundColor: "#fff"}, 500);
+			el.animate({color: "#3376E9"}, 400)
+			.animate({color: "#000"}, 200)
+			.animate({color: "#3376E9"}, 400)
+			.animate({color: "#000"}, 200)
+			.removeAttr('style', '');
 		});
-		// throw an alert
-		var msg = "Filters updated to match query results.";
-		flashNotification(msg, 3000);
+		return true;
 	}
+	return false;
 }
 
 /**
