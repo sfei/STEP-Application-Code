@@ -466,7 +466,7 @@ class StepQueries {
 
 		// then fill in the data for nearby stations
 		$queryString = "SELECT a.StationName_Nearby, a.Distance_Miles, b.WaterType, b.Lat, b.Long, d.AdvisoryURL "
-			. "FROM [dbo].[STEP_StationGroups_PointDistance_old] AS a "
+			. "FROM [dbo].[STEP_Table_ClosestStations] AS a "
 			. "CROSS APPLY ("
 				. "SELECT TOP 1 c.StationNameRevised, c.WaterType, c.Lat, c.Long, c.AdvisoryID "
 				. "FROM [dbo].[STEP_Stations] as c "
@@ -571,7 +571,7 @@ class StepQueries {
 		// then fill in the data for nearby stations
 		$queryString = "SELECT TOP 10 "
 			. "a.StationName_Nearby, a.Distance_Miles, b.WaterType, b.Lat, b.Long, d.AdvisoryURL "
-			. "FROM [dbo].[STEP_StationGroups_PointDistance_old] AS a "
+			. "FROM [dbo].[STEP_Table_ClosestStations] AS a "
 			. "CROSS APPLY ("
 				. "SELECT TOP 1 c.StationNameRevised, c.WaterType, c.Lat, c.Long, c.AdvisoryID "
 				. "FROM [dbo].[STEP_Stations] as c "
