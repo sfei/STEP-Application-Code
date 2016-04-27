@@ -93,7 +93,7 @@ function updateQuery(options) {
 			} else if(prepSecondQuery && showNoData) {
 				toggleNoDataDisplay(false, true);
 				updateMessage = "Stations with no data matching filters will not be displayed.<br />"+
-					"To turn back on, see Map/Layer Options.";
+					"To turn back on, check the \"Display All Stations\" option.";
 				updateMessageTime = 5000;
 				prepSecondQuery = false;
 			}
@@ -120,7 +120,11 @@ function updateQuery(options) {
 			// flash changes, set zoom to fit new extent
 			var queryChanged = flashQueryChanges(options.query, options.firstRun);
 			if(queryChanged) {
-				updateMessage = "Filters updated to match query results.";
+				if(updateMessage) {
+					updateMessage = "Filters updated to match query results.<br /><br />"+updateMessage;
+				} else {
+					updateMessage = "Filters updated to match query results.";
+				}
 			}
 			if(stationDetails && stationDetails.isOpen) {
 				stationDetails.reload(lastQuery);

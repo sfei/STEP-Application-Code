@@ -49,6 +49,11 @@ function controlsInit() {
 	$("#end-year-control").chosen();
 	$("#station-select").chosen();
 	$("#counties-select").chosen();
+	// add placeholder texts to chosen search
+	$("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a species..");
+	$("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a contaminant..");
+	$("#station_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a station..");
+	$("#counties_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a county..");
 	// cache the control groups and tabs, hide the groups
 	for(var key in controls) {
 		if(controls.hasOwnProperty(key)) {
