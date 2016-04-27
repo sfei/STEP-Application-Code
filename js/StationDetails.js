@@ -596,7 +596,7 @@ var StationDetails = function(query) {
 			)
 			// Year select
 			.append(
-				$("<div id='select-year-range-container'></div>")
+				$("<div id='report-year-range-container'></div>")
 					.css({
 						'display': 'block', 
 						'clear': 'both', 
@@ -604,9 +604,9 @@ var StationDetails = function(query) {
 						'text-align': 'center'
 					})
 					.append(
-						"<div id='select-year-range-start' style='display:inline-block;font-weight:bolder;'>" + reportQuery.startYear + "</div>" + 
-						"<div id='select-year-range' style='display:inline-block;width:300px;margin:0px 20px;'></div>" +
-						"<div id='select-year-range-end' style='display:inline-block;font-weight:bolder;'>" + reportQuery.endYear + "</div>"
+						"<div id='report-year-range-start' style='display:inline-block;font-weight:bolder;'>" + reportQuery.startYear + "</div>" + 
+						"<div id='report-year-range' style='display:inline-block;width:300px;margin:0px 20px;'></div>" +
+						"<div id='report-year-range-end' style='display:inline-block;font-weight:bolder;'>" + reportQuery.endYear + "</div>"
 					)
 			)
 			// Miles select
@@ -636,7 +636,7 @@ var StationDetails = function(query) {
 				// slider fails if start and end year are the same
 				if(data.min !== data.max) {
 					// create range slider
-					yearSlider = noUiSlider.create(document.getElementById('select-year-range'), {
+					yearSlider = noUiSlider.create(document.getElementById('report-year-range'), {
 						start: [reportQuery.startYear, reportQuery.endYear],
 						step: 1, 
 						connect: true, 
@@ -644,15 +644,15 @@ var StationDetails = function(query) {
 					});
 					// bind values to display
 					var display = [
-						document.getElementById("select-year-range-start"), 
-						document.getElementById("select-year-range-end")
+						document.getElementById("report-year-range-start"), 
+						document.getElementById("report-year-range-end")
 					];
 					yearSlider.on('update', function(values, handle) {
 						display[handle].innerHTML = parseInt(values[handle]);
 					});
 				} else {
 					// if a single year, just remove that part of the options
-					$("#select-year-range-container").html("Data only available for year <b>" + data.min + "</b>");
+					$("#report-year-range-container").html("Data only available for year <b>" + data.min + "</b>");
 				}
 			}
 		});

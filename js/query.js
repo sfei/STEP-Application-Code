@@ -63,17 +63,18 @@ function resetDefaultQuery() {
 function updateQuery(options) {
 	if(!options.query) {
 		// if no query supplied, use from inputs
+		var yearRange = yearRangeControl.get();
 		options.query = {
 			contaminant: $("#contaminant-control").val(), 
 			species: $("#species-control").val(), 
-			startYear: parseInt($("#start-year-control").val()), 
-			endYear: parseInt($("#end-year-control").val())
+			startYear: parseInt(yearRange[0]), 
+			endYear: parseInt(yearRange[1])
 		};
 	}
 	// lock interface
 	setModalAsLoading(true, false);
 	$("#species-control").prop('disabled', true);
-	$("#station-select").prop('disabled', true);
+	$("#stations-select").prop('disabled', true);
 	var updateMessage = options.flashMessage;
 	var updateMessageTime = 3000;
 	
@@ -138,7 +139,7 @@ function updateQuery(options) {
 			setModal(false);
 			$("#species-control").prop('disabled', false);
 			// for some reason the trigger doesn't work in the updateStationsSelect() function but works here
-			$("#station-select").prop('disabled', false).trigger('chosen:updated');
+			$("#stations-select").prop('disabled', false).trigger('chosen:updated');
 			if(updateMessage) {
 				flashNotification(updateMessage, updateMessageTime);
 			}

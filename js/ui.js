@@ -7,6 +7,7 @@ var speciesList;			// list of available species that keeps original capitalizati
 							// comparison function.
 var activeControl = null;	// The active control (i.e. the visible one), which points to one of the values in 
 							// the controls object below.
+var yearRangeControl = null;// noUiSlider instance for year range slider
 var controls = {			// Object holding the various control panels and common related variables.
   query: {
 		name: 'query', 
@@ -45,10 +46,14 @@ function controlsInit() {
 	// make everything fancy!
 	$("#species-control").chosen();
 	$("#contaminant-control").chosen();
-	$("#start-year-control").chosen();
-	$("#end-year-control").chosen();
-	$("#station-select").chosen();
+	$("#stations-select").chosen();
 	$("#counties-select").chosen();
+	// year range slider (does not create though, that's done on first update)
+	$("#control-year-range-container").html(
+		"<div id='control-year-range-start'></div>" + 
+		"<div id='control-year-range'></div>" +
+		"<div id='control-year-range-end'></div>"
+	);
 	// add placeholder texts to chosen search
 	$("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a species..");
 	$("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a contaminant..");
@@ -88,14 +93,6 @@ function controlsActivate() {
 		.prop('disabled', false)
 		.change(function() { updateQuery({firedBy: "contaminant"}); })
 		.trigger('chosen:updated');
-	$("#start-year-control")
-		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "startYear"}); })
-		.trigger('chosen:updated');
-	$("#end-year-control")
-		.prop('disabled', false)
-		.change(function() { updateQuery({firedBy: "endYear"}); })
-		.trigger('chosen:updated');
 	$("#reset-controls")
 		.prop('disabled', false)
 		.click(function() {
@@ -107,15 +104,15 @@ function controlsActivate() {
 				flashMessage: "Filters and display settings reset to default."
 			});
 		});
-	$("#station-select")
+	$("#stations-select")
 		.prop('disabled', false)
 		.change(function() {
-			var selectVal = parseInt($("#station-select").val());
+			var selectVal = parseInt($("#stations-select").val());
 			if(selectVal >= 0) {
 				var station = stations.getArray()[selectVal];
 				zoomToStation(station);
 				openStationDetails(station);
-				$("#station-select").find('option:first-child')
+				$("#stations-select").find('option:first-child')
 				  .prop('selected', true)
 				  .end().trigger('chosen:updated');
 			}
@@ -168,6 +165,26 @@ function controlsActivate() {
 	// other tab buttons
 	$("#zoom-stations-tab").click(function() { zoomToStations(); });
 	$("#download-tab").click(function() { showDownloadDialog(); });
+}
+
+function createYearSlider(minYear, maxYear) {
+	yearRangeControl = noUiSlider.create(document.getElementById('control-year-range'), {
+		start: [minYear, maxYear],
+		step: 1, 
+		connect: true, 
+		range: { 'min': minYear, 'max': maxYear }
+	});
+	// bind values to display
+	var display = [
+		document.getElementById("control-year-range-start"), 
+		document.getElementById("control-year-range-end")
+	];
+	yearRangeControl.on('update', function(values, handle) {
+		display[handle].innerHTML = parseInt(values[handle]);
+	});
+	yearRangeControl.on('change', function() {
+		updateQuery({firedBy: "year-range"});
+	});
 }
 
 //************************************************************************************************************
@@ -361,24 +378,29 @@ function updateContaminantsSelect(data) {
  * @param {number} data[].max - Latest year with data.
  */
 function updateYearsSelect(data) {
-	var optionsHtml = "";
-	for(var i = parseInt(data['min']); i <= parseInt(data['max']); i++) {
-		optionsHtml += "<option value=\"" + i + "\">" + i + "</option>";
+	var yearMin = parseInt(data.min), 
+		yearMax = parseInt(data.max);
+	if(!yearRangeControl) {
+		createYearSlider(yearMin, yearMax);
 	}
-	var startDiv = $("#start-year-control")
-		.html(optionsHtml)
-		.val(lastQuery.startYear);
-	if(!startDiv.val()) {
-		startDiv.val(toString(data['min']));
+	if(yearMin === yearMax) {
+		yearRangeControl.updateOptions({
+			range: { 'min': yearMin, 'max': yearMax+1 },
+			step: 0, 
+			connect: true
+		});
+		$("#control-year-range").attr('disabled', true);
+	} else {
+		$("#control-year-range").attr('disabled', false);
+		yearRangeControl.updateOptions({
+			range: { 'min': yearMin, 'max': yearMax },
+			step: 1, 
+			connect: true
+		});
 	}
-	startDiv.trigger('chosen:updated');
-	var endDiv = $("#end-year-control")
-		.html(optionsHtml)
-		.val(lastQuery.endYear);
-	if(!endDiv.val()) {
-		endDiv.val(toString(data['max']));
-	}
-	endDiv.trigger('chosen:updated');
+	yearRangeControl.set([lastQuery.startYear, lastQuery.endYear]);
+	$("#control-year-range-start").val(lastQuery.startYear);
+	$("#control-year-range-end").val(lastQuery.endYear);
 }
 
 /**
@@ -391,7 +413,7 @@ function updateStationsSelect() {
 		var stationName = stations.item(i).get("name");
 		optionsHtml += "<option value=" + i + ">" + stationName + "</option>";
 	}
-	$("#station-select")
+	$("#stations-select")
 	  .html(optionsHtml)
 	  .val(-1)
 	  .trigger("chosen:updated");

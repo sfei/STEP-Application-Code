@@ -42,6 +42,7 @@
 	position: absolute;
 	bottom: 30px;
 	left: 20px;
+	z-index: 9998;
 }
 #legend-container hr {
 	margin: 0 4px;

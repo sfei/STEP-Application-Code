@@ -62,31 +62,27 @@
 				<div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
 				<div id="query-controls" class="controls-group">
 					<div class="control-label">Select a Species: </div>
-					<select id="species-control" style="width:340px;" disabled>
+					<select id="species-control" disabled>
 						<option>Loading..</option>
 					</select>
 					<div class="control-spacer"></div>
 					<div class="control-label">Select a Contaminant: </div>
-					<select id="contaminant-control" style="width:200px;" disabled>
+					<select id="contaminant-control" disabled>
 						<option>Loading..</option>
 					</select> 
 					<div class="control-spacer"></div>
 					<div class="control-label">Select a Year Range:</div>
-					<select id="start-year-control" style="width:85px;" disabled>
-						<option>Loading..</option>
-					</select>
-					<div class="label" style="display:inline-block;width:30px;margin:0 -5px;text-align:center;">to</div>
-					<select id="end-year-control" style="width:85px;" disabled>
-						<option>Loading..</option>
-					</select>
+					<div id="control-year-range-container">
+						Loading..
+					</div>
 					<div class="control-spacer"></div>
 					<div class="control-label"></div>
-					<div style="display:inline-block;font-size:12px;">
-						<input type="checkbox" id="show-no-data-control" style="position:relative;top:2px;" disabled />
+					<div id="show-no-data-container">
+						<input type="checkbox" id="show-no-data-control" disabled />
 						Display All Stations
 					</div>
 					<div class="control-spacer"></div>
-					<div id="reset-controls" class="button" style="display:inline-block;width:200px;text-align:center;">
+					<div id="reset-controls" class="button">
 						Reset To Initial Settings
 					</div>
 				</diV>
@@ -94,26 +90,26 @@
 				<div id="control-tab-location" class="control-tab">Find by Location</div>
 				<div id="location-controls" class="controls-group">
 					<div class="control-label">Zoom to County:</div>
-					<select id="counties-select" data-placeholder="Zoom to County.." style="width:380px;margin-left:4px;" disabled>
+					<select id="counties-select" data-placeholder="Zoom to County.." disabled>
 						<option>Loading..</option>
 					</select>
 					<div class="control-spacer"></div>
 					<div class="control-label">Zoom to Station:</div>
-					<select id="station-select" data-placeholder="Select a Location.." style="width:380px;" disabled>
+					<select id="stations-select" data-placeholder="Select a Location.." disabled>
 						<option>Loading..</option>
 					</select>
 				</div>
 				<!-- map/layer controls -->
 				<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
 				<div id="map-controls" class="controls-group">
-					<div class="control-label" style="display:inline-block">Base Layer:</div>
-					<div id="base-layer-control-container" style="display:inline-block;margin-left:4px;"></div>
+					<div class="control-label inline-block">Base Layer:</div>
+					<div id="base-layer-control-container"></div>
 					<div class="control-spacer"></div>
-					<div title='California County Subdivisions' class="control-label" style="display:inline-block">Show Counties Layer:</div>
-					<input type="checkbox" id="show-counties-control" style="position:relative;top:3px;" disabled />
+					<div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
+					<input type="checkbox" id="show-counties-control" disabled />
 					<div class="control-spacer"></div>
-					<div title='Marine Protected Areas in California' class="control-label" style="display:inline-block">Show MPA Layer:</div>
-					<input type="checkbox" id="show-mpa-control" style="position:relative;top:3px;" disabled />
+					<div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
+					<input type="checkbox" id="show-mpa-control" disabled />
 				</div>
 				<div id="additional-buttons">
 					<div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>

@@ -4,6 +4,7 @@
 	left: 30%;
 	min-width: 500px;
 	min-height: 200px;
+	z-index: 9999;
 }
 #details-dialog {
 	min-width: 500px;

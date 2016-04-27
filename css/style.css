@@ -14,6 +14,7 @@ a:hover {
 input, select {
   cursor: pointer;
 }
+
 /* overwrite nouislider styles */
 .noUi-handle {
   cursor: pointer;
@@ -28,6 +29,7 @@ input, select {
   cursor: -webkit-grabbing;
 }
 
+/* application containre */
 #step-container {
   position: absolute;
   top: 0;
@@ -101,6 +103,8 @@ input, select {
   font-weight: bolder;
   z-index: 9999;
 }
+
+/* download dialog related */
 #download-confirm {
   position: relative;
   width: 290px;
@@ -144,7 +148,7 @@ input, select {
   cursor: -webkit-grabbing;
 }
 
-/* layers controls related */
+/* controls related */
 #controls-container {
   position: absolute;
   top: 0;
@@ -202,11 +206,13 @@ input, select {
   text-align: center;
   font-size: 15px;
 }
-.control-label {
-  display: block;
+.control-label, .control-label-inline {
   cursor: default;
   text-align: center;
   margin-right: 4px;
+}
+.control-label-inline {
+  display: inline-block;
 }
 .control-spacer {
   display: block;
@@ -216,6 +222,57 @@ input, select {
 .chosen-results {
   text-align: left;
 }
+.chosen-container {
+  font-size: 15px;
+}
+
+/* query controls related */
+#species-control, #contaminant-control {
+  width: 340px;
+}
+#control-year-range-container {
+  margin-top: 10px;
+}
+#control-year-range-start, #control-year-range-end {
+  display: inline-block;
+  font-weight: bolder;
+}
+#control-year-range {
+  display: inline-block;
+  width: 220px;
+  height: 20px;
+  margin: 0 20px;
+}
+#show-no-data-container {
+  display:inline-block;
+  font-size:12px;
+}
+#show-no-data-control {
+  position:relative;
+  top:2px;
+}
+#reset-controls {
+  display:inline-block;
+  width:200px;
+  text-align:center;
+}
+
+/* location controls related */
+#counties-select, #stations-select {
+	width:380px;
+}
+
+/* map/layer controls related */
+#base-layer-control-container {
+  display:inline-block;
+  margin-left:4px;
+}
+#show-counties-control, #show-mpa-control {
+  position:relative;
+  top:3px;
+}
+
+/* those other bottom buttons related */
 #additional-buttons {
   display: block;
   overflow: auto;
@@ -252,6 +309,7 @@ input, select {
   float: left;
   border-right: 1px solid #999;
 }
+
 #notification-container {
   position: absolute;
   bottom: -40px;
@@ -276,8 +334,5 @@ input, select {
   font-size: 14px;
 }
 #base-layer-control {
-  font-size: 15px;
-}
-.chosen-container {
   font-size: 15px;
 }
