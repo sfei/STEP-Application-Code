@@ -1,129 +1,94 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>STEP Portal</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=0.7">
-		<!-- jQuery -->
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
-		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-		<!-- jQuery extension for mobile interactions -->
-		<script src="js/jquery.ui.touch-punch.min.js"></script>
-		<!-- OpenLayers-3 -->
-		<link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
-		<script src="http://openlayers.org/en/v3.10.1/build/ol-debug.js"></script>
-		<!-- D3 -->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-		<!-- chosen -->
-		<link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
-		<script src="js/chosen/chosen.jquery.min.js"></script>
-		<!-- no UI slider -->
-		<link href="css/nouislider.min.css" rel="stylesheet">
-		<script src="js/nouislider/nouislider.min.js"></script>
-		<!-- page CSS -->
-		<link rel="stylesheet" href="css/style.css" />
-		<!-- helper/utility functions -->
-		<script src="js/helper.js"></script>
-		<!-- js for the ui -->
-		<script src="js/ui.js"></script>
-		<!-- query backend and ui scripts -->
-		<script src="js/query.js"></script>
-		<!-- data download scripts -->
-		<script src="js/download.js"></script>
-		<!-- color/marker scripts -->
-		<script src="js/ColorMap.js"></script>
-		<script src="js/MarkerFactory.js"></script>
-		<!-- map legend scripts -->
-		<link rel="stylesheet" href="css/legend.css" />
-		<script src="js/legend.js"></script>
-		<!-- station details/tabs and scatterplot scripts -->
-		<link rel="stylesheet" href="css/scatterplot.css" />
-		<script src="js/Scatterplot.js"></script>
-		<link rel="stylesheet" href="css/stationdetails.css" />
-		<script src="js/StationDetails.js"></script>
-		<!-- main map script -->
-		<script src="js/basemaps.js"></script>
-		<script src="js/map.js"></script>
-		<!-- init called here (as opposed to in map.js) so it can be overwritten in other templates -->
-		<script>
-			window.onload = init;
-		</script>
-	</head>
-	<body>
-		<!-- application container -->
-		<div id="step-container">
-			<!-- the actual OpenLayers map -->
-			<div id="map-view" title="Click on location icon for details"></div>
-			<!-- layer/data controls -->
-			<div id="controls-container">
-				<div id="controls-header">Safe-to-Eat Portal</div>
-				<!-- filter/query controls -->
-				<div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
-				<div id="query-controls" class="controls-group">
-					<div class="control-label">Select a Species: </div>
-					<select id="species-control" disabled>
-						<option>Loading..</option>
-					</select>
-					<div class="control-spacer"></div>
-					<div class="control-label">Select a Contaminant: </div>
-					<select id="contaminant-control" disabled>
-						<option>Loading..</option>
-					</select> 
-					<div class="control-spacer"></div>
-					<div class="control-label">Select a Year Range:</div>
-					<div id="control-year-range-container">
-						Loading..
-					</div>
-					<div class="control-spacer"></div>
-					<div class="control-label"></div>
-					<div id="show-no-data-container">
-						<input type="checkbox" id="show-no-data-control" disabled />
-						Display All Stations
-					</div>
-					<div class="control-spacer"></div>
-					<div id="reset-controls" class="button">
-						Reset To Initial Settings
-					</div>
-				</diV>
-				<!-- search by location controls -->
-				<div id="control-tab-location" class="control-tab">Find by Location</div>
-				<div id="location-controls" class="controls-group">
-					<div class="control-label">Zoom to County:</div>
-					<select id="counties-select" data-placeholder="Zoom to County.." disabled>
-						<option>Loading..</option>
-					</select>
-					<div class="control-spacer"></div>
-					<div class="control-label">Zoom to Station:</div>
-					<select id="stations-select" data-placeholder="Select a Location.." disabled>
-						<option>Loading..</option>
-					</select>
-				</div>
-				<!-- map/layer controls -->
-				<div id="control-tab-map" class="control-tab">Map/Layer Options</div>
-				<div id="map-controls" class="controls-group">
-					<div class="control-label-inline">Base Layer:</div>
-					<div id="base-layer-control-container"></div>
-					<div class="control-spacer"></div>
-					<div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
-					<input type="checkbox" id="show-counties-control" disabled />
-					<div class="control-spacer"></div>
-					<div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
-					<input type="checkbox" id="show-mpa-control" disabled />
-				</div>
-				<div id="additional-buttons">
-					<div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
-					<div id="download-tab" class="button-tab">Download Data</div>
-				</div>
-			</div>
-			<!-- modal blocking (for loading dialog usually) -->
-			<div id="modal-container-outer">
-				<div id="modal-container-inner"></div>
-			</div>
-			<!-- notification popup thingamajig -->
-			<div id="notification-container">
-				<div id="notification-tab">Notifications go here</div>
-			</div>
-		</div>
-	</body>
+  <head>
+    <title>STEP Portal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.7">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
+    <link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
+    <link rel="stylesheet" href="css/nouislider.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="js/jquery.ui.touch-punch.min.js"></script>
+    <script src="js/chosen.jquery.min.js"></script>
+    <script src="js/require.js" data-main="init"></script>
+  </head>
+  <body>
+    <!-- application container -->
+    <div id="step-container">
+      <!-- the actual OpenLayers map -->
+      <div id="map-view" title="Click on location icon for details"></div>
+      <!-- layer/data controls -->
+      <div id="controls-container" style="visibility:hidden;">
+        <div id="controls-header">Safe-to-Eat Portal</div>
+        <!-- filter/query controls -->
+        <div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
+        <div id="query-controls" class="controls-group">
+          <div class="control-label">Select a Species: </div>
+          <select id="species-control" disabled>
+            <option>Loading..</option>
+          </select>
+          <div class="control-spacer"></div>
+          <div class="control-label">Select a Contaminant: </div>
+          <select id="contaminant-control" disabled>
+            <option>Loading..</option>
+          </select> 
+          <div class="control-spacer"></div>
+          <div class="control-label">Select a Year Range:</div>
+          <div id="control-year-range-container">
+            Loading..
+          </div>
+          <div class="control-spacer"></div>
+          <div class="control-label"></div>
+          <div id="show-no-data-container">
+            <input type="checkbox" id="show-no-data-control" disabled />
+            Display All Stations
+          </div>
+          <div class="control-spacer"></div>
+          <div id="reset-controls" class="button">
+            Reset To Initial Settings
+          </div>
+        </diV>
+        <!-- search by location controls -->
+        <div id="control-tab-location" class="control-tab">Find by Location</div>
+        <div id="location-controls" class="controls-group">
+          <div class="control-label">Zoom to County:</div>
+          <select id="counties-select" data-placeholder="Zoom to County.." disabled>
+            <option>Loading..</option>
+          </select>
+          <div class="control-spacer"></div>
+          <div class="control-label">Zoom to Station:</div>
+          <select id="stations-select" data-placeholder="Select a Location.." disabled>
+            <option>Loading..</option>
+          </select>
+        </div>
+        <!-- map/layer controls -->
+        <div id="control-tab-map" class="control-tab">Map/Layer Options</div>
+        <div id="map-controls" class="controls-group">
+          <div class="control-label-inline">Base Layer:</div>
+          <div id="base-layer-control-container"></div>
+          <div class="control-spacer"></div>
+          <div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
+          <input type="checkbox" id="show-counties-control" disabled />
+          <div class="control-spacer"></div>
+          <div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
+          <input type="checkbox" id="show-mpa-control" disabled />
+        </div>
+        <div id="additional-buttons">
+          <div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
+          <div id="download-tab" class="button-tab">Download Data</div>
+        </div>
+      </div>
+      <!-- modal blocking (for loading dialog usually) -->
+      <div id="modal-container-outer">
+        <div id="modal-container-inner"></div>
+      </div>
+      <!-- notification popup thingamajig -->
+      <div id="notification-container">
+        <div id="notification-tab">Notifications go here</div>
+      </div>
+    </div>
+  </body>
 </html>

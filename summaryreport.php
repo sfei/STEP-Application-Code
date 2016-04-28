@@ -13,6 +13,6 @@ if(!array_key_exists('data', $_SESSION)) {
 $data = $_SESSION['data'];
 $query = $_SESSION['query'];
 
-include("../layouts/reporttemplate.php");
+include("layouts/reporttemplate.php");
 
 ?>

@@ -1,4 +1,3 @@
-
 /**
  * The StationDetails object handles the window that opens when you click a station. There is quite a lot of 
  * functionality provided, which is generally organized into tabs. Only one window may be open at a time, but 
@@ -9,9 +8,15 @@
  * @param {Object} query - Query object. Optional.
  * @returns {StationDetails}
  */
-var StationDetails = function(query) {
+define([
+	"common",
+	"OpenLayers", 
+	"noUiSlider", 
+	"./module-scatterplot"
+], function(common, ol, noUiSlider, Scatterplot) {
 	
-	this.init = function(query) {
+	function StationDetails(parentStepApp) {
+		this.parent = parentStepApp;
 		var self = this;
 		//****************************************************************************************************
 		// All customizable variables below (but do it by manually coding, not dynamically)
@@ -118,10 +123,9 @@ var StationDetails = function(query) {
 		}
 		// open data/query
 		this.isOpen = false;
-		this.open(query);
 	};
 		
-	this.open = function(inputQuery) {
+	StationDetails.prototype.open = function(inputQuery) {
 		if(!inputQuery) { return; }
 		// the query that constructed this
 		this.query = this.copyQuery(inputQuery.query);
@@ -159,14 +163,14 @@ var StationDetails = function(query) {
 		});
 	};
 	
-	this.reload = function(newQueryOnly) {
+	StationDetails.prototype.reload = function(newQueryOnly) {
 		this.open({
 			station: this.station, 
 			query: newQueryOnly
 		});
 	};
 	
-	this.copyQuery = function(toCopy) {
+	StationDetails.prototype.copyQuery = function(toCopy) {
 		//this.query = Object.assign({}, copyQuery);
 		var theCopy = {};
 		for(var v in toCopy) {
@@ -177,7 +181,7 @@ var StationDetails = function(query) {
 		return theCopy;
 	};
 	
-	this.loadNearbyData = function() {
+	StationDetails.prototype.loadNearbyData = function() {
 		// load default selection for species type
 		if(this.tabs.nearby.species === null) {
 			this.tabs.nearby.species = this.query.species;
@@ -205,7 +209,7 @@ var StationDetails = function(query) {
 		return returnData;
 	};
 	
-	this.createDetailsDialog = function() {
+	StationDetails.prototype.createDetailsDialog = function() {
 		this.element = $(
 			"<div id='details-container" + "' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
@@ -236,7 +240,8 @@ var StationDetails = function(query) {
 		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
 		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
-		this.element.hide()
+		this.element
+			.hide()
 			.draggable({containment: "#"+this.parentId})
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
@@ -248,7 +253,7 @@ var StationDetails = function(query) {
 			});
 	};
 	
-	this.setTitle = function() {
+	StationDetails.prototype.setTitle = function() {
 		// station name
 		this.element.find("#details-title").html(
 			"<div id='details-station-name'>" + this.query.station + "</div>" + 
@@ -296,7 +301,7 @@ var StationDetails = function(query) {
 		this.element.find("#details-info").html(listLinks);
 	};	
 	
-	this.openLoadingMessage = function() {
+	StationDetails.prototype.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
 			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>" +
 				"<img src='images/ajax-loader.gif' alt='loading' /> Loading data..." + 
@@ -304,7 +309,7 @@ var StationDetails = function(query) {
 		);
 	};
 	
-	this.setActiveTab = function(tab) {
+	StationDetails.prototype.setActiveTab = function(tab) {
 		for(var t in this.tabs) {
 			if(this.tabs.hasOwnProperty(t)) {
 				var element = $("#"+this.tabs[t].tabId);
@@ -322,7 +327,7 @@ var StationDetails = function(query) {
 	};
 	
 	// getting divs to fit content across all browsers via css is a pain so just do it manually
-	this.adjustContainerDimensions = function(width, height) {
+	StationDetails.prototype.adjustContainerDimensions = function(width, height) {
 		var dialogDiv = this.element.find("#details-dialog");
 		if(!width || width <= 0) { 
 			width = dialogDiv.width();
@@ -345,7 +350,7 @@ var StationDetails = function(query) {
 		this.element.height(height+2*this.containerPadding-1);
 	};
 	
-	this.openTabData = function() {
+	StationDetails.prototype.openTabData = function() {
 		var yearMsg;
 		if(this.query.startYear !== this.query.endYear) {
 			yearMsg = "between " + this.query.startYear + "-" + this.query.endYear;
@@ -422,7 +427,7 @@ var StationDetails = function(query) {
 		this.adjustContainerDimensions(this.tabs.data.tableWidth);
 	};	
 	
-	this.openTabTrends = function() {
+	StationDetails.prototype.openTabTrends = function() {
 		// title
 		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
@@ -432,7 +437,7 @@ var StationDetails = function(query) {
 		);
 		if(this.stationData && this.stationData.length > 0) {
 			// not used but it returns the svg object (already added to container via the options)
-			var svg = Scatterplot.create({
+			var svg = Scatterplot({
 				container: "details-content",
 				data: this.stationData, 
 				dataPointName: 'species', 
@@ -451,7 +456,7 @@ var StationDetails = function(query) {
 		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
 	
-	this.openTabNearby = function() {
+	StationDetails.prototype.openTabNearby = function() {
 		if(!this.nearbyData) {
 			// if data does not exist, attempt to load it from server
 			this.openLoadingMessage();
@@ -482,8 +487,12 @@ var StationDetails = function(query) {
 			);
 			// add all available species to the list
 			var speciesSelect = contentDiv.find("#details-species-control");
-			for(var i = 0; i < speciesList.length; i++) {
-				speciesSelect.append("<option value=\"" + speciesList[i][0] + "\">" + speciesList[i][0] + "</option>");
+			for(var i = 0; i < this.parent.modules.queryAndUI.speciesList.length; i++) {
+				speciesSelect.append(
+						"<option value=\"" + this.parent.modules.queryAndUI.speciesList[i][0] + "\">" + 
+							this.parent.modules.queryAndUI.speciesList[i][0] + 
+						"</option>"
+					);
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
@@ -575,7 +584,7 @@ var StationDetails = function(query) {
 		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
-	this.openTabReport = function(reportQuery) {
+	StationDetails.prototype.openTabReport = function(reportQuery) {
 		// use last report query (which must be stored separately as it can adjust years)
 		if(!reportQuery) {
 			reportQuery = this.copyQuery(this.query);
@@ -684,7 +693,7 @@ var StationDetails = function(query) {
 					self.reportWindow.close();
 				}
 				// open new window with data (which will be stored in session)
-				self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
+				self.reportWindow = newWindow(null, "summaryreport.php", "Summary Report", 750, 950, true);
 				// reset tab html but carry over the last report query
 				self.openTabReport(reportQuery);
 			} else {
@@ -696,7 +705,6 @@ var StationDetails = function(query) {
 		this.adjustContainerDimensions(this.tabs.report.width);
 	};
 	
-	// fire init function
-	this.init(query);
-		
-};
+	return StationDetails;
+	
+});
