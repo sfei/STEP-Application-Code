@@ -15,10 +15,12 @@ define([
 	"./module-scatterplot"
 ], function(common, ol, noUiSlider, Scatterplot) {
 	
+	//********************************************************************************************************
+	// Constructor(s)
+	//********************************************************************************************************
 	function StationDetails(parentStepApp) {
 		this.parent = parentStepApp;
 		var self = this;
-		//****************************************************************************************************
 		// All customizable variables below (but do it by manually coding, not dynamically)
 		//****************************************************************************************************
 		// the id for the container for any created details dialog
@@ -37,7 +39,7 @@ define([
 		// can adjust every place where it is called in one line
 		this.scrollbarWidth = 20;
 		// tabs configurations
-		this.tabs = { 
+		this.tabs = {
 			data: {
 				label: "Data", 
 				tabId: "details-tab-data", 
@@ -99,12 +101,12 @@ define([
 				tabId: "details-tab-report", 
 				click: self.openTabReport, 
 				width: 550,
+				slider: null, 
 				titleFunction: function(query) {
 					return "Generate and Print Summary Report";
 				}
 			}
 		};
-		//****************************************************************************************************
 		// End of customization block
 		//****************************************************************************************************
 		// get table widths by summing column widths
@@ -115,6 +117,7 @@ define([
 				this.tabs[t].tableWidth += this.tabs[t].colWidths.length*4;
 			}
 		}
+		this.activeTab = null;
 		// the element that contains the dialog box/tabs
 		if($("#details-container").length === 0) {
 			this.createDetailsDialog();
@@ -124,96 +127,13 @@ define([
 		// open data/query
 		this.isOpen = false;
 	};
-		
-	StationDetails.prototype.open = function(inputQuery) {
-		if(!inputQuery) { return; }
-		// the query that constructed this
-		this.query = this.copyQuery(inputQuery.query);
-		if(inputQuery.station) {
-			this.station = inputQuery.station;
-			this.query.station = this.station.get("name");
-		}
-		// this needs to be reset
-		this.tabs.nearby.species = null;
-		// put station name from query and place loading message
-		this.setTitle();
-		this.openLoadingMessage();
-		this.element.show();
-		this.isOpen = true;
-		// nearby data is left null until specifically requested
-		this.nearbyData = null;
-		// get the data at least for the data and trends tabs
-		this.stationData = null;
-		// self refernce necessary for callbacks
-		var self = this;
-		$.ajax({
-			async: false, 
-			url: "lib/getStationData.php", 
-			data: this.query, 
-			dataType: "json", 
-			success: function(data) {
-				//console.log(data);
-				self.stationData = data;
-				self.openTabData();
-			},
-			error: function(e) {
-				//self.openErrorMessage();
-				alert(defaultErrorMessage + "(Error StationData)");
-			}
-		});
-	};
-	
-	StationDetails.prototype.reload = function(newQueryOnly) {
-		this.open({
-			station: this.station, 
-			query: newQueryOnly
-		});
-	};
-	
-	StationDetails.prototype.copyQuery = function(toCopy) {
-		//this.query = Object.assign({}, copyQuery);
-		var theCopy = {};
-		for(var v in toCopy) {
-			if(toCopy.hasOwnProperty(v)) {
-				theCopy[v] = toCopy[v];
-			}
-		}
-		return theCopy;
-	};
-	
-	StationDetails.prototype.loadNearbyData = function() {
-		// load default selection for species type
-		if(this.tabs.nearby.species === null) {
-			this.tabs.nearby.species = this.query.species;
-		}
-		// create new query with possibly divergent species type
-		var nearbyQuery = this.copyQuery(this.query);
-		nearbyQuery.species = this.tabs.nearby.species;
-		//console.log(nearbyQuery);
-		// synchronized ajax call
-		var returnData = null;
-		$.ajax({
-			async: false, 
-			url: "lib/getNearbyData.php", 
-			data: nearbyQuery, 
-			dataType: "json", 
-			success: function(data) {
-				//console.log(data);
-				returnData = data;
-			},
-			error: function(e) {
-				// does nothing at the moment
-				//alert(defaultErrorMessage + "(Error NearbyData)");
-			}
-		});
-		return returnData;
-	};
 	
 	StationDetails.prototype.createDetailsDialog = function() {
 		this.element = $(
-			"<div id='details-container" + "' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
+			"<div id='details-container' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='details-title' class='grab'></div>" + // title set elsewhere
+					"<div id='details-contaminant-control'></div>" + 
 					"<div id='details-info'></div>" +
 					"<div id='details-tabs-container'>" + 
 						"<ul id='details-dialog-tabs'></ul>" + 
@@ -253,6 +173,79 @@ define([
 			});
 	};
 	
+	
+	//********************************************************************************************************
+	// Open/load calls
+	//********************************************************************************************************
+	StationDetails.prototype.open = function(params) {
+		if(!params) { return; }
+		// the query that constructed this
+		this.query = this.copyQuery(params.query);
+		this.query.query = "getStationRecords";
+		if(params.station) {
+			this.station = params.station;
+			this.query.station = this.station.get("name");
+		}
+		// this needs to be reset, maybe
+		this.tabs.nearby.species = params.nearbySpecies ? params.nearbySpecies : null;
+		// put station name from query and place loading message
+		this.setTitle();
+		this.element.find("#details-contaminant-control").html("");
+		this.openLoadingMessage();
+		this.populateContaminantControl();
+		this.element.show();
+		this.isOpen = true;
+		// nearby data is left null until specifically requested
+		this.nearbyData = null;
+		// get the data at least for the data and trends tabs
+		this.stationData = null;
+		// self refernce necessary for callbacks
+		var self = this;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: this.query, 
+			dataType: "json", 
+			success: function(data) {
+				//console.log(data);
+				self.stationData = data;
+				switch(params.tab) {
+					case "report":
+						self.openTabReport();
+						break;
+					case "nearby":
+						self.openTabNearby();
+						break;
+					case "trends":
+						self.openTabTrends();
+						break;
+					case "data":
+					default:
+						self.openTabData();
+				}
+			},
+			error: function(e) {
+				//self.openErrorMessage();
+				alert(defaultErrorMessage + "(Error StationData)");
+			}
+		});
+	};
+	
+	StationDetails.prototype.copyQuery = function(toCopy) {
+		//this.query = Object.assign({}, copyQuery);
+		var theCopy = {};
+		for(var v in toCopy) {
+			if(toCopy.hasOwnProperty(v)) {
+				theCopy[v] = toCopy[v];
+			}
+		}
+		return theCopy;
+	};
+	
+	
+	//********************************************************************************************************
+	// Loading and non-tab related content
+	//********************************************************************************************************	
 	StationDetails.prototype.setTitle = function() {
 		// station name
 		this.element.find("#details-title").html(
@@ -279,27 +272,28 @@ define([
 		} else {
 			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
 		}
-		var listLinks = $("<ul></ul>");
-		listLinks.append(
+		var listLinks = $("<ul></ul>").append(
 			$("<li></li>").html(
-				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + 
-					advisoryName + 
-				"</a>"
-		));
+				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + advisoryName + "</a>"
+			)
+		);
 		// link for tidal datum if coastal type
 		if(this.station.get("waterType").search(/coast/i) >= 0) {
 			var coords = ol.proj.toLonLat(this.station.getGeometry().getCoordinates());
+			var tidesUrl = (
+				"https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor="
+				+ coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4)
+			);
 			listLinks.append(
 				$("<li></li>").html(
 					"<a id='details-tides' " + 
-						"href='https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor=" + 
-							coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4) + "' target='_blank'>" + 
+						"href='"+tidesUrl+"' target='_blank'>" + 
 						"Find nearest <b>Tidal Prediction Stations</b> for this location" + 
 					"</a>"
 			));
 		}
 		this.element.find("#details-info").html(listLinks);
-	};	
+	};
 	
 	StationDetails.prototype.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
@@ -309,22 +303,58 @@ define([
 		);
 	};
 	
-	StationDetails.prototype.setActiveTab = function(tab) {
-		for(var t in this.tabs) {
-			if(this.tabs.hasOwnProperty(t)) {
-				var element = $("#"+this.tabs[t].tabId);
-				if(this.tabs[t] === tab) {
-					element
-					  .removeClass("details-tab")
-					  .addClass("details-tab-active");
-				} else {
-					element
-					  .removeClass("details-tab-active")
-					  .addClass("details-tab");
+	StationDetails.prototype.populateContaminantControl = function() {
+		var contaminantSelect = $("<select id='details-contaminant-select'></select>");
+		var contaminantQuery = {
+			query: "getAvailableContaminantsAtStation",
+			station: this.query.station
+		};
+		var self = this;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: contaminantQuery, 
+			dataType: "json", 
+			success: function(data) {
+				for(var i = 0; i < data.length; i++) {
+					contaminantSelect.append(
+						$("<option>", {value: data[i][0]}).text(data[i][0])
+					);
 				}
+				$("#details-contaminant-control").append(contaminantSelect);
+				contaminantSelect.val(self.query.contaminant);
+				$("#details-contaminant-control").on('change', function() {
+					self.query.contaminant = contaminantSelect.val();
+					self.open({
+						station: self.station, 
+						query: self.query, 
+						nearbySpecies: self.tabs.nearby.species, 
+						tab: self.activeTab
+					});
+				});
+			}
+		});
+	};
+	
+	
+	//********************************************************************************************************
+	// Tab Controls
+	//********************************************************************************************************
+	StationDetails.prototype.setActiveTab = function(tabName) {
+		if(!this.tabs[tabName]) {
+			return;
+		}
+		this.activeTab = tabName;
+		for(var t in this.tabs) {
+			var element = $("#"+this.tabs[t].tabId);
+			if(t === this.activeTab) {
+				element.removeClass("details-tab").addClass("details-tab-active");
+			} else {
+				element.removeClass("details-tab-active").addClass("details-tab");
 			}
 		}
 	};
+	
 	
 	// getting divs to fit content across all browsers via css is a pain so just do it manually
 	StationDetails.prototype.adjustContainerDimensions = function(width, height) {
@@ -350,6 +380,10 @@ define([
 		this.element.height(height+2*this.containerPadding-1);
 	};
 	
+	
+	//********************************************************************************************************
+	// Data Tab
+	//********************************************************************************************************
 	StationDetails.prototype.openTabData = function() {
 		var yearMsg;
 		if(this.query.startYear !== this.query.endYear) {
@@ -423,10 +457,14 @@ define([
 			);
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.data);
+		this.setActiveTab("data");
 		this.adjustContainerDimensions(this.tabs.data.tableWidth);
 	};	
 	
+	
+	//********************************************************************************************************
+	// Trends Tab
+	//********************************************************************************************************
 	StationDetails.prototype.openTabTrends = function() {
 		// title
 		var contentDiv = this.element.find("#details-content");
@@ -452,10 +490,14 @@ define([
 			contentDiv.append(this.tabs.trends.noDataMsg);
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.trends);
+		this.setActiveTab("trends");
 		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
 	
+	
+	//********************************************************************************************************
+	// Nearby Tab
+	//********************************************************************************************************
 	StationDetails.prototype.openTabNearby = function() {
 		if(!this.nearbyData) {
 			// if data does not exist, attempt to load it from server
@@ -580,10 +622,43 @@ define([
 			}
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.nearby);
+		this.setActiveTab("nearby");
 		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
+	StationDetails.prototype.loadNearbyData = function() {
+		// load default selection for species type
+		if(this.tabs.nearby.species === null) {
+			this.tabs.nearby.species = this.query.species;
+		}
+		// create new query with possibly divergent species type
+		var nearbyQuery = this.copyQuery(this.query);
+		nearbyQuery.query = "getNearbyData";
+		nearbyQuery.species = this.tabs.nearby.species;
+		//console.log(nearbyQuery);
+		// synchronized ajax call
+		var returnData = null;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: nearbyQuery, 
+			dataType: "json", 
+			success: function(data) {
+				//console.log(data);
+				returnData = data;
+			},
+			error: function(e) {
+				// does nothing at the moment
+				//alert(defaultErrorMessage + "(Error NearbyData)");
+			}
+		});
+		return returnData;
+	};
+	
+	
+	//********************************************************************************************************
+	// Report Tab
+	//********************************************************************************************************
 	StationDetails.prototype.openTabReport = function(reportQuery) {
 		// use last report query (which must be stored separately as it can adjust years)
 		if(!reportQuery) {
@@ -636,27 +711,38 @@ define([
 					})
 			);
 		// get all years for query
-		var yearSlider;
+		var self = this;
 		$.ajax({
-			url: "lib/getAvailableYearSpan.php", 
-			data: { contaminant: reportQuery.contaminant, species: "highest"}, 
+			url: "lib/query.php", 
+			data: {
+				query: "getAvailableYearSpan", 
+				contaminant: reportQuery.contaminant,
+				species: "highest"
+			}, 
 			dataType: 'json', 
 			success: function(data) {
 				// slider fails if start and end year are the same
 				if(data.min !== data.max) {
 					// create range slider
-					yearSlider = noUiSlider.create(document.getElementById('report-year-range'), {
-						start: [reportQuery.startYear, reportQuery.endYear],
-						step: 1, 
-						connect: true, 
-						range: { 'min': data.min, 'max': data.max }
-					});
+					if(self.tabs.report.slider) {
+						self.tabs.report.slider.destroy();
+					}
+					self.tabs.report.slider = noUiSlider.create(
+						document.getElementById('report-year-range'),
+						{
+							range: { 'min': data.min, 'max': data.max }, 
+							start: [reportQuery.startYear, reportQuery.endYear],
+							step: 1, 
+							connect: true, 
+							behaviour: 'tap-drag'
+						}
+					);
 					// bind values to display
 					var display = [
 						document.getElementById("report-year-range-start"), 
 						document.getElementById("report-year-range-end")
 					];
-					yearSlider.on('update', function(values, handle) {
+					self.tabs.report.slider.on('update', function(values, handle) {
 						display[handle].innerHTML = parseInt(values[handle]);
 					});
 				} else {
@@ -669,9 +755,9 @@ define([
 		// add click functionality
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			if(yearSlider) {
+			if(this.tabs.report.slider) {
 				// if no slider, leave as default query, which should've already been adjusted for years available
-				var yearRange = yearSlider.get();
+				var yearRange = this.tabs.report.slider.get();
 				reportQuery.startYear = parseInt(yearRange[0]);
 				reportQuery.endYear = parseInt(yearRange[1]);
 			}
@@ -701,9 +787,10 @@ define([
 			}
 		});
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.report);
+		this.setActiveTab("report");
 		this.adjustContainerDimensions(this.tabs.report.width);
 	};
+	
 	
 	return StationDetails;
 	

@@ -131,7 +131,7 @@ define([
 		var self = this;
 		$.ajax({
 			async: !options.firstRun,
-			url: "lib/getQuery.php", 
+			url: "lib/queryStations.php", 
 			data: options.query, 
 			dataType: "json", 
 			success: function(data) {
@@ -458,7 +458,8 @@ define([
 	QueryAndUI.prototype.updateSpeciesList = function() {
 		var self = this;
 		$.ajax({
-			url: "lib/getAllSpecies.php", 
+			url: "lib/query.php", 
+			data: { query: "getAllSpecies" }, 
 			dataType: "json", 
 			success: function(data) {
 				self.speciesList = data;
@@ -476,10 +477,10 @@ define([
 	 * as is (that is, not upper/lower-cased).
 	 */
 	QueryAndUI.prototype.updateSpeciesSelect = function() {
-		var optionsHtml = "<option value=\"highest\">Species with Highest Avg Concentration</option>"
-			+ "<option value=\"lowest\">Species with Lowest Avg Concentration</option>";
+		var optionsHtml = "<option value='highest'>Species with Highest Avg Concentration</option>"
+			+ "<option value='lowest'>Species with Lowest Avg Concentration</option>";
 		for(var i = 0; i < this.speciesList.length; i++) {
-			optionsHtml += "<option value=\"" + this.speciesList[i][0] + "\">" + this.speciesList[i][0] + "</option>";
+			optionsHtml += "<option value='" + this.speciesList[i][0] + "'>" + this.speciesList[i][0] + "</option>";
 		}
 		$("#species-control")
 			.html(optionsHtml)
@@ -496,7 +497,7 @@ define([
 	QueryAndUI.prototype.updateContaminantsSelect = function(data) {
 		var optionsHtml = "";
 		for(var i = 0; i < data.length; i++) {
-			optionsHtml += "<option value=\"" + data[i][0] + "\">" + data[i][0] + "</option>";
+			optionsHtml += "<option value='" + data[i][0] + "'>" + data[i][0] + "</option>";
 		}
 		var controlDiv = $("#contaminant-control")
 			.html(optionsHtml)

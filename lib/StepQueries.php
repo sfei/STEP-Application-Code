@@ -3,6 +3,8 @@
 /** Since this is a common function, write it here outside the class for ease of editing. Safely gets the 
  * query contaminants. Query parameters looked for are:
  * <ul>
+ *		<li>(String) <i>query</i> - name of query, if calling dynamically via query.php, available options are
+ *			same as method names in StepQueries</li>
  *		<li>(String) <i>species</i> - species name (which may also be 'highest' or 'lowest')</li>
  *		<li>(String) <i>contaminant</i> - contaminant name</li>
  *		<li>(int) <i>startYear</i> - start year / min. year</li>
@@ -14,6 +16,7 @@
  *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, (boolean) <i>isASpecies</i>, (String)
  *		<i>station</i>, and (int) <i>radiusMiles</i>.  */
 function getQuery() {
+	$query			= filter_input(INPUT_GET, 'query', FILTER_SANITIZE_STRING);
 	$species		= filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING);
 	$contaminant	= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
 	$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
@@ -42,6 +45,7 @@ function getQuery() {
 	if($radiusMiles < 0) { $radiusMiles = 0; }
 
 	return array(
+		'query' => $query, 
 		'species' => $species, 
 		'contaminant' => $contaminant, 
 		'startYear' => $startYear, 
@@ -269,6 +273,25 @@ class StepQueries {
 			$queryString .= "WHERE CommonName = '" . $params['species'] . "' ";
 		}
 		$queryString .= "ORDER BY result";
+		// Sample years and below heirarchy so ignore them for query
+		$query = StepQueries::$dbconn->prepare($queryString);
+		$query->execute();
+		if($query->errorCode() != 0) {
+			die("Query Error: " . $query->errorCode());
+		}
+		return $query->fetchAll();	// fetch with keys as both numeric and as 'result'
+	}
+	
+	/** Get all available contaminants that have a record for the given species. Due to the 
+	 * species->contaminant->years search hierarchy, any year values in $params are ignored. That is, returns 
+	 * all existing contaminants recorded regardless of year.
+	 * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}.
+	 * @return array Associate array of all contaminants that have a record for the given species, sorted 
+	 *		alphabetically. The array is two-deep, i.e. to get the contaminant name, it is usually 
+	 *		$array[0][0] or $array[0]['result'].*/
+	public function getAvailableContaminantsAtStation($params) {
+		$queryString = "SELECT DISTINCT Parameter AS result FROM [dbo].[STEP_Table_AllResults] "
+			. "WHERE StationName='" . $params['station'] . "' ORDER BY result";
 		// Sample years and below heirarchy so ignore them for query
 		$query = StepQueries::$dbconn->prepare($queryString);
 		$query->execute();

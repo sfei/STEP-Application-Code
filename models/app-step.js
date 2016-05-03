@@ -413,7 +413,8 @@ define([
 		if(!data) {
 			$.ajax({
 				async: false,
-				url: "lib/getAllStations.php", 
+				url: "lib/query.php", 
+				data: { query: "getAllStations" }, 
 				dataType: "json", 
 				success: function(json) {
 					data = json;

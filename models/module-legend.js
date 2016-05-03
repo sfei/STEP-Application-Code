@@ -176,9 +176,11 @@ define(["d3", "common"], function(d3, common) {
 	 */
 	Legend.prototype.resetThresholds = function() {
 		var self = this;
+		var queryParams = this.parent.modules.query.getLastQuery();
+		queryParams.query = "getThresholds";
 		$.ajax({
-			url: 'lib/getThresholds.php', 
-			data: this.parent.modules.query.getLastQuery(), 
+			url: 'lib/query.php', 
+			data: queryParams, 
 			dataType: 'json', 
 			success: function(data) {
 				self.updateThresholds(data);
