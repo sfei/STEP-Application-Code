@@ -133,7 +133,6 @@ define([
 			"<div id='details-container' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='details-title' class='grab'></div>" + // title set elsewhere
-					"<div id='details-contaminant-control'></div>" + 
 					"<div id='details-info'></div>" +
 					"<div id='details-tabs-container'>" + 
 						"<ul id='details-dialog-tabs'></ul>" + 
@@ -157,6 +156,7 @@ define([
 					);
 			}
 		}
+		tabsList.append("<div id='details-contaminant-control'></div>");
 		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
 		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
@@ -177,7 +177,7 @@ define([
 	//********************************************************************************************************
 	// Open/load calls
 	//********************************************************************************************************
-	StationDetails.prototype.open = function(params) {
+	StationDetails.prototype.open = function(params, flagReload) {
 		if(!params) { return; }
 		// the query that constructed this
 		this.query = this.copyQuery(params.query);
@@ -304,6 +304,7 @@ define([
 	};
 	
 	StationDetails.prototype.populateContaminantControl = function() {
+		$("#details-contaminant-control").html("For contaminant: ");
 		var contaminantSelect = $("<select id='details-contaminant-select'></select>");
 		var contaminantQuery = {
 			query: "getAvailableContaminantsAtStation",
@@ -323,14 +324,17 @@ define([
 				}
 				$("#details-contaminant-control").append(contaminantSelect);
 				contaminantSelect.val(self.query.contaminant);
-				$("#details-contaminant-control").on('change', function() {
+				$("#details-contaminant-select").on('change', function() {
+					if(contaminantSelect.val() === self.query.contaminant) {
+						return;
+					}
 					self.query.contaminant = contaminantSelect.val();
 					self.open({
 						station: self.station, 
 						query: self.query, 
 						nearbySpecies: self.tabs.nearby.species, 
 						tab: self.activeTab
-					});
+					}, true);
 				});
 			}
 		});
@@ -755,9 +759,9 @@ define([
 		// add click functionality
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			if(this.tabs.report.slider) {
+			if(self.tabs.report.slider) {
 				// if no slider, leave as default query, which should've already been adjusted for years available
-				var yearRange = this.tabs.report.slider.get();
+				var yearRange = self.tabs.report.slider.get();
 				reportQuery.startYear = parseInt(yearRange[0]);
 				reportQuery.endYear = parseInt(yearRange[1]);
 			}

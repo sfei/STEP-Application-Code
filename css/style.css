@@ -471,7 +471,7 @@ input, select {
 	font-weight: bold;
 	font-size: 18px;
 	margin-left: 8px;
-	margin-bottom: 12px;
+	margin-bottom: 6px;
 }
 #details-dialog-close {
 	float: right;
@@ -485,11 +485,26 @@ input, select {
 	text-align: center;
 	line-height: 14px;
 }
-#details-info { }
+#details-info {
+	margin-bottom: 6px;
+}
+#details-info ul {
+	margin: 0px;
+}
 #details-info li {
 	margin-left: 6px;
 	text-indent: -6px;
 	margin-bottom: 4px;
+}
+#details-contaminant-control {
+	float: left;
+	margin-top: 3px;
+	margin-left: 10px;
+	font-weight: bolder;
+}
+#details-contaminant-select {
+	width: 100px;
+	font-size: 12px;
 }
 #details-tabs-container {
 	position: relative;

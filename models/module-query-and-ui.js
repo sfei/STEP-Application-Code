@@ -17,19 +17,18 @@ define([
 	"noUiSlider"
 ], function(common, noUiSlider) {
 	
-	function QueryAndUI(parentStepApp) {
+	function QueryAndUI(parentStepApp, defaultQuery) {
 		this.parent = parentStepApp;
 		// quick reference
 		this.legend = this.parent.modules.legend;
 		// The default query to start or when resetting. Start year is 1900 and end year is the current year. 
 		// This is fine as submitting the query will return a corrected version that fits the data.
-		this.defaultQuery = {
-			species: 'Largemouth Bass', 
-			contaminant: 'Mercury',
-			// query will automatically adjust years to min/max year
-			startYear: 1900,
-			endYear: new Date().getFullYear()
-		};
+		this.defaultQuery = defaultQuery ? defaultQuery : {};
+		this.defaultQuery.species = this.defaultQuery.species ? this.defaultQuery.species : 'Largemouth Bass';
+		this.defaultQuery.contaminant = this.defaultQuery.contaminant ? this.defaultQuery.contaminant : 'Mercury';
+		// query will automatically adjust years to min/max year
+		this.defaultQuery.startYear = this.defaultQuery.startYear ? this.defaultQuery.startYear : 1900;
+		this.defaultQuery.endYear = this.defaultQuery.endYear ? this.defaultQuery.endYear : new Date().getFullYear();
 		// The last successful query. This is usually not the submitted query but the returned (and corrected) 
 		// query from the submitted.
 		this.lastQuery;
@@ -175,9 +174,6 @@ define([
 					} else {
 						updateMessage = "Filters updated to match query results.";
 					}
-				}
-				if(self.parent.modules.stationDetails && self.parent.modules.stationDetails.isOpen) {
-					self.parent.modules.stationDetails.reload(self.lastQuery);
 				}
 			}, 
 			error: function(e) {
