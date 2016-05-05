@@ -177,7 +177,7 @@ define([
 	//********************************************************************************************************
 	// Open/load calls
 	//********************************************************************************************************
-	StationDetails.prototype.open = function(params, flagReload) {
+	StationDetails.prototype.open = function(params) {
 		if(!params) { return; }
 		// the query that constructed this
 		this.query = this.copyQuery(params.query);
@@ -334,7 +334,7 @@ define([
 						query: self.query, 
 						nearbySpecies: self.tabs.nearby.species, 
 						tab: self.activeTab
-					}, true);
+					});
 				});
 			}
 		});

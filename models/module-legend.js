@@ -12,11 +12,17 @@ define(["d3", "common"], function(d3, common) {
 		// threshold group key
 		this.selectedThresholdGroup = "standard";
 		this.thresholdGroups = {
-			"standard": "Non-Specific Thresholds", 
-			"oehha-women-1845-children": "Women Aged 18-45 Years and Children Aged 1-17 Years",
 			"oehha-men-women-over-45": "Women Over 45 Years and Men", 
+			"oehha-women-1845-children": "Women Aged 18-45 Years and Children Aged 1-17 Years",
+			"standard": "Non-Specific Thresholds", 
 			"custom": "User Defined Thresholds"
 		};
+		this.thresholdOrder = [
+			"oehha-men-women-over-45", 
+			"oehha-women-1845-children", 
+			"standard", 
+			"custom"
+		];
 	};
 	
 	/**
@@ -138,36 +144,74 @@ define(["d3", "common"], function(d3, common) {
 	 * Update the selection options for thresholds
 	 */
 	Legend.prototype.updateThresholdGroupSelect = function() {
-		// default selected threshold group (try to carry over last)
-		if(!this.selectedThresholdGroup || !(this.selectedThresholdGroup in this.thresholds)) {
-			this.selectedThresholdGroup = "select";
-			if(!(this.selectedThresholdGroup in this.thresholds)) {
-				for(var group in this.thresholds) {
-					if(group !== "custom") {
-						this.selectedThresholdGroup = group;
-						break;
-					}
-				}
-			}
-		}
-		// append custom option
-		this.thresholds.custom = [];
+		this.selectedThresholdGroup = null;
+		
 		// empty and fill select
 		var selectElem = $("#threshold-group-select").html("");
-		for(var group in this.thresholds) {
-			var option = $("<option></option>").appendTo(selectElem)
-				.attr("value", group)
-				.text((group in this.thresholdGroups) ? this.thresholdGroups[group] : group);
-			// custom option is hidden (only programatically selected after defining custom thresholds)
-			if(group === "custom") {
-				option.prop("disabled", true).css("display", "none");
+		var recognizedGroups = [];
+		for(var i = 0; i < this.thresholdOrder.length; i++) {
+			var group = this.thresholdOrder[i];
+			if(group in this.thresholds) {
+				recognizedGroups.push(group);
+				if(!this.selectedThresholdGroup) {
+					this.selectedThresholdGroup = group;
+				}
+				var option = $("<option></option>").appendTo(selectElem)
+					.attr("value", group)
+					.text(this.thresholdGroups[group]);
 			}
 		}
+		for(var group in this.thresholds) {
+			if($.inArray(group, recognizedGroups) < 0) {
+				if(!this.selectedThresholdGroup) {	
+					this.selectedThresholdGroup = group;
+				}
+				$("<option></option>").appendTo(selectElem)
+					.attr("value", group)
+					.text(this.thresholdGroups[group]);
+			}
+		}
+		
 		selectElem.val(this.selectedThresholdGroup);
+		
 		// to customize, there is an option specifically to customize (thus it can be reselected)
+		this.thresholds.custom = [];
 		$("<option></option>").appendTo(selectElem)
 			.attr("value", "customize")
 			.text("Customize Thresholds");
+		// custom option is hidden (only programatically selected after defining custom thresholds)
+		$("<option></option>").appendTo(selectElem)
+			.attr("value", "custom")
+			.text(this.thresholdGroups.custom)
+			.prop("disabled", true)
+			.css("display", "none");
+		
+		
+//		// default selected threshold group (try to carry over last)
+//		if(!this.selectedThresholdGroup || !(this.selectedThresholdGroup in this.thresholds)) {
+//			this.selectedThresholdGroup = this.iniThresholdGroup;
+//			if(!(this.selectedThresholdGroup in this.thresholds)) {
+//				for(var group in this.thresholds) {
+//					if(group !== "custom") {
+//						this.selectedThresholdGroup = group;
+//						break;
+//					}
+//				}
+//			}
+//		}
+//		// empty and fill select
+//		var selectElem = $("#threshold-group-select").html("");
+//		for(var group in this.thresholds) {
+//			var option = $("<option></option>").appendTo(selectElem)
+//				.attr("value", group)
+//				.text((group in this.thresholdGroups) ? this.thresholdGroups[group] : group);
+//			// custom option is hidden (only programatically selected after defining custom thresholds)
+//			if(group === "custom") {
+//				option.prop("disabled", true).css("display", "none");
+//			}
+//		}
+//		selectElem.val(this.selectedThresholdGroup);
+		
 	};
 
 	/**
@@ -397,10 +441,18 @@ define(["d3", "common"], function(d3, common) {
 				color: this.markerFactory.hexMap[0], 
 				value: 0, 
 				units: thresholdsData[0].units, 
-				comments: "Not Detected" 
+				comments: "Not Detected"
 			};
+			var label = threshold.value + " " + threshold.units;
+			if(i === thresholdsData.length-1) {
+				label = "&ge; " + label;
+			} else if(i === 0) {
+				label = "&lt; " + label;
+			} else if(threshold.value === 0) {
+				label = "ND";
+			}
 			row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-			row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + ((i === thresholdsData.length-1) ? "+" : "") + threshold.value + " " + threshold.units + "</div>";
+			row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + label + "</div>";
 			row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 			row += "</div>";
 			table.append(row);
