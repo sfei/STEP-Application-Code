@@ -416,6 +416,11 @@ input, select {
 	background:#555;
 	color:#fff;
 }
+#legend-show-adv {
+	margin-top: 4px;
+	margin-right: 10px;
+	text-align: right;
+}
 #legend-table {
 	display: block;
 	overflow: hidden;

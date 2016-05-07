@@ -23,6 +23,10 @@ define(["d3", "common"], function(d3, common) {
 			"standard", 
 			"custom"
 		];
+		this.nonAdvancedGroups = [
+			"oehha-men-women-over-45", 
+			"oehha-women-1845-children"
+		];
 	};
 	
 	/**
@@ -41,13 +45,16 @@ define(["d3", "common"], function(d3, common) {
 		$("<div id='legend-content'></div>").appendTo(this.legendContainer)
 			.addClass("inner-container-style")
 			.append("<div id='legend-title'></div>")
-			.append("<div id='legend-symbols'><hr/></div>")
 			.append(
 				"<div id='thresholds-control'>" + 
 					"<hr />" + 
+					"<div id='legend-show-adv'>" + 
+						"<input type='checkbox' id='threshold-show-adv' />Show Advanced Options" + 
+					"</div>" +
 					"<select id='threshold-group-select'></select>" + 
 				"</div>"
 			)
+			.append("<div id='legend-symbols'><hr/></div>")
 			.append("<div id='legend-table'></div>");
 		$("<div id='hide-legend-tab'>Hide Legend</div>").appendTo(this.legendContainer)
 			.on('click', this.legendHide);
@@ -68,6 +75,13 @@ define(["d3", "common"], function(d3, common) {
 					self.thresholdsChanged();
 				}
 			});
+		$("#threshold-show-adv").on('change', function() {
+			if(!this.checked && $("#threshold-group-select").find(".non-adv-thres-grp").length === 0) {
+				this.checked = true;
+			} else {
+				$("#threshold-group-select").find(".adv-thres-grp").css("display", this.checked ? "block" : 'none');
+			}
+		});
 	};
 
 	//************************************************************************************************************
@@ -149,6 +163,7 @@ define(["d3", "common"], function(d3, common) {
 		// empty and fill select
 		var selectElem = $("#threshold-group-select").html("");
 		var recognizedGroups = [];
+		var nonAdvancedExists = false;
 		for(var i = 0; i < this.thresholdOrder.length; i++) {
 			var group = this.thresholdOrder[i];
 			if(group in this.thresholds) {
@@ -156,9 +171,16 @@ define(["d3", "common"], function(d3, common) {
 				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
-				var option = $("<option></option>").appendTo(selectElem)
-					.attr("value", group)
+				var option = $("<option>", {value: group}).appendTo(selectElem)
 					.text(this.thresholdGroups[group]);
+				if($.inArray(group, this.nonAdvancedGroups) < 0) {
+					option.attr("class", "adv-thres-grp");
+				} else {
+					option.attr("class", "non-adv-thres-grp");
+					if(!nonAdvancedExists) {
+						nonAdvancedExists = true;
+					}
+				}
 			}
 		}
 		for(var group in this.thresholds) {
@@ -166,8 +188,8 @@ define(["d3", "common"], function(d3, common) {
 				if(!this.selectedThresholdGroup) {	
 					this.selectedThresholdGroup = group;
 				}
-				$("<option></option>").appendTo(selectElem)
-					.attr("value", group)
+				$("<option>", {value: group}).appendTo(selectElem)
+					.attr("class", "adv-thres-grp")
 					.text(this.thresholdGroups[group]);
 			}
 		}
@@ -176,42 +198,20 @@ define(["d3", "common"], function(d3, common) {
 		
 		// to customize, there is an option specifically to customize (thus it can be reselected)
 		this.thresholds.custom = [];
-		$("<option></option>").appendTo(selectElem)
-			.attr("value", "customize")
+		$("<option>", {value: "customize"}).appendTo(selectElem)
+			.attr("class", "adv-thres-grp")
 			.text("Customize Thresholds");
 		// custom option is hidden (only programatically selected after defining custom thresholds)
-		$("<option></option>").appendTo(selectElem)
-			.attr("value", "custom")
+		$("<option>", {value: "custom"}).appendTo(selectElem)
 			.text(this.thresholdGroups.custom)
 			.prop("disabled", true)
 			.css("display", "none");
-		
-		
-//		// default selected threshold group (try to carry over last)
-//		if(!this.selectedThresholdGroup || !(this.selectedThresholdGroup in this.thresholds)) {
-//			this.selectedThresholdGroup = this.iniThresholdGroup;
-//			if(!(this.selectedThresholdGroup in this.thresholds)) {
-//				for(var group in this.thresholds) {
-//					if(group !== "custom") {
-//						this.selectedThresholdGroup = group;
-//						break;
-//					}
-//				}
-//			}
-//		}
-//		// empty and fill select
-//		var selectElem = $("#threshold-group-select").html("");
-//		for(var group in this.thresholds) {
-//			var option = $("<option></option>").appendTo(selectElem)
-//				.attr("value", group)
-//				.text((group in this.thresholdGroups) ? this.thresholdGroups[group] : group);
-//			// custom option is hidden (only programatically selected after defining custom thresholds)
-//			if(group === "custom") {
-//				option.prop("disabled", true).css("display", "none");
-//			}
-//		}
-//		selectElem.val(this.selectedThresholdGroup);
-		
+		if(nonAdvancedExists) {
+			selectElem.find(".adv-thres-grp").css("display", "none");
+			$("#threshold-show-adv").prop('checked', false).prop('disabled', false);
+		} else {
+			$("#threshold-show-adv").prop('checked', true).prop('disabled', true);
+		}
 	};
 
 	/**

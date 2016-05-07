@@ -535,10 +535,10 @@ define([
 			var speciesSelect = contentDiv.find("#details-species-control");
 			for(var i = 0; i < this.parent.modules.queryAndUI.speciesList.length; i++) {
 				speciesSelect.append(
-						"<option value=\"" + this.parent.modules.queryAndUI.speciesList[i][0] + "\">" + 
-							this.parent.modules.queryAndUI.speciesList[i][0] + 
-						"</option>"
-					);
+					$("<option>", {
+						value: this.parent.modules.queryAndUI.speciesList[i][0]
+					}).html(this.parent.modules.queryAndUI.speciesList[i][0])
+				);
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
@@ -603,10 +603,10 @@ define([
 									$(this).css('color', '#000');
 								})
 								.click(function() {
-									var station = getStationByName($(this).html());
+									var station = self.parent.getStationByName($(this).html());
 									if(station) {
-										zoomToStation(station);
-										openStationDetails(station);
+										self.parent.zoomToStation(station);
+										self.parent.openStationDetails(station);
 									}
 								});
 						}
