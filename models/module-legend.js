@@ -95,7 +95,7 @@ define(["d3", "common"], function(d3, common) {
 		// create svg shapes legend
 		var svg = d3.select("#legend-symbols")
 		  .append("svg")
-			.attr("width", 380)
+			.attr("width", 350)
 			.attr("height", 30)
 		  .append("g")
 			.attr("transform", "translate(5,0)");
@@ -112,37 +112,37 @@ define(["d3", "common"], function(d3, common) {
 			.attr("y", 15)
 			.attr("dy", ".35em")
 			.style("text-anchor", "start")
-			.style("font-size", "13px")
+			.style("font-size", "12px")
 			.text("Lake/Reservoir");
 		// triangle (for coastal/ocean)
 		svg.append("path")
-			.attr("d", "M 130 22 L 150 22 L 140 7 z")
+			.attr("d", "M 115 22 L 135 22 L 125 7 z")
 			.attr("stroke-width", 2.0)
 			.attr("stroke", "black")
 			.style("fill", "none");
 		svg.append("text")
-			.attr("x", 157)
+			.attr("x", 142)
 			.attr("y", 15)
 			.attr("dy", ".35em")
 			.style("text-anchor", "start")
-			.style("font-size", "13px")
+			.style("font-size", "12px")
 			.text("Coast/Ocean");
 		// diamond (for rivers and misc)
 		svg.append("rect")
 			.attr("width", 14)
 			.attr("height", 14)
-			.attr("x", 270)
+			.attr("x", 240)
 			.attr("y", 9)
-			.attr("transform", "rotate(45,279,14)")
+			.attr("transform", "rotate(45,249,14)")
 			.attr("stroke-width", 2.0)
 			.attr("stroke", "black")
 			.style("fill", "none");
 		svg.append("text")
-			.attr("x", 294)
+			.attr("x", 264)
 			.attr("y", 15)
 			.attr("dy", ".35em")
 			.style("text-anchor", "start")
-			.style("font-size", "13px")
+			.style("font-size", "12px")
 			.text("River/Stream");
 		$("#legend-symbols");
 	};
@@ -451,9 +451,9 @@ define(["d3", "common"], function(d3, common) {
 			} else if(threshold.value === 0) {
 				label = "ND";
 			}
-			row += "<div class='legend-table-cell' style='width:26px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-			row += "<div class='legend-table-cell' style='width:70px;margin-right:10px;text-align:right;'>" + label + "</div>";
-			row += "<div class='legend-table-cell' style='display:table;width:300px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
+			row += "<div class='legend-table-cell' style='width:21px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
+			row += "<div class='legend-table-cell' style='width:55px;margin-right:10px;text-align:right;'>" + label + "</div>";
+			row += "<div class='legend-table-cell' style='display:table;width:280px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 			row += "</div>";
 			table.append(row);
 		}

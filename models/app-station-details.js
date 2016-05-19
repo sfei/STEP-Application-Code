@@ -162,7 +162,7 @@ define([
 		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element
 			.hide()
-			.draggable({containment: "#"+this.parentId})
+			.draggable()
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");
