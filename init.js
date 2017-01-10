@@ -20,7 +20,8 @@ require([
 	'models/app-step', 
 	'models/app-summary-report'
 ], function(common, domReady, STEP, SummaryReport) {
-	common.setModalAsLoading(true, false);
+	// HTML inits with loading
+	//common.setModalAsLoading(true, false);
 	domReady(function() {
 		step = new STEP();
 		if(typeof summaryReport !== "undefined" && summaryReport) {

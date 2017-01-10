@@ -77,16 +77,22 @@ define([
 	//********************************************************************************************************
 	QueryAndUI.prototype.getLastQuery = function() { return this.lastQuery; };
 	
+	QueryAndUI.prototype.getLastQueryCopy = function() {
+		var copyQuery = {};
+		for(var v in this.lastQuery) {
+			copyQuery[v] = this.lastQuery[v];
+		}
+		return copyQuery;
+	};
+	
 	/**
 	 * Reset the lastQuery var to a copy of the defaultQuery.
 	 */
 	QueryAndUI.prototype.resetDefaultQuery = function() {
-		this.//lastQuery = Object.assign({}, defaultQuery);
-		lastQuery = {};
+		//this.lastQuery = Object.assign({}, defaultQuery);
+		this.lastQuery = {};
 		for(var v in this.defaultQuery) {
-			if(this.defaultQuery.hasOwnProperty(v)) {
-				this.lastQuery[v] = this.defaultQuery[v];
-			}
+			this.lastQuery[v] = this.defaultQuery[v];
 		}
 	};
 	

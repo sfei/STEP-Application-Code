@@ -16,13 +16,13 @@
  *		<i>contaminant</i>, (int) <i>startYear</i>, (int) <i>endYear</i>, (boolean) <i>isASpecies</i>, (String)
  *		<i>station</i>, and (int) <i>radiusMiles</i>.  */
 function getQuery() {
-	$query			= filter_input(INPUT_GET, 'query', FILTER_SANITIZE_STRING);
-	$species		= filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING);
-	$contaminant	= filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
-	$startYear		= filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
-	$endYear		= filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
-	$station		= filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING);
-	$radiusMiles	= filter_input(INPUT_GET, 'radiusMiles', FILTER_SANITIZE_NUMBER_INT);
+	$query       = filter_input(INPUT_GET, 'query', FILTER_SANITIZE_STRING);
+	$species     = filter_input(INPUT_GET, 'species', FILTER_SANITIZE_STRING);
+	$contaminant = filter_input(INPUT_GET, 'contaminant', FILTER_SANITIZE_STRING);
+	$startYear   = filter_input(INPUT_GET, 'startYear', FILTER_SANITIZE_NUMBER_INT);
+	$endYear     = filter_input(INPUT_GET, 'endYear', FILTER_SANITIZE_NUMBER_INT);
+	$station     = filter_input(INPUT_GET, 'station', FILTER_SANITIZE_STRING);
+	$radiusMiles = filter_input(INPUT_GET, 'radiusMiles', FILTER_SANITIZE_NUMBER_INT);
 
 	if($startYear && $endYear) {
 		if($startYear > $endYear) {
@@ -145,7 +145,7 @@ class StepQueries {
 	 *		</ul> */
 	public function getAllStations() {
 		$query = StepQueries::$dbconn->prepare(
-			"Select * FROM [STEPDEV].[dbo].[STEP_StationGroup] AS a "
+			"SELECT * FROM [STEPDEV].[dbo].[STEP_StationGroup] AS a "
 				. "CROSS APPLY ("
 					. "SELECT TOP 1 b.WaterType, b.AdvisoryID "
 					. "FROM [STEPDEV].[dbo].[STEP_Stations] AS b "
@@ -253,6 +253,17 @@ class StepQueries {
 					. "SampleYear <= " . $params["endYear"]
 				. " ORDER BY result"
 		);
+		$query->execute();
+		if($query->errorCode() != 0) {
+			die("Query Error: " . $query->errorCode());
+		}
+		return $query->fetchAll();	// fetch with keys as both numeric and as 'result'
+	}
+	
+	public function getAllContaminants($params) {
+		$queryString = "SELECT DISTINCT Parameter AS result FROM [dbo].[STEP_Table_AllResults] ORDER BY result";
+		// Sample years and below heirarchy so ignore them for query
+		$query = StepQueries::$dbconn->prepare($queryString);
 		$query->execute();
 		if($query->errorCode() != 0) {
 			die("Query Error: " . $query->errorCode());

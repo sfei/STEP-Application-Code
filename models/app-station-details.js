@@ -28,6 +28,7 @@ define([
 		// styles for a few things that appear frequently and/or has cascading effects on parent/child 
 		// elements so is easier to set here as variables
 		this.titleDivPadLeft = 12;
+		this.containerMargin = 4;
 		this.containerPadding = 2;
 		this.contentPadding = 4;
 		this.style = {
@@ -56,8 +57,7 @@ define([
 					}
 					return "What records exist for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
 				},
-				bottomMsg: "A result of ND means the concentration was below detection limits.", 
-				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
+				bottomMsg: "A result of ND means the concentration was below detection limits."
 			}, 
 			trends: {
 				label: "Trends", 
@@ -73,8 +73,7 @@ define([
 						yearMsg = "in " + query.startYear;
 					}
 					return "What are the trends for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
-				}, 
-				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
+				}
 			}, 
 			nearby: {
 				label: "Nearby", 
@@ -93,8 +92,7 @@ define([
 					}
 					return "How does \"" + query.station + "\" compare to nearby water bodies " + yearMsg + "?";
 				},
-				bottomMsg: "A result of ND means the concentration was below detection limits.", 
-				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
+				bottomMsg: "A result of ND means the concentration was below detection limits."
 			}, 
 			report: {
 				label: "Print Report", 
@@ -126,7 +124,24 @@ define([
 		}
 		// open data/query
 		this.isOpen = false;
+		// whether selected station has any data at all
+		this.stationHasData = true;
+		// get list of all contaminants
+		this.allContaminants = [];
+		var self = this;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: {query: "getAllContaminants"}, 
+			dataType: "json", 
+			success: function(data) {
+				for(var i = 0; i < data.length; i++) {
+					self.allContaminants.push(data[i][0]);
+				}
+			}
+		});
 	};
+	
 	
 	StationDetails.prototype.createDetailsDialog = function() {
 		this.element = $(
@@ -140,7 +155,7 @@ define([
 					"<div id='details-content'></div>" + 
 				"</div>" + 
 			"</div>"
-		).appendTo($('#'+this.parentId));
+		).appendTo("body");
 		// add tabs programmatically
 		var self = this;
 		var tabsList = this.element.find("#details-dialog-tabs");
@@ -162,7 +177,7 @@ define([
 		var titleElement = this.element.find("#details-title").addClass("grab");
 		this.element
 			.hide()
-			.draggable()
+			.draggable({containment: "body"})
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");
@@ -192,9 +207,31 @@ define([
 		this.setTitle();
 		this.element.find("#details-contaminant-control").html("");
 		this.openLoadingMessage();
-		this.populateContaminantControl();
-		this.element.show();
-		this.isOpen = true;
+		// get list of available contaminants
+		var availContaminants = [];
+		var contaminantQuery = {
+			query: "getAvailableContaminantsAtStation",
+			station: this.query.station
+		};
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: contaminantQuery, 
+			dataType: "json", 
+			success: function(data) {
+				for(var i = 0; i < data.length; i++) {
+					availContaminants.push(data[i][0]);
+				}
+			}
+		});
+		this.populateContaminantControl(availContaminants);
+		this.stationHasData = availContaminants.length > 0;
+		// if not already open, show and center the container
+		if(!this.isOpen) {
+			this.element.show();
+			this.correctPosition();
+			this.isOpen = true;
+		}
 		// nearby data is left null until specifically requested
 		this.nearbyData = null;
 		// get the data at least for the data and trends tabs
@@ -231,13 +268,12 @@ define([
 		});
 	};
 	
+	
 	StationDetails.prototype.copyQuery = function(toCopy) {
 		//this.query = Object.assign({}, copyQuery);
 		var theCopy = {};
 		for(var v in toCopy) {
-			if(toCopy.hasOwnProperty(v)) {
-				theCopy[v] = toCopy[v];
-			}
+			theCopy[v] = toCopy[v];
 		}
 		return theCopy;
 	};
@@ -295,6 +331,7 @@ define([
 		this.element.find("#details-info").html(listLinks);
 	};
 	
+	
 	StationDetails.prototype.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
 			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>" +
@@ -303,41 +340,66 @@ define([
 		);
 	};
 	
-	StationDetails.prototype.populateContaminantControl = function() {
+	
+	StationDetails.prototype.populateContaminantControl = function(availContaminants) {
 		$("#details-contaminant-control").html("For contaminant: ");
 		var contaminantSelect = $("<select id='details-contaminant-select'></select>");
-		var contaminantQuery = {
-			query: "getAvailableContaminantsAtStation",
-			station: this.query.station
-		};
-		var self = this;
-		$.ajax({
-			async: false, 
-			url: "lib/query.php", 
-			data: contaminantQuery, 
-			dataType: "json", 
-			success: function(data) {
-				for(var i = 0; i < data.length; i++) {
-					contaminantSelect.append(
-						$("<option>", {value: data[i][0]}).text(data[i][0])
-					);
-				}
-				$("#details-contaminant-control").append(contaminantSelect);
-				contaminantSelect.val(self.query.contaminant);
-				$("#details-contaminant-select").on('change', function() {
-					if(contaminantSelect.val() === self.query.contaminant) {
-						return;
-					}
-					self.query.contaminant = contaminantSelect.val();
-					self.open({
-						station: self.station, 
-						query: self.query, 
-						nearbySpecies: self.tabs.nearby.species, 
-						tab: self.activeTab
-					});
-				});
+		for(var i = 0; i < this.allContaminants.length; i++) {
+			var option = $("<option>", {value: this.allContaminants[i]}).text(this.allContaminants[i]);
+			if($.inArray(this.allContaminants[i], availContaminants) >= 0) {
+				option.css({'font-weight': 'bolder'});
+			} else {
+				option.css({'color': '#666'});
 			}
+			contaminantSelect.append(option);
+		}
+		$("#details-contaminant-control").append(contaminantSelect);
+		contaminantSelect.val(this.query.contaminant);
+		var self = this;
+		$("#details-contaminant-select").on('change', function() {
+			if(contaminantSelect.val() === self.query.contaminant) {
+				return;
+			}
+			self.query.contaminant = contaminantSelect.val();
+			self.open({
+				station: self.station, 
+				query: self.query, 
+				nearbySpecies: self.tabs.nearby.species, 
+				tab: self.activeTab
+			});
 		});
+	};
+	
+	
+	StationDetails.prototype.noDataMessageAsDiv = function() {
+		if(this.stationHasData) {
+			return $("<div>").html(
+				"No data could be retrieved for this station with the contaminant and year parameters. Try " +
+				"expanding the query year-span or changing the contaminant type."
+			);
+		} else {
+			var self = this;
+			var div = $("<div>").html(
+				"No data was found at this station. Due to _____, all sample data at this station is " + 
+				"filtered out from the map. However, sample data for this station may be recorded in the " + 
+				"full data table, "
+			).append(
+				$("<a>", {
+					href:"#", 
+					text: "available for download here."}
+				).on('click', function() {
+					self.downloadData();
+				})
+			);
+			return div;
+		}
+	};
+	
+	
+	StationDetails.prototype.downloadData = function() {
+		var query = this.copyQuery(this.query);
+		query.species = "highest";
+		this.parent.modules.download.showDownloadDialog(query);
 	};
 	
 	
@@ -368,7 +430,13 @@ define([
 		} else {
 			width += this.scrollbarWidth;
 			dialogDiv.width(width);
-			width += 2*this.contentPadding + 2;	// plus 2 from the border
+			width += 2*this.contentPadding + 2;  // plus 2 from the border
+		}
+		// max width based on body
+		var maxWidth = $("body").width() - 2*(this.contentPadding + this.containerMargin);
+		if(width > maxWidth) {
+			width = maxWidth;
+			dialogDiv.width(maxWidth - 2*this.contentPadding - 2);  // adjust for padding
 		}
 		this.element.width(width);
 		// adjust title width (leave room for close button)
@@ -382,6 +450,38 @@ define([
 			height += 2*this.contentPadding + 2;
 		}
 		this.element.height(height+2*this.containerPadding-1);
+		
+		this.correctPosition();
+	};
+	
+	StationDetails.prototype.correctPosition = function() {
+		var body = $("body");
+		var margin = this.contentPadding + this.containerMargin;
+		var bheight = body.height() - 2*margin;
+		var bwidth = body.width() - 2*margin;
+		
+		var correctIt = false;
+		var pos = this.element.offset();
+		 if(pos.top < margin) {
+			correctIt = true;
+			pos.top = margin;
+		 } else if(pos.top + this.element.height() > bheight) {
+			correctIt = true;
+			pos.top = bheight - this.element.height();
+			if(pos.top < margin) { pos.top = margin; }
+		}
+		if(pos.left < 0) {
+			correctIt = true;
+			pos.left = 0;
+		} else if(pos.left + this.element.width() > bwidth) {
+			correctIt = true;
+			pos.left = bwidth - this.element.width();
+			if(pos.left < margin) { pos.left = margin; }
+		}
+		
+		if(correctIt) {
+			this.element.offset(pos);
+		}
 	};
 	
 	
@@ -426,7 +526,7 @@ define([
 		}
 		if(!hasResult) {
 			// if no result, display no data message
-			$("<div>"+this.tabs.data.noDataMsg+"</div>").appendTo(contentDiv)
+			this.noDataMessageAsDiv().appendTo(contentDiv)
 				.addClass('details-table-row')
 				.width(width)
 				.css("padding", "10px 5px")
@@ -491,7 +591,7 @@ define([
 				height: this.tabs.trends.chartHeight
 			});
 		} else {
-			contentDiv.append(this.tabs.trends.noDataMsg);
+			contentDiv.append(this.noDataMessageAsDiv());
 		}
 		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab("trends");
@@ -573,7 +673,7 @@ define([
 			}
 			if(!hasResult) {
 				// if no result, display no data message
-				$("<div>"+this.tabs.nearby.noDataMsg+"</div>").appendTo(contentDiv)
+				this.noDataMessageAsDiv().appendTo(contentDiv)
 					.addClass('details-table-row')
 					.width(width)
 					.css("padding", "10px 5px")

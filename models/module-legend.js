@@ -39,9 +39,9 @@ define(["d3", "common"], function(d3, common) {
 		$("<div id='show-legend-tab'>Show Legend</div>").appendTo(container)
 			.click(function() { self.legendShow(); })
 			.hide();
-		this.legendContainer = $("<div id='legend-container'>").appendTo(container)
+		this.legendContainer = $("<div id='legend-container'>").appendTo("body")
 			.addClass("container-styled")
-			.draggable({containment: "parent"});
+			.draggable({containment: "body"});
 		$("<div id='legend-content'></div>").appendTo(this.legendContainer)
 			.addClass("inner-container-style")
 			.append("<div id='legend-title'></div>")

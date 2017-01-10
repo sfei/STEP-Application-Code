@@ -518,11 +518,10 @@ define([
 	 * @param {ol.Feature} station - Feature object to option details on.
 	 */
 	STEP.prototype.openStationDetails = function(station) {
-		var options = {
+		this.modules.stationDetails.open({
 			query: this.modules.queryAndUI.lastQuery,
 			station: station
-		};
-		this.modules.stationDetails.open(options);
+		});
 	};
 
 	/**
