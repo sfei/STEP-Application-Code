@@ -154,9 +154,12 @@ define([
 					updateMessageTime = 5000;
 					self.prepSecondQuery = false;
 				}
-				// update thresholds only if contaminant changed
+				// update legend
 				if(options.firstRun || options.firedBy === 'contaminant') {
+					// update thresholds only if contaminant changed
 					self.legend.updateThresholds(data.thresholds, options.selectThresholdGroup);
+				} else {
+					self.legend.updateLegend(self.lastQuery);
 				}
 				// update stations to match query
 				self.parent.updateStations(data.stations);
@@ -525,10 +528,13 @@ define([
 		}
 		if(yearMin === yearMax) {
 			this.yearRangeControl.updateOptions({
-				range: { 'min': yearMin-1, 'max': yearMin+1 },
-				step: 0, 
+				range: { 'min': yearMin-1, 'max': yearMax },
+				step: 1, 
 				connect: true
 			});
+			this.yearRangeControl.set([this.lastQuery.startYear-1, this.lastQuery.endYear]);
+			$("#control-year-range-start").html(yearMin);
+			$("#control-year-range-end").html(yearMax);
 			$("#control-year-range").attr('disabled', true);
 		} else {
 			$("#control-year-range").attr('disabled', false);
@@ -538,10 +544,10 @@ define([
 				connect: true, 
 				behaviour: 'tap-drag'
 			});
+			this.yearRangeControl.set([this.lastQuery.startYear, this.lastQuery.endYear]);
+			$("#control-year-range-start").html(this.lastQuery.startYear);
+			$("#control-year-range-end").html(this.lastQuery.endYear);
 		}
-		this.yearRangeControl.set([this.lastQuery.startYear, this.lastQuery.endYear]);
-		$("#control-year-range-start").val(this.lastQuery.startYear);
-		$("#control-year-range-end").val(this.lastQuery.endYear);
 	};
 
 	/**
