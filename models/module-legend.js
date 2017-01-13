@@ -4,6 +4,7 @@ define(["d3", "common"], function(d3, common) {
 	function Legend(parentStepApp) {
 		this.parent = parentStepApp;
 		this.markerFactory = this.parent.modules.markerFactory;
+		this.contaminant = "";
 		// array of threshold values on which legend fit to
 		this.thresholds;
 		// DOM element container
@@ -23,10 +24,10 @@ define(["d3", "common"], function(d3, common) {
 			"standard", 
 			"custom"
 		];
-		this.nonAdvancedGroups = [
-			"oehha-men-women-over-45", 
-			"oehha-women-1845-children"
-		];
+//		this.nonAdvancedGroups = [
+//			"oehha-men-women-over-45", 
+//			"oehha-women-1845-children"
+//		];
 	};
 	
 	/**
@@ -48,9 +49,9 @@ define(["d3", "common"], function(d3, common) {
 			.append(
 				"<div id='thresholds-control'>" + 
 					"<hr />" + 
-					"<div id='legend-show-adv'>" + 
-						"<input type='checkbox' id='threshold-show-adv' />Show Advanced Options" + 
-					"</div>" +
+//					"<div id='legend-show-adv'>" + 
+//						"<input type='checkbox' id='threshold-show-adv' />Show Advanced Options" + 
+//					"</div>" +
 					"<select id='threshold-group-select'></select>" + 
 				"</div>"
 			)
@@ -69,7 +70,7 @@ define(["d3", "common"], function(d3, common) {
 			.on('change', function() {
 				var group = $("#threshold-group-select option:selected").val();
 				if(group === "customize") {
-					self.showCustomThresholdsPanel($("#map-view"));
+					self.showCustomThresholdsPanel();
 				} else {
 					self.selectedThresholdGroup = group;
 					self.thresholdsChanged();
@@ -163,7 +164,7 @@ define(["d3", "common"], function(d3, common) {
 		// empty and fill select
 		var selectElem = $("#threshold-group-select").html("");
 		var recognizedGroups = [];
-		var nonAdvancedExists = false;
+//		var nonAdvancedExists = false;
 		for(var i = 0; i < this.thresholdOrder.length; i++) {
 			var group = this.thresholdOrder[i];
 			if(group in this.thresholds) {
@@ -173,14 +174,15 @@ define(["d3", "common"], function(d3, common) {
 				}
 				var option = $("<option>", {value: group}).appendTo(selectElem)
 					.text(this.thresholdGroups[group]);
-				if($.inArray(group, this.nonAdvancedGroups) < 0) {
-					option.attr("class", "adv-thres-grp");
-				} else {
-					option.attr("class", "non-adv-thres-grp");
-					if(!nonAdvancedExists) {
-						nonAdvancedExists = true;
-					}
-				}
+//				if($.inArray(group, this.nonAdvancedGroups) < 0) {
+//					option.attr("class", "adv-thres-grp");
+//				} else {
+//					option.attr("class", "non-adv-thres-grp");
+//					if(!nonAdvancedExists) {
+//						nonAdvancedExists = true;
+//					}
+//				}
+				option.attr("class", "adv-thres-grp");
 			}
 		}
 		for(var group in this.thresholds) {
@@ -206,12 +208,12 @@ define(["d3", "common"], function(d3, common) {
 			.text(this.thresholdGroups.custom)
 			.prop("disabled", true)
 			.css("display", "none");
-		if(nonAdvancedExists) {
-			selectElem.find(".adv-thres-grp").css("display", "none");
-			$("#threshold-show-adv").prop('checked', false).prop('disabled', false);
-		} else {
-			$("#threshold-show-adv").prop('checked', true).prop('disabled', true);
-		}
+//		if(nonAdvancedExists) {
+//			selectElem.find(".adv-thres-grp").css("display", "none");
+//			$("#threshold-show-adv").prop('checked', false).prop('disabled', false);
+//		} else {
+//			$("#threshold-show-adv").prop('checked', true).prop('disabled', true);
+//		}
 	};
 
 	/**
@@ -227,7 +229,7 @@ define(["d3", "common"], function(d3, common) {
 			data: queryParams, 
 			dataType: 'json', 
 			success: function(data) {
-				self.updateThresholds(data);
+				self.updateThresholds(queryParams.contaminant, data);
 			}, 
 			error: function(e) {
 				alert(defaultErrorMessage + "(Error Thresholds)");
@@ -239,6 +241,7 @@ define(["d3", "common"], function(d3, common) {
 	 * Update the thresholds and accordingly update the legend and style function (specifically the value 
 	 * function in the MarkerFactory). As such call after getting the returned data from a query but before 
 	 * reloading the stations layer.
+	 * @params {string} contaminant - The contaminant name.
 	 * @param {Object[]} data - The thresholds data returned by the query or the custom thresholds set by the 
 	 *        user.
 	 * @param {number} data[].value - The threshold value.
@@ -247,7 +250,8 @@ define(["d3", "common"], function(d3, common) {
 	 * @param {boolean} custom - If set true (for user-set thresholds), this validates and corrects the input 
 	 *        thresholds as necessary.
 	 */
-	Legend.prototype.updateThresholds = function(data, selectThresholdGroup, custom) {
+	Legend.prototype.updateThresholds = function(contaminant, data, selectThresholdGroup, custom) {
+		this.contaminant = contaminant;
 		// convert to numeric type
 		if(!custom) {
 			var dataByGroup = {};
@@ -329,7 +333,7 @@ define(["d3", "common"], function(d3, common) {
 	 * Update the colors (both for the legend and the layer symbology) according to the new thresholds. Takes no 
 	 * parameters but instead uses the global {@link #thresholds}. Updates the MarkerFactory to do this, which is 
 	 * linked to the style function for the stations layer. Does not usually have to be called explicitly as it's 
-	 * called in {@link #updateThresholds(data,selectThresholdGroup,validate)}.
+	 * called in {@link #updateThresholds(contaminant, data,selectThresholdGroup,validate)}.
 	 */
 	Legend.prototype.updateThresholdStyles = function() {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
@@ -478,7 +482,7 @@ define(["d3", "common"], function(d3, common) {
 	/**
 	 * Show/create the custom thresholds panel.
 	 */
-	Legend.prototype.showCustomThresholdsPanel = function(query) {
+	Legend.prototype.showCustomThresholdsPanel = function() {
 		var self = this;
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
 		var panel = $("<div id='custom-thresholds-content'></div>")
@@ -490,7 +494,7 @@ define(["d3", "common"], function(d3, common) {
 			'text-align': 'center'
 		};
 		// add title
-		panel.append("<span style='font-weight:bolder;font-size:16px;'>Customize " + query.contaminant + " Thresholds</span><hr />");
+		panel.append("<span style='font-weight:bolder;font-size:16px;'>Customize " + this.contaminant + " Thresholds</span><hr />");
 		// append threshold inputs
 		var inputs = $("<div id='custom-thresholds-inputs-container'></div>").appendTo(panel);
 		var i = thresholdsData.length;
@@ -546,7 +550,7 @@ define(["d3", "common"], function(d3, common) {
 			common.hideModal();
 			//thresholdsContainer.remove(); 
 			//thresholdsContainer = null;
-			var updated = self.updateThresholds(data, null, true);
+			var updated = self.updateThresholds(self.contaminant, data, null, true);
 			if(updated) {
 				// set to hidden custom option
 				$("#threshold-group-select").val("custom");

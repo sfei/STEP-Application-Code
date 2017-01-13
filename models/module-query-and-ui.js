@@ -157,7 +157,7 @@ define([
 				// update legend
 				if(options.firstRun || options.firedBy === 'contaminant') {
 					// update thresholds only if contaminant changed
-					self.legend.updateThresholds(data.thresholds, options.selectThresholdGroup);
+					self.legend.updateThresholds(options.query.contaminant, data.thresholds, options.selectThresholdGroup);
 				} else {
 					self.legend.updateLegend(self.lastQuery);
 				}

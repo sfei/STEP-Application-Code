@@ -178,10 +178,6 @@ img.attribution-logo {
   height: 100%;
   overflow: hidden;
 }
-.ol-zoom {
-  //left: auto;
-  //right: 410px;
-}
 #station-tooltip {
   position: absolute;
   background-color: #000;
@@ -251,7 +247,7 @@ img.attribution-logo {
   font-size: 13px;
 }
 .control-tab-active {
-  //font-weight: bolder;
+  /*font-weight: bolder;*/
 }
 .controls-group {
   display: block;
