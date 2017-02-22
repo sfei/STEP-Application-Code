@@ -11,7 +11,7 @@ require_once('StepQueries.php');
 
 $query = getQuery();
 $instance = StepQueries::getInstance();
-$result = $instance->getNearbyStationsRecords($query);
+$result = $instance->get10NearestStationsRecords($query);
 
 // save results to session
 session_start();

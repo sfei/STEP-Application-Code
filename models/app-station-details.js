@@ -1,4 +1,3 @@
-
 /**
  * The StationDetails object handles the window that opens when you click a station. There is quite a lot of 
  * functionality provided, which is generally organized into tabs. Only one window may be open at a time, but 
@@ -9,11 +8,19 @@
  * @param {Object} query - Query object. Optional.
  * @returns {StationDetails}
  */
-var StationDetails = function(query) {
+define([
+	"common",
+	"OpenLayers", 
+	"noUiSlider", 
+	"./module-scatterplot"
+], function(common, ol, noUiSlider, Scatterplot) {
 	
-	this.init = function(query) {
+	//********************************************************************************************************
+	// Constructor(s)
+	//********************************************************************************************************
+	function StationDetails(parentStepApp) {
+		this.parent = parentStepApp;
 		var self = this;
-		//****************************************************************************************************
 		// All customizable variables below (but do it by manually coding, not dynamically)
 		//****************************************************************************************************
 		// the id for the container for any created details dialog
@@ -21,6 +28,7 @@ var StationDetails = function(query) {
 		// styles for a few things that appear frequently and/or has cascading effects on parent/child 
 		// elements so is easier to set here as variables
 		this.titleDivPadLeft = 12;
+		this.containerMargin = 4;
 		this.containerPadding = 2;
 		this.contentPadding = 4;
 		this.style = {
@@ -32,7 +40,7 @@ var StationDetails = function(query) {
 		// can adjust every place where it is called in one line
 		this.scrollbarWidth = 20;
 		// tabs configurations
-		this.tabs = { 
+		this.tabs = {
 			data: {
 				label: "Data", 
 				tabId: "details-tab-data", 
@@ -49,8 +57,7 @@ var StationDetails = function(query) {
 					}
 					return "What records exist for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
 				},
-				bottomMsg: "A result of ND means the concentration was below detection limits.", 
-				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
+				bottomMsg: "A result of ND means the concentration was below detection limits."
 			}, 
 			trends: {
 				label: "Trends", 
@@ -66,8 +73,7 @@ var StationDetails = function(query) {
 						yearMsg = "in " + query.startYear;
 					}
 					return "What are the trends for " + query.contaminant + " at \"" + query.station + "\" " + yearMsg + "?";
-				}, 
-				noDataMsg: "No data could be retrieved for this station with the contaminant and year parameters. Try expanding the query year-span or changing the contaminant type."
+				}
 			}, 
 			nearby: {
 				label: "Nearby", 
@@ -86,20 +92,19 @@ var StationDetails = function(query) {
 					}
 					return "How does \"" + query.station + "\" compare to nearby water bodies " + yearMsg + "?";
 				},
-				bottomMsg: "A result of ND means the concentration was below detection limits.", 
-				noDataMsg: "No nearby water bodies to compare data against. Try expanding the query year-span or species type."
+				bottomMsg: "A result of ND means the concentration was below detection limits."
 			}, 
 			report: {
 				label: "Print Report", 
 				tabId: "details-tab-report", 
 				click: self.openTabReport, 
 				width: 550,
+				slider: null, 
 				titleFunction: function(query) {
 					return "Generate and Print Summary Report";
 				}
 			}
 		};
-		//****************************************************************************************************
 		// End of customization block
 		//****************************************************************************************************
 		// get table widths by summing column widths
@@ -110,6 +115,7 @@ var StationDetails = function(query) {
 				this.tabs[t].tableWidth += this.tabs[t].colWidths.length*4;
 			}
 		}
+		this.activeTab = null;
 		// the element that contains the dialog box/tabs
 		if($("#details-container").length === 0) {
 			this.createDetailsDialog();
@@ -118,96 +124,28 @@ var StationDetails = function(query) {
 		}
 		// open data/query
 		this.isOpen = false;
-		this.open(query);
-	};
-		
-	this.open = function(inputQuery) {
-		if(!inputQuery) { return; }
-		// the query that constructed this
-		this.query = this.copyQuery(inputQuery.query);
-		if(inputQuery.station) {
-			this.station = inputQuery.station;
-			this.query.station = this.station.get("name");
-		}
-		// this needs to be reset
-		this.tabs.nearby.species = null;
-		// put station name from query and place loading message
-		this.setTitle();
-		this.openLoadingMessage();
-		this.element.show();
-		this.isOpen = true;
-		// nearby data is left null until specifically requested
-		this.nearbyData = null;
-		// get the data at least for the data and trends tabs
-		this.stationData = null;
-		// self refernce necessary for callbacks
+		// whether selected station has any data at all
+		this.stationHasData = true;
+		// get list of all contaminants
+		this.allContaminants = [];
 		var self = this;
 		$.ajax({
 			async: false, 
-			url: "lib/getStationData.php", 
-			data: this.query, 
+			url: "lib/query.php", 
+			data: {query: "getAllContaminants"}, 
 			dataType: "json", 
 			success: function(data) {
-				//console.log(data);
-				self.stationData = data;
-				self.openTabData();
-			},
-			error: function(e) {
-				//self.openErrorMessage();
-				alert(defaultErrorMessage + "(Error StationData)");
+				for(var i = 0; i < data.length; i++) {
+					self.allContaminants.push(data[i][0]);
+				}
 			}
 		});
 	};
 	
-	this.reload = function(newQueryOnly) {
-		this.open({
-			station: this.station, 
-			query: newQueryOnly
-		});
-	};
 	
-	this.copyQuery = function(toCopy) {
-		//this.query = Object.assign({}, copyQuery);
-		var theCopy = {};
-		for(var v in toCopy) {
-			if(toCopy.hasOwnProperty(v)) {
-				theCopy[v] = toCopy[v];
-			}
-		}
-		return theCopy;
-	};
-	
-	this.loadNearbyData = function() {
-		// load default selection for species type
-		if(this.tabs.nearby.species === null) {
-			this.tabs.nearby.species = this.query.species;
-		}
-		// create new query with possibly divergent species type
-		var nearbyQuery = this.copyQuery(this.query);
-		nearbyQuery.species = this.tabs.nearby.species;
-		//console.log(nearbyQuery);
-		// synchronized ajax call
-		var returnData = null;
-		$.ajax({
-			async: false, 
-			url: "lib/getNearbyData.php", 
-			data: nearbyQuery, 
-			dataType: "json", 
-			success: function(data) {
-				//console.log(data);
-				returnData = data;
-			},
-			error: function(e) {
-				// does nothing at the moment
-				//alert(defaultErrorMessage + "(Error NearbyData)");
-			}
-		});
-		return returnData;
-	};
-	
-	this.createDetailsDialog = function() {
+	StationDetails.prototype.createDetailsDialog = function() {
 		this.element = $(
-			"<div id='details-container" + "' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
+			"<div id='details-container' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
 				"<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
 					"<div id='details-title' class='grab'></div>" + // title set elsewhere
 					"<div id='details-info'></div>" +
@@ -217,7 +155,7 @@ var StationDetails = function(query) {
 					"<div id='details-content'></div>" + 
 				"</div>" + 
 			"</div>"
-		).appendTo($('#'+this.parentId));
+		).appendTo("body");
 		// add tabs programmatically
 		var self = this;
 		var tabsList = this.element.find("#details-dialog-tabs");
@@ -233,11 +171,13 @@ var StationDetails = function(query) {
 					);
 			}
 		}
+		tabsList.append("<div id='details-contaminant-control'></div>");
 		// While addGrabCursorFunctionality() exists in map.js, do this a little specifically so grab cursor 
 		// appears on title bar only
 		var titleElement = this.element.find("#details-title").addClass("grab");
-		this.element.hide()
-			.draggable({containment: "#"+this.parentId})
+		this.element
+			.hide()
+			.draggable({containment: "body"})
 			.mousedown(function(evt) {
 				self.element.addClass("grabbing");
 				titleElement.removeClass("grab");
@@ -248,7 +188,101 @@ var StationDetails = function(query) {
 			});
 	};
 	
-	this.setTitle = function() {
+	
+	//********************************************************************************************************
+	// Open/load calls
+	//********************************************************************************************************
+	StationDetails.prototype.open = function(params) {
+		if(!params) { return; }
+		// the query that constructed this
+		this.query = this.copyQuery(params.query);
+		this.query.query = "getStationRecords";
+		if(params.station) {
+			this.station = params.station;
+			this.query.station = this.station.get("name");
+		}
+		// this needs to be reset, maybe
+		this.tabs.nearby.species = params.nearbySpecies ? params.nearbySpecies : null;
+		// put station name from query and place loading message
+		this.setTitle();
+		this.element.find("#details-contaminant-control").html("");
+		this.openLoadingMessage();
+		// get list of available contaminants
+		var availContaminants = [];
+		var contaminantQuery = {
+			query: "getAvailableContaminantsAtStation",
+			station: this.query.station
+		};
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: contaminantQuery, 
+			dataType: "json", 
+			success: function(data) {
+				for(var i = 0; i < data.length; i++) {
+					availContaminants.push(data[i][0]);
+				}
+			}
+		});
+		this.populateContaminantControl(availContaminants);
+		this.stationHasData = availContaminants.length > 0;
+		// if not already open, show and center the container
+		if(!this.isOpen) {
+			this.element.show();
+			this.correctPosition();
+			this.isOpen = true;
+		}
+		// nearby data is left null until specifically requested
+		this.nearbyData = null;
+		// get the data at least for the data and trends tabs
+		this.stationData = null;
+		// self refernce necessary for callbacks
+		var self = this;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: this.query, 
+			dataType: "json", 
+			success: function(data) {
+				//console.log(data);
+				self.stationData = data;
+				switch(params.tab) {
+					case "report":
+						self.openTabReport();
+						break;
+					case "nearby":
+						self.openTabNearby();
+						break;
+					case "trends":
+						self.openTabTrends();
+						break;
+					case "data":
+					default:
+						self.openTabData();
+				}
+			},
+			error: function(e) {
+				//self.openErrorMessage();
+				alert(defaultErrorMessage + "(Error StationData)");
+			}
+		});
+	};
+	
+	
+	StationDetails.prototype.copyQuery = function(toCopy) {
+		//this.query = Object.assign({}, copyQuery);
+		var theCopy = {};
+		for(var v in toCopy) {
+			theCopy[v] = toCopy[v];
+		}
+		return theCopy;
+	};
+	
+	
+	//********************************************************************************************************
+	// Loading and non-tab related content
+	//********************************************************************************************************	
+	StationDetails.prototype.setTitle = function() {
 		// station name
 		this.element.find("#details-title").html(
 			"<div id='details-station-name'>" + this.query.station + "</div>" + 
@@ -274,29 +308,31 @@ var StationDetails = function(query) {
 		} else {
 			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
 		}
-		var listLinks = $("<ul></ul>");
-		listLinks.append(
+		var listLinks = $("<ul></ul>").append(
 			$("<li></li>").html(
-				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + 
-					advisoryName + 
-				"</a>"
-		));
+				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + advisoryName + "</a>"
+			)
+		);
 		// link for tidal datum if coastal type
 		if(this.station.get("waterType").search(/coast/i) >= 0) {
 			var coords = ol.proj.toLonLat(this.station.getGeometry().getCoordinates());
+			var tidesUrl = (
+				"https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor="
+				+ coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4)
+			);
 			listLinks.append(
 				$("<li></li>").html(
 					"<a id='details-tides' " + 
-						"href='https://tidesandcurrents.noaa.gov/tide_predictions.html?type=Tide+Predictions&searchfor=" + 
-							coords[1].toFixed(4) + "%2C+" + coords[0].toFixed(4) + "' target='_blank'>" + 
+						"href='"+tidesUrl+"' target='_blank'>" + 
 						"Find nearest <b>Tidal Prediction Stations</b> for this location" + 
 					"</a>"
 			));
 		}
 		this.element.find("#details-info").html(listLinks);
-	};	
+	};
 	
-	this.openLoadingMessage = function() {
+	
+	StationDetails.prototype.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
 			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>" +
 				"<img src='images/ajax-loader.gif' alt='loading' /> Loading data..." + 
@@ -304,32 +340,103 @@ var StationDetails = function(query) {
 		);
 	};
 	
-	this.setActiveTab = function(tab) {
+	
+	StationDetails.prototype.populateContaminantControl = function(availContaminants) {
+		$("#details-contaminant-control").html("For contaminant: ");
+		var contaminantSelect = $("<select id='details-contaminant-select'></select>");
+		for(var i = 0; i < this.allContaminants.length; i++) {
+			var option = $("<option>", {value: this.allContaminants[i]}).text(this.allContaminants[i]);
+			if($.inArray(this.allContaminants[i], availContaminants) >= 0) {
+				option.css({'font-weight': 'bolder'});
+			} else {
+				option.css({'color': '#666'});
+			}
+			contaminantSelect.append(option);
+		}
+		$("#details-contaminant-control").append(contaminantSelect);
+		contaminantSelect.val(this.query.contaminant);
+		var self = this;
+		$("#details-contaminant-select").on('change', function() {
+			if(contaminantSelect.val() === self.query.contaminant) {
+				return;
+			}
+			self.query.contaminant = contaminantSelect.val();
+			self.open({
+				station: self.station, 
+				query: self.query, 
+				nearbySpecies: self.tabs.nearby.species, 
+				tab: self.activeTab
+			});
+		});
+	};
+	
+	
+	StationDetails.prototype.noDataMessageAsDiv = function() {
+		if(this.stationHasData) {
+			return $("<div>").html(
+				"No data could be retrieved for this station with the contaminant and year parameters. Try " +
+				"expanding the query year-span or changing the contaminant type."
+			);
+		} else {
+			var self = this;
+			var div = $("<div>").html(
+				"No data was found at this station. Due to _____, all sample data at this station is " + 
+				"filtered out from the map. However, sample data for this station may be recorded in the " + 
+				"full data table, "
+			).append(
+				$("<a>", {
+					href:"#", 
+					text: "available for download here."}
+				).on('click', function() {
+					self.downloadData();
+				})
+			);
+			return div;
+		}
+	};
+	
+	
+	StationDetails.prototype.downloadData = function() {
+		var query = this.copyQuery(this.query);
+		query.species = "highest";
+		this.parent.modules.download.showDownloadDialog(query);
+	};
+	
+	
+	//********************************************************************************************************
+	// Tab Controls
+	//********************************************************************************************************
+	StationDetails.prototype.setActiveTab = function(tabName) {
+		if(!this.tabs[tabName]) {
+			return;
+		}
+		this.activeTab = tabName;
 		for(var t in this.tabs) {
-			if(this.tabs.hasOwnProperty(t)) {
-				var element = $("#"+this.tabs[t].tabId);
-				if(this.tabs[t] === tab) {
-					element
-					  .removeClass("details-tab")
-					  .addClass("details-tab-active");
-				} else {
-					element
-					  .removeClass("details-tab-active")
-					  .addClass("details-tab");
-				}
+			var element = $("#"+this.tabs[t].tabId);
+			if(t === this.activeTab) {
+				element.removeClass("details-tab").addClass("details-tab-active");
+			} else {
+				element.removeClass("details-tab-active").addClass("details-tab");
 			}
 		}
 	};
 	
+	
 	// getting divs to fit content across all browsers via css is a pain so just do it manually
-	this.adjustContainerDimensions = function(width, height) {
+	StationDetails.prototype.adjustContainerDimensions = function(width, height) {
 		var dialogDiv = this.element.find("#details-dialog");
 		if(!width || width <= 0) { 
 			width = dialogDiv.width();
 		} else {
 			width += this.scrollbarWidth;
 			dialogDiv.width(width);
-			width += 2*this.contentPadding + 2;	// plus 2 from the border
+			width += 2*this.contentPadding + 2;  // plus 2 from the border
+		}
+		// max width based on body
+		var maxWidth = $("body").width() - 2*(this.contentPadding + this.containerMargin);
+		if(width > maxWidth) {
+			width = maxWidth;
+			dialogDiv.width(maxWidth - 2*this.contentPadding - 2);  // adjust for padding
 		}
 		this.element.width(width);
 		// adjust title width (leave room for close button)
@@ -343,9 +450,45 @@ var StationDetails = function(query) {
 			height += 2*this.contentPadding + 2;
 		}
 		this.element.height(height+2*this.containerPadding-1);
+		
+		this.correctPosition();
 	};
 	
-	this.openTabData = function() {
+	StationDetails.prototype.correctPosition = function() {
+		var body = $("body");
+		var margin = this.contentPadding + this.containerMargin;
+		var bheight = body.height() - 2*margin;
+		var bwidth = body.width() - 2*margin;
+		
+		var correctIt = false;
+		var pos = this.element.offset();
+		 if(pos.top < margin) {
+			correctIt = true;
+			pos.top = margin;
+		 } else if(pos.top + this.element.height() > bheight) {
+			correctIt = true;
+			pos.top = bheight - this.element.height();
+			if(pos.top < margin) { pos.top = margin; }
+		}
+		if(pos.left < 0) {
+			correctIt = true;
+			pos.left = 0;
+		} else if(pos.left + this.element.width() > bwidth) {
+			correctIt = true;
+			pos.left = bwidth - this.element.width();
+			if(pos.left < margin) { pos.left = margin; }
+		}
+		
+		if(correctIt) {
+			this.element.offset(pos);
+		}
+	};
+	
+	
+	//********************************************************************************************************
+	// Data Tab
+	//********************************************************************************************************
+	StationDetails.prototype.openTabData = function() {
 		var yearMsg;
 		if(this.query.startYear !== this.query.endYear) {
 			yearMsg = "between " + this.query.startYear + "-" + this.query.endYear;
@@ -383,7 +526,7 @@ var StationDetails = function(query) {
 		}
 		if(!hasResult) {
 			// if no result, display no data message
-			$("<div>"+this.tabs.data.noDataMsg+"</div>").appendTo(contentDiv)
+			this.noDataMessageAsDiv().appendTo(contentDiv)
 				.addClass('details-table-row')
 				.width(width)
 				.css("padding", "10px 5px")
@@ -418,11 +561,15 @@ var StationDetails = function(query) {
 			);
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.data);
+		this.setActiveTab("data");
 		this.adjustContainerDimensions(this.tabs.data.tableWidth);
 	};	
 	
-	this.openTabTrends = function() {
+	
+	//********************************************************************************************************
+	// Trends Tab
+	//********************************************************************************************************
+	StationDetails.prototype.openTabTrends = function() {
 		// title
 		var contentDiv = this.element.find("#details-content");
 		contentDiv.html(
@@ -432,7 +579,7 @@ var StationDetails = function(query) {
 		);
 		if(this.stationData && this.stationData.length > 0) {
 			// not used but it returns the svg object (already added to container via the options)
-			var svg = Scatterplot.create({
+			var svg = Scatterplot({
 				container: "details-content",
 				data: this.stationData, 
 				dataPointName: 'species', 
@@ -444,14 +591,18 @@ var StationDetails = function(query) {
 				height: this.tabs.trends.chartHeight
 			});
 		} else {
-			contentDiv.append(this.tabs.trends.noDataMsg);
+			contentDiv.append(this.noDataMessageAsDiv());
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.trends);
+		this.setActiveTab("trends");
 		this.adjustContainerDimensions(this.tabs.trends.chartWidth);
 	};
 	
-	this.openTabNearby = function() {
+	
+	//********************************************************************************************************
+	// Nearby Tab
+	//********************************************************************************************************
+	StationDetails.prototype.openTabNearby = function() {
 		if(!this.nearbyData) {
 			// if data does not exist, attempt to load it from server
 			this.openLoadingMessage();
@@ -482,8 +633,12 @@ var StationDetails = function(query) {
 			);
 			// add all available species to the list
 			var speciesSelect = contentDiv.find("#details-species-control");
-			for(var i = 0; i < speciesList.length; i++) {
-				speciesSelect.append("<option value=\"" + speciesList[i][0] + "\">" + speciesList[i][0] + "</option>");
+			for(var i = 0; i < this.parent.modules.queryAndUI.speciesList.length; i++) {
+				speciesSelect.append(
+					$("<option>", {
+						value: this.parent.modules.queryAndUI.speciesList[i][0]
+					}).html(this.parent.modules.queryAndUI.speciesList[i][0])
+				);
 			}
 			// set the currently selected option
 			speciesSelect.val(this.tabs.nearby.species);
@@ -518,7 +673,7 @@ var StationDetails = function(query) {
 			}
 			if(!hasResult) {
 				// if no result, display no data message
-				$("<div>"+this.tabs.nearby.noDataMsg+"</div>").appendTo(contentDiv)
+				this.noDataMessageAsDiv().appendTo(contentDiv)
 					.addClass('details-table-row')
 					.width(width)
 					.css("padding", "10px 5px")
@@ -548,10 +703,10 @@ var StationDetails = function(query) {
 									$(this).css('color', '#000');
 								})
 								.click(function() {
-									var station = getStationByName($(this).html());
+									var station = self.parent.getStationByName($(this).html());
 									if(station) {
-										zoomToStation(station);
-										openStationDetails(station);
+										self.parent.zoomToStation(station);
+										self.parent.openStationDetails(station);
 									}
 								});
 						}
@@ -571,11 +726,44 @@ var StationDetails = function(query) {
 			}
 		}
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.nearby);
+		this.setActiveTab("nearby");
 		this.adjustContainerDimensions(this.tabs.nearby.tableWidth);
 	};
 	
-	this.openTabReport = function(reportQuery) {
+	StationDetails.prototype.loadNearbyData = function() {
+		// load default selection for species type
+		if(this.tabs.nearby.species === null) {
+			this.tabs.nearby.species = this.query.species;
+		}
+		// create new query with possibly divergent species type
+		var nearbyQuery = this.copyQuery(this.query);
+		nearbyQuery.query = "getNearbyData";
+		nearbyQuery.species = this.tabs.nearby.species;
+		//console.log(nearbyQuery);
+		// synchronized ajax call
+		var returnData = null;
+		$.ajax({
+			async: false, 
+			url: "lib/query.php", 
+			data: nearbyQuery, 
+			dataType: "json", 
+			success: function(data) {
+				//console.log(data);
+				returnData = data;
+			},
+			error: function(e) {
+				// does nothing at the moment
+				//alert(defaultErrorMessage + "(Error NearbyData)");
+			}
+		});
+		return returnData;
+	};
+	
+	
+	//********************************************************************************************************
+	// Report Tab
+	//********************************************************************************************************
+	StationDetails.prototype.openTabReport = function(reportQuery) {
 		// use last report query (which must be stored separately as it can adjust years)
 		if(!reportQuery) {
 			reportQuery = this.copyQuery(this.query);
@@ -596,7 +784,7 @@ var StationDetails = function(query) {
 			)
 			// Year select
 			.append(
-				$("<div id='select-year-range-container'></div>")
+				$("<div id='report-year-range-container'></div>")
 					.css({
 						'display': 'block', 
 						'clear': 'both', 
@@ -604,15 +792,14 @@ var StationDetails = function(query) {
 						'text-align': 'center'
 					})
 					.append(
-						"<div id='select-year-range-start' style='display:inline-block;font-weight:bolder;'>" + reportQuery.startYear + "</div>" + 
-						"<div id='select-year-range' style='display:inline-block;width:300px;margin:0px 20px;'></div>" +
-						"<div id='select-year-range-end' style='display:inline-block;font-weight:bolder;'>" + reportQuery.endYear + "</div>"
+						"<div id='report-year-range-start' style='display:inline-block;font-weight:bolder;'>" + reportQuery.startYear + "</div>" + 
+						"<div id='report-year-range' style='display:inline-block;width:300px;margin:0px 20px;'></div>" +
+						"<div id='report-year-range-end' style='display:inline-block;font-weight:bolder;'>" + reportQuery.endYear + "</div>"
 					)
 			)
 			// Miles select
 			.append(
-				"Within a distance of <select id='report-select-miles' style='font-weight:bold;'></select> miles from " + 
-				"<b>" + reportQuery.station + "</b><br />"
+				"For <b>" + reportQuery.station + "</b> and its 10 nearest stations.<br />"
 			)
 			// Submit button
 			.append(
@@ -628,75 +815,75 @@ var StationDetails = function(query) {
 					})
 			);
 		// get all years for query
-		var yearSlider;
+		var self = this;
 		$.ajax({
-			url: "lib/getAvailableYearSpan.php", 
-			data: { contaminant: reportQuery.contaminant, species: "highest"}, 
+			url: "lib/query.php", 
+			data: {
+				query: "getAvailableYearSpan", 
+				contaminant: reportQuery.contaminant,
+				species: "highest"
+			}, 
 			dataType: 'json', 
 			success: function(data) {
 				// slider fails if start and end year are the same
 				if(data.min !== data.max) {
 					// create range slider
-					yearSlider = noUiSlider.create(document.getElementById('select-year-range'), {
-						start: [reportQuery.startYear, reportQuery.endYear],
-						step: 1, 
-						connect: true, 
-						range: { 'min': data.min, 'max': data.max }
-					});
+					if(self.tabs.report.slider) {
+						self.tabs.report.slider.destroy();
+					}
+					self.tabs.report.slider = noUiSlider.create(
+						document.getElementById('report-year-range'),
+						{
+							range: { 'min': data.min, 'max': data.max }, 
+							start: [reportQuery.startYear, reportQuery.endYear],
+							step: 1, 
+							connect: true, 
+							behaviour: 'tap-drag'
+						}
+					);
 					// bind values to display
 					var display = [
-						document.getElementById("select-year-range-start"), 
-						document.getElementById("select-year-range-end")
+						document.getElementById("report-year-range-start"), 
+						document.getElementById("report-year-range-end")
 					];
-					yearSlider.on('update', function(values, handle) {
+					self.tabs.report.slider.on('update', function(values, handle) {
 						display[handle].innerHTML = parseInt(values[handle]);
 					});
 				} else {
 					// if a single year, just remove that part of the options
-					$("#select-year-range-container").html("Data only available for year <b>" + data.min + "</b>");
+					$("#report-year-range-container").html("Data only available for year <b>" + data.min + "</b>");
 				}
 			}
 		});
-		// append select options
-		var selectMiles = this.element.find("#report-select-miles")
-			.append("<option value=5>5</option>")
-			.append("<option value=10>10</option>")
-			.append("<option value=15>15</option>")
-			.append("<option value=20>20</option>")
-			.append("<option value=25>25</option>")
-			.append("<option value=30>30</option>")
-			.val(reportQuery.radiusMiles);
-		if(!selectMiles.val()) { selectMiles.val(10); }
+		
 		// add click functionality
 		var self = this;
 		contentDiv.find("#create-report").on("click", function() { 
-			// grab parameters from options
-			reportQuery.radiusMiles = selectMiles.val();
-			if(yearSlider) {
+			if(self.tabs.report.slider) {
 				// if no slider, leave as default query, which should've already been adjusted for years available
-				var yearRange = yearSlider.get();
+				var yearRange = self.tabs.report.slider.get();
 				reportQuery.startYear = parseInt(yearRange[0]);
 				reportQuery.endYear = parseInt(yearRange[1]);
 			}
 			// open loading message after getting parameters
 			self.openLoadingMessage();
 			// ajax call to gather data (use async to keep new window call shallower and hopefull avoid popup blocking)
-			var success = false;
+			var onSuccess = false;
 			$.ajax({
 				async: false, 
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) { success = true; },
+				success: function(response) { onSuccess = true; },
 				error: function(e) { }
 			});
-			if(success) {
+			if(onSuccess) {
 				if(self.reportWindow && !self.reportWindow.closed) {
 					// close if it already exists (reopening is only way to bring into focus with new browsers)
 					self.reportWindow.close();
 				}
 				// open new window with data (which will be stored in session)
-				self.reportWindow = newWindow(null, "lib/generateSummaryReport.php", "Summary Report", 750, 950, true);
+				self.reportWindow = newWindow(null, "summaryreport.php", "Summary Report", 750, 950, true);
 				// reset tab html but carry over the last report query
 				self.openTabReport(reportQuery);
 			} else {
@@ -704,11 +891,11 @@ var StationDetails = function(query) {
 			}
 		});
 		// set as active tab and adjust dimension to fit new content
-		this.setActiveTab(this.tabs.report);
+		this.setActiveTab("report");
 		this.adjustContainerDimensions(this.tabs.report.width);
 	};
 	
-	// fire init function
-	this.init(query);
-		
-};
+	
+	return StationDetails;
+	
+});

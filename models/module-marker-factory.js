@@ -1,4 +1,3 @@
-
 /** 
  * Class for handling OpenLayer 3 styles. As it is best to cache similar styles, especially with a large 
  * number of points, creating styles and style functions through this class helps reduce redundancy. 
@@ -7,11 +6,14 @@
  * attribute in all affected features, as this uses that value first and skips the other steps if that cache 
  * exists for a given feature.
  * @param {Object[]} options - optional options to customize style, for more details on available options, see
- *		MarkerFactory.setStyle()
+ *        MarkerFactory.setStyle()
  */
-var MarkerFactory = function(options) {
-	
-	this.init = function(options) {
+define([
+	"OpenLayers", 
+	"./module-color-map"
+], function(ol, ColorMap) {
+
+	function MarkerFactory(options) {
 		// some default values which can be manually changed or change in the style options
 		this.resolution		= 10;
 		this.colorMap		= [[20, 75, 200],  [240, 80, 0]];
@@ -62,7 +64,7 @@ var MarkerFactory = function(options) {
 	 *		inherent property of to determine the resulting label.
 	 * @returns {string} Some text (by default returns null - or no label) 
 	 */
-	this.textFunction = null;
+	MarkerFactory.prototype.textFunction = null;
 	
 	/** 
 	 * Determine the normalized value (i.e. 0-1) which in turns determines the color from the gradient to 
@@ -71,8 +73,8 @@ var MarkerFactory = function(options) {
 	 * @param {OpenLayers.Feature} feature - can accept an OpenLayers feature, thus allowing you to use some 
 	 *		inherent property of to determine the resulting value.
 	 * @returns {number} Normalized value from 0 to 1 inclusive (by default returns 0). 
-   */
-	this.normalizeValue = function(feature) {
+	*/
+	MarkerFactory.prototype.normalizeValue = function(feature) {
 		return 0;
 	};
 	
@@ -85,7 +87,7 @@ var MarkerFactory = function(options) {
 	 *		or a string name for a shape (currently supported are 'circle', 'square', 'triangle', 'diamond', 
 	 *		'cross', and 'x'). By default (if left unchanged) returns the circle shape.
 	 */
-	this.determineShape = function(feature) {
+	MarkerFactory.prototype.determineShape = function(feature) {
 		return "circle";
 	};
 	
@@ -114,7 +116,7 @@ var MarkerFactory = function(options) {
 	 *		label.
 	 * @returns {MarkerFactory} instance of MarkerFactory 
 	 */
-	this.setStyle = function(options) {
+	MarkerFactory.prototype.setStyle = function(options) {
 		var clearCache = false;
 		// gradient options
 		if(options.resolution && options.resolution > 0) {
@@ -205,7 +207,7 @@ var MarkerFactory = function(options) {
 		return false;
 	};
 	
-	this.createShape = function(shape, fill, thestroke) {
+	MarkerFactory.prototype.createShape = function(shape, fill, thestroke) {
 		if(shape === this.shapes.square || shape === "square") {
 			return new ol.style.Style({
 				image: new ol.style.RegularShape({
@@ -276,7 +278,7 @@ var MarkerFactory = function(options) {
 	 * @param {ol.Feature} feature - The feature object the style is being created for.
 	 * @returns {ol.style.Style[]} The computed highlight style. The style is returned in a single-length array.
 	 */
-	this.createHighlightStyle = function(feature) {
+	MarkerFactory.prototype.createHighlightStyle = function(feature) {
 		return this.createLayerStyle(feature, true);
 	};
 	
@@ -286,7 +288,7 @@ var MarkerFactory = function(options) {
 	 * @param {boolean} highlight - Whether to get the default or highlight style.
 	 * @returns {ol.style.Style[]} The computed style. The style is returned in a single-length array.
 	 */
-	this.createLayerStyle = function(feature, highlight) {
+	MarkerFactory.prototype.createLayerStyle = function(feature, highlight) {
 		// first check the cache
 		var styles = feature.get("mfStyle");
 		if(!styles) {
@@ -295,7 +297,7 @@ var MarkerFactory = function(options) {
 			// if no shape object exists, return null
 			if(!this.shapes[shape]) { return null; }
 			// check feature value is not no data value first
-			value = feature.get("value");
+			var value = feature.get("value");
 			if(value > this.nullValue) {
 				// determine the color index
 				var iColor = this.normalizeValue(feature);
@@ -350,6 +352,6 @@ var MarkerFactory = function(options) {
 		return style;
 	};
 	
-	this.init(options);
-	
-};
+	return MarkerFactory;
+
+});
