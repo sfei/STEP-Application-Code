@@ -1,0 +1,11 @@
+/* Custom CSS - The CSS properties in this stylesheet will over-write any original template styles if the same class names are used in addition to custom styles which can also be added. */
+
+img.partners {padding:4px;}
+
+/*   h2 {border-bottom:2px solid #bcbcbc}   */
+
+.blueSubtitle {font-weight:bold; color:#336699;}
+
+.redContent {font-weight:bold; color:#AA0000;}
+
+.greenSubtitle {font-weight: bold; color: #088110; font-size: 1.1em;}
