@@ -1,3 +1,4 @@
 index.html
 step_conns.php
-build/*
+build/step.js
+build/style.css

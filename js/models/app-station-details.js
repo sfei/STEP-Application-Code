@@ -336,7 +336,7 @@ define([
 	StationDetails.prototype.openLoadingMessage = function() {
 		this.element.find("#details-content").html(
 			"<div style='margin:30px 10px;text-align:center;font-weight:bolder;'>" +
-				"<img src='images/ajax-loader.gif' alt='loading' /> Loading data..." + 
+				"<img src='images/loader.gif' alt='loading' /> Loading data..." + 
 			"</div>"
 		);
 	};

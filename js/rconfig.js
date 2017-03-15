@@ -1,9 +1,11 @@
 require.config({
+	export: {
+		
+	}, 
 	shim: {
 		// jQuery/UI plugins
+		//chosen:                   ["jquery"], // chosen was having problems optimizing so modified the source
 		"jquery.ui":              ["jquery"], 
-		chosen:                   ["jquery"], 
-		//"jquery.ui.switchButton": ["jquery.ui"], // this library was causing issues when optimizing so just modified the source
 		"jquery.ui.touch-punch":  ["jquery.ui"]
 	}, 
 	baseUrl: "js", 

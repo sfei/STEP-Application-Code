@@ -78,7 +78,7 @@ define(["common"], function(common) {
 					'text-align': 'center', 
 					'margin': '20px 0'
 				})
-				.html("<img src='images/ajax-loader.gif' alt='loading' /> Preparing file for download..")
+				.html("<img src='images/loader.gif' alt='loading' /> Preparing file for download..")
 			);
 			var buttonStyle = {
 				'display': 'inline-block',
