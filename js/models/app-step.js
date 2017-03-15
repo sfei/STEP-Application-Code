@@ -147,7 +147,7 @@ define([
 		this.modules.legend.init($("#step-container"));
 		
 		// activate functions -- start by populating query options and loading stations by firing an initial query
-		var getVars = getUrlGetVars();
+		var getVars = common.getUrlGetVars();
 		this.modules.queryAndUI.updateQuery({
 			query: this.modules.queryAndUI.defaultQuery, 
 			selectThresholdGroup: getVars.tgroup, 
@@ -383,7 +383,7 @@ define([
 						self.openStationDetails(feature); 
 						return true;	// make sure to return on match to stop cycling through additional features
 					} else if(type === 'mpa') {
-						window.newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
+						common.newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
 						return true;
 					}
 				}

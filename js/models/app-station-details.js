@@ -9,11 +9,12 @@
  * @returns {StationDetails}
  */
 define([
+	"chosen", 
 	"common",
 	"OpenLayers", 
 	"noUiSlider", 
 	"./module-scatterplot"
-], function(common, ol, noUiSlider, Scatterplot) {
+], function(chosen, common, ol, noUiSlider, Scatterplot) {
 	
 	//********************************************************************************************************
 	// Constructor(s)
@@ -883,7 +884,7 @@ define([
 					self.reportWindow.close();
 				}
 				// open new window with data (which will be stored in session)
-				self.reportWindow = newWindow(null, "summaryreport.php", "Summary Report", 750, 950, true);
+				self.reportWindow = common.newWindow(null, "summaryreport.php", "Summary Report", 750, 950, true);
 				// reset tab html but carry over the last report query
 				self.openTabReport(reportQuery);
 			} else {

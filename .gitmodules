@@ -1,0 +1,3 @@
+[submodule "js/lib/common"]
+	path = js/lib/common
+	url = https://siml@bitbucket.org/siml/web-common.git

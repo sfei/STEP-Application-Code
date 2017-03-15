@@ -13,9 +13,10 @@
 // particularly StepQueries.php which holds all the core query functions.
 //************************************************************************************************************
 define([
+	"chosen", 
 	"common", 
 	"noUiSlider"
-], function(common, noUiSlider) {
+], function(chosen, common, noUiSlider) {
 	
 	function QueryAndUI(parentStepApp, defaultQuery) {
 		this.parent = parentStepApp;

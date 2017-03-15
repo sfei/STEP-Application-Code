@@ -1,3 +1,6 @@
+<?php
+$devmode = true;
+?>
 <!DOCTYPE html>
 <html>
   <head>
@@ -5,15 +8,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
-    <link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
-    <link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/nouislider.min.css" />
+    <?php if($devmode) { ?>
     <link rel="stylesheet" href="css/style.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    <script src="js/jquery.ui.touch-punch.min.js"></script>
-    <script src="js/chosen.jquery.min.js"></script>
-    <script src="js/require.js" data-main="init"></script>
+    <script src="js/lib/require.js" data-main="js/init"></script>
+    <?php } else { ?>
+    <link rel="stylesheet" href="build/style.css" />
+    <script src="js/lib/require.js" data-main="build/step"></script>
+    <?php } ?>
   </head>
   <body>
     <!--  header -->
@@ -125,12 +126,6 @@
       <!-- notification popup thingamajig -->
       <div id="notification-container">
         <div id="notification-tab">Notifications go here</div>
-      </div>
-    </div>
-    <!-- modal blocking (for loading dialog usually) -->
-    <div id="modal-container-outer">
-      <div id="modal-container-inner">
-        <div id="loading-dialog"><img src="images/ajax-loader.gif" alt="loading"> Loading Application..</div>
       </div>
     </div>
   </body>
