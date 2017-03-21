@@ -531,15 +531,14 @@ define(["d3", "common"], function(d3, common) {
 			.append(
 				$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
 			);
-		// center it
-		//thresholdsContainer.center();
-		common.setModal(true, true, panel);
+		common.setModal(true, panel, {
+			onClose: function() {
+				$("#threshold-group-select").val(self.selectedThresholdGroup);
+			}
+		});
 		// close functionality
 		$("#custom-thresholds-cancel").click(function() {
 			common.hideModal();
-			//thresholdsContainer.remove();
-			//thresholdsContainer = null;
-			$("#threshold-group-select").val(self.selectedThresholdGroup);
 		});
 		// submit functionality
 		$("#custom-thresholds-submit").click(function() {
@@ -547,9 +546,7 @@ define(["d3", "common"], function(d3, common) {
 			$(".custom-threshold-input").each(function(i, element) {
 				data.push({value: element.value});
 			});
-			common.hideModal();
-			//thresholdsContainer.remove(); 
-			//thresholdsContainer = null;
+			common.hideModal(true);
 			var updated = self.updateThresholds(self.contaminant, data, null, true);
 			if(updated) {
 				// set to hidden custom option
