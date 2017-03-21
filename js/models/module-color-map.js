@@ -8,7 +8,8 @@ define(function() {
 		 */
 		rgb2hex: function(rgb) {
 			return '#' + rgb.map(function(x) { 
-				return ("0" + Math.round(x*255).toString(16)).slice(-2);
+				if(!x) { x = 0; }
+				return ("0" + x.toString(16)).slice(-2);
 			}).join('');
 		}, 
 
@@ -37,9 +38,9 @@ define(function() {
 			if(hsv[1] === 0) {
 				 rgb = [hsv[2],hsv[2],hsv[2]];
 			} else {
-				hsv[0] = hsv[0] / 60;
-				i = Math.floor(hsv[0]);
-				data = [hsv[2]*(1-hsv[1]), hsv[2]*(1-hsv[1]*(hsv[0]-i)), hsv[2]*(1-hsv[1]*(1-(hsv[0]-i)))];
+				var hue = hsv[0] / 60;
+				i = Math.floor(hue);
+				data = [hsv[2]*(1-hsv[1]), hsv[2]*(1-hsv[1]*(hue-i)), hsv[2]*(1-hsv[1]*(1-(hue-i)))];
 				switch(i) {
 					case 0:
 						rgb = [hsv[2], data[2], data[0]];
@@ -61,7 +62,7 @@ define(function() {
 						break;
 				}
 			}
-			return rgb;
+			return rgb.map(function(x) { return Math.round(x*255); });
 		}, 
 
 		/** 
@@ -119,59 +120,77 @@ define(function() {
 			}
 			resolution = parseInt(resolution);
 			var hexColors = [];
-			var spread = colorMap.length;
-			if(spread === 1) {
+			// if only one color, just apply it to all
+			if(colorMap.length === 1) {
 				var hex = this.rgb2hex(colorMap[0]);
 				for(var i = 0; i < resolution; i++) {
 					hexColors.push(hex);
 				}
-			} else if(spread >= resolution) {
-				// just go 1-to-1 for first 10 colors supplied
+				return hexColors;
+			}
+			if(resolution === colorMap.length) {
+				// just go 1-to-1
 				for(var i = 0; i < resolution; i++) {
-					hexColors.push(this.rgb2hex(colorMap[i]));
+					hexColors.push(
+						//this.rgb2hex( this.hsv2rgb( this.rgb2hsv(colorMap[i]) ) )
+						this.rgb2hex(colorMap[i])
+					);
 				}
 			} else {
 				// convert to HSV first
 				var hsvColors = [];
-				for(var i = 0; i < spread; i++) {
+				for(var i = 0; i < colorMap.length; i++) {
 					hsvColors.push(this.rgb2hsv(colorMap[i]));
 				}
-				// setup looping variables
-				var increment = (resolution-1)/(spread - 1);
-				var interpolatePositions = {
-					start: 0, 
-					end: 0
-				};
-				var twoColors = {
-					index: 0, 
-					first: hsvColors[0], 
-					second: hsvColors[0]
-				};
-				// linearlly interpolate between HSV values
-				for(var i = 0; i < resolution; i++) {
-					if(i === 0 || i >= interpolatePositions.end) {
-						interpolatePositions.start = interpolatePositions.end;
-						interpolatePositions.end += increment;
-						twoColors.index++;
-						twoColors.first = twoColors.second;
-						if(twoColors.index < spread) {
-							twoColors.second = hsvColors[twoColors.index];
+				var iHsv = 0, 
+					twoColors = [hsvColors[0], hsvColors[0]], 
+					twoPositions = [0, 0], 
+					colorDiff, 
+					span;
+				for(var r = 0; r <= resolution; r++) {
+					if(r === resolution) {
+						hexColors.push(
+							this.rgb2hex(this.hsv2rgb(hexColors[hsvColors.length-1]))
+						);
+					} else {
+						var rnorm = r/(resolution - 1);
+						// relative position between two colors
+						var rel = (rnorm - twoPositions[0]) / span;
+						// check if getting next hsv
+						if(r === 0 || rel > 1.0) {
+							if(++iHsv > hsvColors.length - 1) {
+								iHsv = hsvColors.length - 1;
+							}
+							twoColors[0] = twoColors[1];
+							twoColors[1] = hsvColors[iHsv];
+							twoPositions[0] = twoPositions[1];
+							twoPositions[1] = parseFloat(iHsv) / (hsvColors.length - 1);
+							span = twoPositions[1] - twoPositions[0];
+							colorDiff = {
+								h: twoColors[1][0] - twoColors[0][0], 
+								s: twoColors[1][1] - twoColors[0][1], 
+								v: twoColors[1][2] - twoColors[0][2]
+							};
+							rel = (rnorm - twoPositions[0]) / span;
 						}
-						twoColors.hdiff = twoColors.second[0] - twoColors.first[0]; 
-						twoColors.sdiff = twoColors.second[1] - twoColors.first[1]; 
-						twoColors.vdiff = twoColors.second[2] - twoColors.first[2];
+						var hsv;
+						if(rel <= 0) {
+							hsv = twoColors[0];
+						} else if(rel >= 1) {
+							hsv = twoColors[1];
+						} else {
+							hsv = [
+								twoColors[0][0] + colorDiff.h * rel, 
+								twoColors[0][1] + colorDiff.s * rel, 
+								twoColors[0][2] + colorDiff.v * rel
+							];
+							// adjust hue if it's past max value
+							if(hsv[0] >= 360) { hsv[0] -= 360; }
+						}
+						hexColors.push(
+							this.rgb2hex(this.hsv2rgb(hsv))
+						);
 					}
-					var pos = (i - interpolatePositions.start) / increment;
-					var hsv = [
-						twoColors.first[0] + twoColors.hdiff * pos, 
-						twoColors.first[1] + twoColors.sdiff * pos, 
-						twoColors.first[2] + twoColors.vdiff * pos
-					];
-					// adjust hue if it's past max value
-					if(hsv[0] >= 360) { hsv[0] -= 360; }
-					hexColors.push(
-						this.rgb2hex( this.hsv2rgb(hsv) )
-					);
 				}
 			}
 			return hexColors;

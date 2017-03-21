@@ -194,8 +194,7 @@ define([
 				this.shapes[k] = new Array(this.resolution+1);
 			}
 			// create hexmap and fills
-			// this will create an array of length resolution+1 (as it's 0 to resolution inclusive)
-			this.hexMap = ColorMap.createHexColorMap(this.colorMap, this.resolution+1);
+			this.hexMap = ColorMap.createHexColorMap(this.colorMap, this.resolution);
 			this.fills = new Array();
 			for(var i = 0; i < this.hexMap.length; i++) {
 				this.fills.push(

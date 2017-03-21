@@ -337,19 +337,18 @@ define(["d3", "common"], function(d3, common) {
 	 */
 	Legend.prototype.updateThresholdStyles = function() {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
-		var numThresholds = thresholdsData.length;
-		var stretchFactor = 3; // for a nice gradient instead of just solid colors
+		var stretchFactor = 1; // 3; for a nice gradient instead of just solid colors
 		// set the style function (see MarkerFactory.js)
 		var self = this;
 		this.markerFactory.setStyle({
-			resolution: numThresholds*stretchFactor,
+			resolution: (1+thresholdsData.length)*stretchFactor,
 			valueFunction: function(feature) {
 				return self.getThresholdColorIndex(feature.get("value"));
 			}
 		});
 		// get the color values for each threshold
-		for(var i = 0; i < numThresholds; i++) {
-			thresholdsData[i].color = this.markerFactory.hexMap[(1+i)*stretchFactor];
+		for(var i = 0; i < thresholdsData.length; i++) {
+			thresholdsData[i].color = this.markerFactory.hexMap[(i+1)*stretchFactor];
 		}
 	};
 
@@ -438,6 +437,7 @@ define(["d3", "common"], function(d3, common) {
 		title += " (" + thresholdsData[0].units + ") " + yearString;
 		$("#legend-title").html(title);
 		var table = $("#legend-table").html("");
+		var lastThreshold = null;
 		// do legend in descending order
 		for(var i = thresholdsData.length-1; i >= -1; i--) {
 			var row = "<div class='legend-table-row'>";
@@ -445,18 +445,23 @@ define(["d3", "common"], function(d3, common) {
 				color: this.markerFactory.hexMap[0], 
 				value: 0, 
 				units: thresholdsData[0].units, 
-				comments: "Not Detected"
+				comments: ""
 			};
-			var label = threshold.value + " " + threshold.units;
+			var label;
 			if(i === thresholdsData.length-1) {
-				label = "&ge; " + label;
-			} else if(i === 0) {
-				label = "&lt; " + label;
-			} else if(threshold.value === 0) {
-				label = "ND";
+				label = "&ge; " + threshold.value;
+			} else if(i === -1) {
+				label = "&lt; " + lastThreshold;
+			} else {
+				label = threshold.value + " - " + lastThreshold;
 			}
+//			} else if(threshold.value === 0) {
+//				label = "ND";
+//			}
+			lastThreshold = threshold.value;
+			label += " " + threshold.units;
 			row += "<div class='legend-table-cell' style='width:21px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-			row += "<div class='legend-table-cell' style='width:55px;margin-right:10px;text-align:right;'>" + label + "</div>";
+			row += "<div class='legend-table-cell' style='width:95px;margin-right:10px;text-align:right;'>" + label + "</div>";
 			row += "<div class='legend-table-cell' style='display:table;width:280px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
 			row += "</div>";
 			table.append(row);
