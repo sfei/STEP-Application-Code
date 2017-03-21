@@ -379,19 +379,15 @@ define(["d3", "common"], function(d3, common) {
 	Legend.prototype.getThresholdColorIndex = function(value) {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
 		var numThresholds = thresholdsData.length;
-		var iColor = numThresholds;
+		var iColor = 0;
 		for(var i = 0; i < numThresholds; i++) {
-			if(value <= thresholdsData[i].value) {
-				if(i === 0) {
-					iColor = value/thresholdsData[i].value;
-				} else {
-					iColor = i + (value - thresholdsData[i-1].value)/(thresholdsData[i].value - thresholdsData[i-1].value);
-				}
+			if(value >= thresholdsData[i].value) {
+				iColor++;
+			} else {
 				break;
 			}
 		}
-		iColor /= numThresholds;
-		return iColor;
+		return iColor/this.markerFactory.resolution;
 	};
 
 	//************************************************************************************************************

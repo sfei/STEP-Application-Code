@@ -147,7 +147,7 @@ define(function() {
 					twoPositions = [0, 0], 
 					colorDiff, 
 					span;
-				for(var r = 0; r <= resolution; r++) {
+				for(var r = 0; r < resolution; r++) {
 					if(r === resolution) {
 						hexColors.push(
 							this.rgb2hex(this.hsv2rgb(hexColors[hsvColors.length-1]))
