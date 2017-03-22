@@ -301,6 +301,12 @@ define([
 					self.parent.counties.highlightLayer.changed();
 				}
 			});
+		$("#show-waterboards-control")
+			.prop('disabled', false)
+			.prop('checked', this.parent.waterboards.layer.getVisible())
+			.click(function() {
+				self.parent.waterboards.layer.setVisible(!self.parent.waterboards.layer.getVisible());
+			});
 		$("#show-mpa-control")
 			.prop('disabled', false)
 			.prop('checked', this.parent.mpa.layer.getVisible())

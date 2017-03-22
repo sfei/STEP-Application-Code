@@ -115,6 +115,9 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
           <div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
           <input type="checkbox" id="show-counties-control" disabled />
           <div class="control-spacer"></div>
+          <div title='Water Board Region Subdivisions' class="control-label-inline">Show Water Board Regions Layer:</div>
+          <input type="checkbox" id="show-waterboards-control" disabled />
+          <div class="control-spacer"></div>
           <div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
           <input type="checkbox" id="show-mpa-control" disabled />
         </div>

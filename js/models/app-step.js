@@ -20,7 +20,7 @@ define([
 	 * Basic constructor, does nothing really on it's own, just sets instance variables.
 	 * @returns {STEP}
 	 */
-	function STEP() {
+	function STEP(options) {
 		// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
 		if(browserType.isIE) {
 			// Edge returns NaN value
@@ -91,6 +91,14 @@ define([
 			collection: null, // stations data as ol.Collection instance
 			layer: null       // layer object
 		};
+		// Water Board Regions
+		this.waterboards = {
+			url: options.mapserverUrl + "watboards.map", 
+			params: {
+				layers: "watboards"
+			}, 
+			layer: null
+		};
 		// CA counties
 		this.counties = {
 			url: "data/ca_counties.geojson", 
@@ -158,6 +166,7 @@ define([
 		// init functions
 		this.mapInit();
 		this.addCountyLayer();
+		this.addWaterBoardLayer();
 		this.addMPALayer();
 		this.initStationsLayer();
 		this.modules.queryAndUI.updateStationsSelect();
@@ -596,9 +605,25 @@ define([
 		return null;
 	};
 
-	//************************************************************************************************************
-	// County and MPA layer functionalities
-	//************************************************************************************************************
+	//********************************************************************************************************
+	// County, Water Board Region, and MPA layer functionalities
+	//********************************************************************************************************
+	/**
+	 * Add Water Board Region layer to the map.
+	 */
+	STEP.prototype.addWaterBoardLayer = function() {
+		this.waterboards.layer = new ol.layer.Tile({
+			title: 'Water Board Regions', 
+			source: new ol.source.TileWMS({
+				url: this.waterboards.url, 
+				params: this.waterboards.params
+			})
+		});
+		this.waterboards.layer.setZIndex(1);
+		this.waterboards.layer.setVisible(false);
+		this.map.addLayer(this.waterboards.layer);
+	};
+	
 	/**
 	 * Add CA counties layer to the map.
 	 */

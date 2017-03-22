@@ -1,8 +1,23 @@
+// MapServer
+	// personal development environments
+var mapfileGsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevgs/", 
+	mapfileLfDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevlf/", 
+	mapfileLsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevls/", 
+	// testing and staging environments
+	mapfileTesting0_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
+	mapfileTesting1_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/",
+	mapfileTesting2_base  = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
+	// production environment
+	mapfileProdURL_base   = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/";
+	// set this variable to one of the above
+var mapfileURL_base       = mapfileProdURL_base;
 
+// outer require pulls shared config
 require(['rconfig'], function(rconfig) {
 	init();
 });
 
+// init function
 function init() {
 	require([
 		'jquery', 
@@ -18,7 +33,7 @@ function init() {
 		}
 		common.setModalAsLoading();
 		domReady(function() {
-			step = new STEP();
+			step = new STEP({mapserverUrl: mapfileURL_base});
 			if(typeof summaryReport !== "undefined" && summaryReport) {
 				SummaryReport(step, reportQuery, reportData);
 			} else {
