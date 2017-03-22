@@ -456,12 +456,15 @@ define(["d3", "common"], function(d3, common) {
 //			}
 			lastThreshold = threshold.value;
 			label += " " + threshold.units;
-			row += "<div class='legend-table-cell' style='width:21px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-			row += "<div class='legend-table-cell' style='width:95px;margin-right:10px;text-align:right;'>" + label + "</div>";
-			row += "<div class='legend-table-cell' style='display:table;width:280px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
+			row += "<div class='legend-table-cell legend-cell-color' style='background-color:" + threshold.color + ";'>&nbsp;</div>";
+			row += "<div class='legend-table-cell legend-cell-value'>" + label + "</div>";
+			row += "<div class='legend-table-cell legend-cell-desc'><span>" + threshold.comments + "</span></div>";
 			row += "</div>";
 			table.append(row);
 		}
+		table.append(
+			"<div class='legend-table-row legend-row-info'>Hollow symbols denote no records matching query if all stations are set to display.</div>"
+		);
 		// always show legend on update
 		this.legendShow();
 		// dynamically set height

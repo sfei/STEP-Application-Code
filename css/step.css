@@ -441,7 +441,7 @@ img.attribution-logo {
   margin: 0 4px;
 }
 #legend-content {
-  width: 420px;
+  width: 390px;
 }
 #legend-title {
   height: auto;
@@ -484,6 +484,13 @@ img.attribution-logo {
   padding: 2px 0px;
   margin-left: 4px;
 }
+.legend-row-info {
+  height: auto;
+  padding: 8px 2px 4px 2px;
+  font-size: 0.9em;
+  text-align: justify;
+  font-style: italic;
+}
 .legend-table-cell {
   display: inline-block;
   float: left;
@@ -493,6 +500,26 @@ img.attribution-logo {
   vertical-align: middle;
   margin: 2px;
   overflow: hidden;
+}
+.legend-cell-color {
+  width: 21px;
+  clear: left;
+  border-radius: 4px;
+}
+.legend-cell-value {
+  width: 95px;
+  margin-right: 10px;
+  text-align: right;
+}
+.legend-cell-desc {
+  display: table;
+  width: 250px;
+  clear: right;
+}
+.legend-cell-desc span {
+  display: table-cell;
+  vertical-align: bottom;
+  line-height: 120%;
 }
 #custom-thresholds-content {
   width: 200px;

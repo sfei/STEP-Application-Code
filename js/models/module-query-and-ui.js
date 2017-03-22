@@ -573,7 +573,7 @@ define([
 		} else {
 			this.parent.noDataOptions.showNoData = !this.parent.noDataOptions.showNoData;
 		}
-		this.parent.createMarkerFactory();
+		this.parent.refreshMarkerFactory();
 		if(!supressUpdate) { this.parent.refreshStations(); }
 		$("#show-no-data-control").prop("checked", this.parent.noDataOptions.showNoData);
 	};

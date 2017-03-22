@@ -131,7 +131,25 @@ define([
 		
 		// create marker factory - value function is not set here, but instead set when updating thresholds 
 		// (see legend.js) which is triggered by a query return.
-		this.createMarkerFactory();
+		this.modules.markerFactory = new MarkerFactory({
+			shapeFunction: function(feature) {
+				var watertype = feature.get("waterType");
+				if(watertype.search(/reservoir|lake/i) >= 0) {
+					return 'circle';
+				} else if(watertype.search(/coast/i) >= 0) {
+					return 'triangle';
+				} else {
+					return 'diamond';
+				}
+			},
+			colorMap: this.colorMap,
+			showNoData: this.noDataOptions.showNoData, 
+			noDataValue: this.noDataOptions.noDataValue,
+			noDataColor: this.noDataOptions.noDataColor, 
+			resolution: (this.modules.markerFactory) ? this.modules.markerFactory.resolution : null, 
+			valueFunction: (this.modules.markerFactory) ? this.modules.markerFactory.normalizeValue : null
+		});
+		// other modules
 		this.modules.download       = Download;
 		this.modules.stationDetails = new StationDetails(this);
 		this.modules.legend         = new Legend(this);
@@ -285,21 +303,8 @@ define([
 	//********************************************************************************************************
 	// Symbology functionalities
 	//********************************************************************************************************
-	/**
-	 * Create the marker factory. Done as sometimes reset with no data color available or not
-	 */
-	STEP.prototype.createMarkerFactory = function() {
-		this.modules.markerFactory = new MarkerFactory({
-			shapeFunction: function(feature) {
-				var watertype = feature.get("waterType");
-				if(watertype.search(/reservoir|lake/i) >= 0) {
-					return 'circle';
-				} else if(watertype.search(/coast/i) >= 0) {
-					return 'triangle';
-				} else {
-					return 'diamond';
-				}
-			},
+	STEP.prototype.refreshMarkerFactory = function() {
+		this.modules.markerFactory.setStyle({
 			colorMap: this.colorMap,
 			showNoData: this.noDataOptions.showNoData, 
 			noDataValue: this.noDataOptions.noDataValue,
