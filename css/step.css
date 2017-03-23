@@ -441,7 +441,7 @@ img.attribution-logo {
   margin: 0 4px;
 }
 #legend-content {
-  width: 390px;
+  width: 420px;
 }
 #legend-title {
   height: auto;
@@ -513,7 +513,7 @@ img.attribution-logo {
 }
 .legend-cell-desc {
   display: table;
-  width: 250px;
+  width: 280px;
   clear: right;
 }
 .legend-cell-desc span {

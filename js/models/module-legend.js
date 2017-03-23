@@ -158,7 +158,7 @@ define(["d3", "common"], function(d3, common) {
 	/**
 	 * Update the selection options for thresholds
 	 */
-	Legend.prototype.updateThresholdGroupSelect = function() {
+	Legend.prototype.updateThresholdGroupSelect = function(contaminant) {
 		this.selectedThresholdGroup = null;
 		
 		// empty and fill select
@@ -169,6 +169,10 @@ define(["d3", "common"], function(d3, common) {
 			var group = this.thresholdOrder[i];
 			if(group in this.thresholds) {
 				recognizedGroups.push(group);
+				// for mercury, skip standard as they're redundant until we put contaminant goals back in
+				if(contaminant === "Mercury" && group === "standard") {
+					continue;
+				}
 				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
@@ -187,7 +191,7 @@ define(["d3", "common"], function(d3, common) {
 		}
 		for(var group in this.thresholds) {
 			if($.inArray(group, recognizedGroups) < 0) {
-				if(!this.selectedThresholdGroup) {	
+				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
 				$("<option>", {value: group}).appendTo(selectElem)
@@ -256,6 +260,10 @@ define(["d3", "common"], function(d3, common) {
 		if(!custom) {
 			var dataByGroup = {};
 			for(var i = 0; i < data.length; i++) {
+				// filter so only OEHHA tissue advisory levels for now
+				if(!data[i].comments.startsWith("OEHHA Advisory")) {
+					continue;
+				}
 				// ensure numeric type
 				data[i].value = parseFloat(data[i].value);
 				var group = data[i].group;
@@ -280,7 +288,7 @@ define(["d3", "common"], function(d3, common) {
 			}
 			this.thresholds = dataByGroup;
 			this.selectedThresholdGroup = selectThresholdGroup;
-			this.updateThresholdGroupSelect();
+			this.updateThresholdGroupSelect(contaminant);
 		} else {
 			// for user inputs thresholds need to validate
 			if(!data || data.length === 0) { return false; }
@@ -434,6 +442,7 @@ define(["d3", "common"], function(d3, common) {
 		$("#legend-title").html(title);
 		var table = $("#legend-table").html("");
 		var lastThreshold = null;
+		//var isOehha = this.selectedThresholdGroup.startsWith("oehha");
 		// do legend in descending order
 		for(var i = thresholdsData.length-1; i >= -1; i--) {
 			var row = "<div class='legend-table-row'>";
