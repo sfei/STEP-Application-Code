@@ -13,8 +13,8 @@ define([
 	"common",
 	"OpenLayers", 
 	"noUiSlider", 
-	"./module-scatterplot"
-], function(chosen, common, ol, noUiSlider, Scatterplot) {
+	"SimpleGraph"
+], function(chosen, common, ol, noUiSlider, SimpleGraph) {
 	
 	//********************************************************************************************************
 	// Constructor(s)
@@ -579,18 +579,85 @@ define([
 			"</div>"
 		);
 		if(this.stationData && this.stationData.length > 0) {
-			// not used but it returns the svg object (already added to container via the options)
-			var svg = Scatterplot({
-				container: "details-content",
-				data: this.stationData, 
-				dataPointName: 'species', 
-				xValueName: 'sampleYear', 
-				xAxisLabel: 'Year', 
-				yValueName: 'value', 
-				yAxisLabel: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
-				width: this.tabs.trends.chartWidth,
-				height: this.tabs.trends.chartHeight
-			});
+			// get mix max and process so ND = 0
+			var graphData = [];
+			var minMax = { x: null, y: null };
+			for(var i = 0; i < this.stationData.length; i++) {
+				// get min max values
+				if(!minMax.x) {
+					minMax.x = [this.stationData[i]["sampleYear"] , this.stationData[i]["sampleYear"]];
+				} else if(this.stationData[i]["sampleYear"] < minMax.x[0]) {
+					minMax.x[0] = this.stationData[i]["sampleYear"];
+				} else if(this.stationData[i]["sampleYear"] > minMax.x[1]) {
+					minMax.x[1] = this.stationData[i]["sampleYear"];
+				}
+				if(!minMax.y) {
+					// always set y-min to 0
+					minMax.y = [0 , this.stationData[i]["value"]];
+				} else if(this.stationData[i]["value"] > minMax.y[1]) {
+					minMax.y[1] = this.stationData[i]["value"];
+				}
+				graphData.push({
+					species: this.stationData[i]["species"], 
+					value: this.stationData[i]["value"] === "ND" ? 0 : this.stationData[i]["value"], 
+					orgValue: this.stationData[i]["value"], 
+					sampleYear: this.stationData[i]["sampleYear"]
+				});
+			}
+			// always set y-min to 0, extend max by 10% to avoid overlap on edges
+			minMax.y[1] *= 1.1;
+			// extend range of x-min/max by one to avoid overlap on edges (and also min. of 3 x-range)
+			minMax.x[0] -= 1;
+			minMax.x[1] += 1;
+			// y-format variable
+			var yFormat;
+			if(minMax.y[1] < 0.1) {
+				yFormat = ".3f";
+			} else if(minMax.y[1] < 1) {
+				yFormat = ".2f";
+			} else if(minMax.y[1] < 100) {
+				yFormat = ".1f";
+			} else {
+				yFormat = ",.0f";
+			}
+			// force tick values on x-axis to stick to whole years
+			var xTickValues = [];
+			for(var y = minMax.x[0]; y <= minMax.x[1]; y++) {
+				xTickValues.push(y.toString());
+			}
+			// create graph
+			var sg = new SimpleGraph({
+					container: "#details-content", 
+					width: this.tabs.trends.chartWidth, 
+					height: this.tabs.trends.chartHeight, 
+					margins: {top: 20, right: 190, bottom: 30, left: 40}, 
+					axis: {
+						x: {
+							min: minMax.x[0], 
+							max: minMax.x[1], 
+							label: "Year", 
+							format: ".0f", 
+							tickValues: xTickValues
+						}, 
+						y: {
+							min: minMax.y[0], 
+							max: minMax.y[1], 
+							label: this.query.contaminant + " (" +  this.stationData[0].units + ")", 
+							format: yFormat, 
+							ticks: 7 // more open, let d3 adjust as best fit
+						}
+					}
+				})
+				.addPointsData(graphData, "species", "sampleYear", "value", ["orgValue"])
+				.addLinesDataFromPoints()
+				.drawGrid()
+				.drawAxes("inside top right")
+				.drawLines()
+				.drawPoints()
+				.drawLegend([this.tabs.trends.chartWidth-180, 20])
+				.addTooltipToPoints(function(d, i) {
+					return ("<b>" + d.series + "</b><br />" + d.orgValue + " in " + d.x); 
+				});
 		} else {
 			contentDiv.append(this.noDataMessageAsDiv());
 		}
