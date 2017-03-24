@@ -430,13 +430,13 @@ define(["d3", "common"], function(d3, common) {
 	 */
 	Legend.prototype.updateLegend = function(query) {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
-		var title;
+		var title = "Most Recent";
 		var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + query.species + "</span>";
 		var yearString = (query.startYear === query.endYear) ? query.startYear : (query.startYear + "-" + query.endYear);
 		if(query.species === 'highest' || query.species === 'lowest') {
-			title = capitalizeSpecies + " Average " + query.contaminant + " Concentration for Any Species";
+			title += ", " + capitalizeSpecies +  " " + query.contaminant + " Concentration<br />for Any Species";
 		} else {
-			title = query.contaminant + " Concentrations in " + capitalizeSpecies;
+			title += " " + query.contaminant + " Concentration<br />in " + capitalizeSpecies;
 		}
 		title += " (" + thresholdsData[0].units + ") " + yearString;
 		$("#legend-title").html(title);
