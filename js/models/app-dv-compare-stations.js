@@ -1,8 +1,8 @@
 define([
 	"jquery", 
-	"d3", 
-	"chosen"
-], function(jQuery, d3, chosen) {
+	"chosen", 
+	"d3"
+], function(jQuery, chosen, d3) {
 
 	DVCompareStations = function(options) {
 		if(!options) { options = {}; }
@@ -53,6 +53,8 @@ define([
 		this.selectedColor = options.selectedColor ? options.selectedColor : "#04a";
 		
 		this.stationsSelect = null;
+		this.title = null;
+		this.units = null;
 	};
 	
 	DVCompareStations.prototype.addGraphContainer = function(containerSelect) {
@@ -79,13 +81,14 @@ define([
 			});
 	};
 	
-	DVCompareStations.prototype.update = function(query) {
+	DVCompareStations.prototype.update = function(query, onSuccess) {
 		var self = this;
 		this._pullData({
 			queryObj: query, 
 			success: function() {
 				self._updateStationsSelect();
 				self._draw();
+				if(onSuccess) { onSuccess(); }
 			}
 		});
 	};
@@ -119,9 +122,12 @@ define([
 			.attr("fill", function(s, i) {
 				return self._colorFunction(s, i, h);
 			});
-		$('html, body').animate({
-			scrollTop: $("#sg-bar-"+h).offset().top
-		}, 100 + 100*Math.log(10*h));
+		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
+		var scrollLen = Math.abs(scrollTo - $('body').scrollTop());
+		$('body').animate(
+			{scrollTop: scrollTo}, 
+			50 + 100*Math.log(10*scrollLen)
+		);
 	};
 	
 	DVCompareStations.prototype._pullData = function(options) {
@@ -144,7 +150,7 @@ define([
 	};
 	
 	DVCompareStations.prototype._colorFunction = function(s, i, h) {
-		if(i == h) {
+		if(i == h) { // may be comparing int to string so use loose comparison
 			return this.selectedColor;
 		}
 		var color;
@@ -161,10 +167,13 @@ define([
 		if(!this.data || !this.svg) { return; }
 		
 		var max = this.data.stations[0].value;
+		var precision = 0; // let d3 handle tick formats but needed for tooltip
 		if(max < 4.5) {
 			max = 0.1*Math.ceil(10*max);
+			precision = (max < 1) ? 3 : 2;
 		} else if(max < 10) {
 			max = Math.ceil(max);
+			precision = 1;
 		} else if(max < 45) {
 			max = 5*Math.ceil(0.2*max);
 		} else if(max < 100) {
@@ -180,14 +189,36 @@ define([
 		}
 		
 		// clear and reset the SVG
+		var halfBarSpacing = 0.5*this.barSpacing;
 		d3.selectAll("svg > *").remove();
-		this.height = this.data.stations.length * (this.barHeight + this.barSpacing);
+		this.height = halfBarSpacing + this.barHeight + this.data.stations.length * (this.barHeight + this.barSpacing);
 		this.containerHeight = this.height + this.margins.top + this.margins.bottom;
 		this.svg.attr("height", this.containerHeight);
 		this.svgGraph = this.svg.append("g")
 			.attr("transform", "translate(" + this.margins.left + "," + this.margins.top + ")");
+	
+		// add title
+		this.units = this.data.thresholds[0].units;
+		if(this.data.query.isASpecies) {
+			this.title = (
+				"Most Recent " + this.data.query.contaminant + " Concentration in " 
+				+ this.data.query.species
+			);
+		} else {
+			this.title = (
+				"Most Recent, " + this.data.query.species.capitalize() 
+				+ " " + this.data.query.contaminant + " Concentration for Any Species"
+			);
+		}
+		this.title += " (" + this.units + ") " + this.data.query.startYear + "-" + this.data.query.endYear;
+//		this.svgGraph.append("text")
+//			.attr("class", "sg-title")
+//			.attr("text-anchor", "middle")
+//			.attr("transform", "translate(" + (0.5*this.width) + "," + (30-this.margins.top) + ")")
+//			.style("font-size", 15)
+//			.text(this.title);
 		
-		// axes
+		// create axes
 		this.x = {};
 		this.x.scale = d3.scaleLinear()
 			.range([this.margins.left, this.margins.left + this.width])
@@ -197,11 +228,10 @@ define([
 		this.y = {};
 		this.y.scale = d3.scaleBand()
 			.range([this.margins.top, this.margins.top + this.height])
-			.padding(this.barSpacing*0.5)
+			.padding(halfBarSpacing)
 			.domain(this.data.stations.map(function(s) { return s.name; }));
 		this.y.axis = d3.axisLeft(this.y.scale)
-			// hide tick labels
-			.tickValues([]);
+			.tickValues([]);  // hide tick labels
 	
 		var self = this, 
 			labelPadding = 6, 
@@ -215,7 +245,7 @@ define([
 				.attr("id", function(d, i) { return "clip-" + i; })
 			.append("rect")
 				.attr("x", this.margins.left)
-				.attr("y", function(s) { return self.y.scale(s.name) - self.barHeight; })
+				.attr("y", function(s) { return halfBarSpacing+ self.y.scale(s.name) - self.barHeight; })
 				.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
 				.attr("height", this.barHeight);
 		
@@ -223,10 +253,10 @@ define([
 		this.svgGraph.selectAll(".sg-label-back")
 			.data(this.data.stations).enter()
 			.append("text")
-				.attr("class", "sg-label-back")
+				.attr("class", "sg-label sg-label-back")
 				.attr("fill", "black")
 				.attr("x", this.margins.left + labelPadding)
-				.attr("y", function(s) { return self.y.scale(s.name) - labelOffset; })
+				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
 				.style("font-size", fontSize)
 				.text(function(s) { return s.name; });
 	
@@ -237,7 +267,7 @@ define([
 				.attr("class", "sg-bar")
 				.attr("id", function(s, i) { return "sg-bar-" + i; })
 				.attr("x", this.margins.left)
-				.attr("y", function(s) { return self.y.scale(s.name) - self.barHeight; })
+				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - self.barHeight; })
 				.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
 				.attr("height", this.barHeight)
 				.attr("fill", function(s, i) {
@@ -248,24 +278,114 @@ define([
 		this.svgGraph.selectAll(".sg-label-front")
 			.data(this.data.stations).enter()
 			.append("text")
-				.attr("class", "sg-label-front")
+				.attr("class", "sg-label sg-label-front")
 				.attr("fill", "white")
 				.attr("x", this.margins.left + labelPadding)
-				.attr("y", function(s) { return self.y.scale(s.name) - labelOffset; })
+				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
 				.attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
 				.style("font-size", fontSize)
 				.text(function(s) { return s.name; });
 		
-		// draw axes last (so they're on top)
+		// draw axes last so they're on top
 		this.x.g = this.svgGraph.append("g")
 			.attr("class", "sg-xaxis")
 			.attr("transform", "translate(0," + this.margins.top + ")")
 			.call(this.x.axis);
-	
 		this.y.g = this.svgGraph.append("g")
 			.attr("class", "sg-yaxis")
 			.attr("transform", "translate(" + this.margins.left + ",0)")
 			.call(this.y.axis);
+	
+		// add tooltip
+		this.svgGraph.selectAll(".sg-bar, .sg-label").call(
+			this._constructTooltipFunctionality(
+				function(d, p, s, i) {
+					return (
+						"<b>" + d.name + "</b><br />"
+						+ d.value.addCommas(precision) + " " + self.units
+					);
+				}, 
+				{offset: [15, 5]}
+			)
+		);
+	};
+	
+	// copied from simple-graph
+	DVCompareStations.prototype._constructTooltipFunctionality = function(textFunction, options) {
+		var svg = this.svg;
+		return function(selection) {
+			if(!selection) { return null; }
+			if(!options) { options = {}; }
+			var d3Body = d3.select('body');
+			var tooltipDiv;
+			selection.on("mouseover", function(d, i) {
+				// set relative position of tool-tip
+				var absMousePos = d3.mouse(d3Body.node());
+				var tooltipOffset = (options.offset) ? options.offset : [10, -15];
+				// Check if tooltip div already exists
+				var styles = {};
+				if(!tooltipDiv) {
+					// Clean up lost tooltips
+					d3Body.selectAll('.sg-tooltip').remove();
+					// Append tooltip 
+					tooltipDiv = d3Body.append('div');
+					tooltipDiv.attr('class', 'sg-tooltip');
+					// full styles
+					styles = {
+						'position': 'absolute', 
+						'left': (absMousePos[0] + tooltipOffset[0])+'px', 
+						'top': (absMousePos[1] + tooltipOffset[1])+'px', 
+						'z-index': 1001, 
+						'background-color': '#fff', 
+						'border': '1px solid #777', 
+						'border-radius': '4px', 
+						'padding': '4px 6px', 
+						'font-family': "'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif", 
+						'font-size': '12px'
+					};
+				} else {
+					// just update position
+					styles = {
+						'left': (absMousePos[0] + tooltipOffset[0])+'px', 
+						'top': (absMousePos[1] + tooltipOffset[1])+'px'
+					};
+				}
+				for(var styleKey in styles) {
+					tooltipDiv.style(styleKey, styles[styleKey]);
+				}
+				// add custom styles if provided
+				if(options.style) {
+					for(var styleKey in options.style) {
+						tooltipDiv.style(styleKey, options.style[styleKey]);
+					}
+				}
+			})
+			.on('mousemove', function(d, i) {
+				if(tooltipDiv) {
+					// Move tooltip
+					var absMousePos = d3.mouse(d3Body.node());
+					var tooltipOffset = (options.offset) ? options.offset : [10, -15];
+					tooltipDiv.style('left', (absMousePos[0] + tooltipOffset[0])+'px');
+					tooltipDiv.style('top', (absMousePos[1] + tooltipOffset[1])+'px');
+					// TODO: selection is no longer array-like, hides it in _groups var -- this seems unideal, update/change when able
+					var tooltipText = (textFunction) ? textFunction(d, d3.mouse(svg.node()), selection._groups[0], i) : null;
+					// If no text, remove tooltip
+					if(!tooltipText) {
+						tooltipDiv.remove();
+						tooltipDiv = null;
+					} else {
+						tooltipDiv.html(tooltipText);
+					}
+				}
+			})
+			.on("mouseout", function(d, i) {
+				// Remove tooltip
+				if(tooltipDiv) {
+					tooltipDiv.remove();
+					tooltipDiv = null;
+				}
+			});
+		};
 	};
 	
 	return DVCompareStations;

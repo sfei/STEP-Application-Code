@@ -22,10 +22,26 @@ function init() {
 			query.startYear = query.startYear ? query.startYear : 1900;
 			query.endYear = query.endYear ? query.endYear : 3000;
 			
-			var dv = new DVCompareStations();
+			
+			var width = window.parameters.width ? window.parameters.width : 760;
+			var padding = 15;
+			width -= 2*padding;
+			$("#dv-container").width(width).css("padding", padding);
+			
+			$("#dv-back-to-top").on('click', function() {
+				var scrollLen = $('body').scrollTop();
+				$('body').animate(
+					{scrollTop: 0}, 
+					50 + 100*Math.log(10*scrollLen)
+				);
+			});
+			
+			var dv = new DVCompareStations({width: width});
 			dv.addGraphContainer("#dv-svg-container");
 			dv.addStationsSelect("#dv-stations-select-container");
-			dv.update(query);
+			dv.update(query, function() {
+				$("#dv-title").html(dv.title);
+			});
 			window.dv = dv;
 		});
 	}, function(e) {

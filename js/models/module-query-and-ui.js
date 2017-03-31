@@ -276,6 +276,26 @@ define([
 					flashMessage: "Filters and display settings reset to default."
 				});
 			});
+		$("#open-dv-compare")
+			.prop('disabled', false)
+			.click(function() {
+				var width = 760;
+				var params = {
+					species: self.lastQuery.species, 
+					contaminant: self.lastQuery.contaminant, 
+					startYear: self.lastQuery.startYear, 
+					endYear: self.lastQuery.endYear, 
+					width: width-30 // some spacing for scroll bar necessary
+				};
+				common.newWindow(
+					null, 
+					"dvtest.php?" + $.param(params), 
+					"STEP Compare Stations", 
+					width, 
+					800, 
+					true
+				);
+			});
 		$("#stations-select")
 			.prop('disabled', false)
 			.change(function() {

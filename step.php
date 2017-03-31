@@ -92,6 +92,9 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
           <div id="reset-controls" class="button">
             Reset To Initial Settings
           </div>
+          <div id="open-dv-compare" class="button">
+            Compare All Stations
+          </div>
         </diV>
         <!-- search by location controls -->
         <div id="control-tab-location" class="control-tab">Find by Location</div>

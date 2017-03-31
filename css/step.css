@@ -307,6 +307,12 @@ img.attribution-logo {
   display:inline-block;
   width:200px;
   text-align:center;
+  margin-bottom: 8px;
+}
+#open-dv-compare {
+  display:inline-block;
+  width:200px;
+  text-align:center;
 }
 
 /* location controls related */
@@ -681,3 +687,39 @@ img.attribution-logo {
   stroke-width: 0.3;
   opacity: 0.7;
 }
+
+
+/* Stations Data Viz */
+#dv-controls-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  padding-top: 10px;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+}
+#dv-title {
+  margin-bottom: 5px;
+  font-weight: bolder;
+}
+#dv-stations-select-container {
+  height: 25px;
+  font-size: 0.85em;
+  line-height: 25px;
+}
+#dv-back-to-top {
+  margin-top: 10px;
+  font-size: 0.75em;
+  color: #2970a3;
+  cursor: pointer;
+}
+#dv-back-to-top:hover {
+  color: #5ae;
+}
+#dv-svg-container {
+  margin-top: 65px;
+}
+
