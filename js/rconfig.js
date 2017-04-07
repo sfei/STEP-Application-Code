@@ -25,6 +25,6 @@ require.config({
 		"common.table": "lib/common/common.table", 
 		noUiSlider:     "lib/nouislider.min", 
 		OpenLayers:     "lib/ol.3.19.0", //"lib/ol.3.19.0-debug", 
-		SimpleGraph:    "lib/d3-simplegraph/simplegraph/simple-graph"
+		SimpleGraph:    "lib/d3-simplegraph/d3.simplegraph.min"
 	}
 });

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>STEP Data Visualization Test</title>
+    <title>STEP Compare Stations</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
     <link rel="stylesheet" href="css/style.css" />
-    <script src="js/lib/require.js" data-main="js/init-dvtest"></script>
+    <script src="js/lib/require.js" data-main="js/init-dvcs"></script>
     <script>
         parameters = {
             width: <?= !empty($_GET["width"]) ? $_GET["width"] : 760; ?>, 

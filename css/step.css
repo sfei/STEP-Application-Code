@@ -697,7 +697,8 @@ img.attribution-logo {
   width: 100%;
   height: 80px;
   padding-top: 10px;
-  background: #fff;
+  background: #000;
+  color: #fff;
   border-bottom: 1px solid #ccc;
   text-align: center;
 }
@@ -713,11 +714,11 @@ img.attribution-logo {
 #dv-back-to-top {
   margin-top: 10px;
   font-size: 0.75em;
-  color: #2970a3;
+  color: #5ae;
   cursor: pointer;
 }
 #dv-back-to-top:hover {
-  color: #5ae;
+  color: #6cf;
 }
 #dv-svg-container {
   margin-top: 65px;

@@ -79,6 +79,7 @@ define([
 			.change(function() {
 				self._highlightStation($(this).val());
 			});
+		$(container).find(".chosen-container").css("text-align", "left");
 	};
 	
 	DVCompareStations.prototype.update = function(query, onSuccess) {
@@ -123,8 +124,8 @@ define([
 				return self._colorFunction(s, i, h);
 			});
 		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
-		var scrollLen = Math.abs(scrollTo - $('body').scrollTop());
-		$('body').animate(
+		var scrollLen = Math.abs(scrollTo - $('body,html').scrollTop());
+		$('body,html').animate(
 			{scrollTop: scrollTo}, 
 			50 + 100*Math.log(10*scrollLen)
 		);

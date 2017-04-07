@@ -289,7 +289,7 @@ define([
 				};
 				common.newWindow(
 					null, 
-					"dvtest.php?" + $.param(params), 
+					"dvcs.php?" + $.param(params), 
 					"STEP Compare Stations", 
 					width, 
 					800, 

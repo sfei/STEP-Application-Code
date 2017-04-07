@@ -29,10 +29,10 @@ function init() {
 			$("#dv-container").width(width).css("padding", padding);
 			
 			$("#dv-back-to-top").on('click', function() {
-				var scrollLen = $('body').scrollTop();
-				$('body').animate(
+				$('body,html').animate(
 					{scrollTop: 0}, 
-					50 + 100*Math.log(10*scrollLen)
+					// little weird that this is inconsistent between Chrome and others
+					50 + 100*Math.log(10*$(window.browserType.isChrome ? "body" : "body,html").scrollTop())
 				);
 			});
 			
