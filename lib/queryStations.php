@@ -87,7 +87,6 @@ if(count($result['stations']) == 0) {
 			$query['endYear'] = $tmpYear;
 		}
 	}
-	$result['debug'] = $years;
 	// update stations
 	$result['stations'] = $instance->getStations($query);
 }

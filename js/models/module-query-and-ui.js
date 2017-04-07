@@ -14,7 +14,8 @@
 //************************************************************************************************************
 define([
 	"common", 
-	"noUiSlider"
+	"noUiSlider", 
+	"chosen"
 ], function(common, noUiSlider) {
 	
 	function QueryAndUI(parentStepApp, defaultQuery) {
@@ -275,6 +276,26 @@ define([
 					flashMessage: "Filters and display settings reset to default."
 				});
 			});
+		$("#open-dv-compare")
+			.prop('disabled', false)
+			.click(function() {
+				var width = 760;
+				var params = {
+					species: self.lastQuery.species, 
+					contaminant: self.lastQuery.contaminant, 
+					startYear: self.lastQuery.startYear, 
+					endYear: self.lastQuery.endYear, 
+					width: width-30 // some spacing for scroll bar necessary
+				};
+				common.newWindow(
+					null, 
+					"dvcs.php?" + $.param(params), 
+					"STEP Compare Stations", 
+					width, 
+					800, 
+					true
+				);
+			});
 		$("#stations-select")
 			.prop('disabled', false)
 			.change(function() {
@@ -299,6 +320,12 @@ define([
 					self.parent.counties.highlightLayer.setVisible(false);
 					self.parent.counties.highlightLayer.changed();
 				}
+			});
+		$("#show-waterboards-control")
+			.prop('disabled', false)
+			.prop('checked', this.parent.waterboards.layer.getVisible())
+			.click(function() {
+				self.parent.waterboards.layer.setVisible(!self.parent.waterboards.layer.getVisible());
 			});
 		$("#show-mpa-control")
 			.prop('disabled', false)
@@ -572,7 +599,7 @@ define([
 		} else {
 			this.parent.noDataOptions.showNoData = !this.parent.noDataOptions.showNoData;
 		}
-		this.parent.createMarkerFactory();
+		this.parent.refreshMarkerFactory();
 		if(!supressUpdate) { this.parent.refreshStations(); }
 		$("#show-no-data-control").prop("checked", this.parent.noDataOptions.showNoData);
 	};

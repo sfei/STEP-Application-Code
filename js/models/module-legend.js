@@ -158,7 +158,7 @@ define(["d3", "common"], function(d3, common) {
 	/**
 	 * Update the selection options for thresholds
 	 */
-	Legend.prototype.updateThresholdGroupSelect = function() {
+	Legend.prototype.updateThresholdGroupSelect = function(contaminant) {
 		this.selectedThresholdGroup = null;
 		
 		// empty and fill select
@@ -169,6 +169,10 @@ define(["d3", "common"], function(d3, common) {
 			var group = this.thresholdOrder[i];
 			if(group in this.thresholds) {
 				recognizedGroups.push(group);
+				// for mercury, skip standard as they're redundant until we put contaminant goals back in
+				if(contaminant === "Mercury" && group === "standard") {
+					continue;
+				}
 				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
@@ -187,7 +191,7 @@ define(["d3", "common"], function(d3, common) {
 		}
 		for(var group in this.thresholds) {
 			if($.inArray(group, recognizedGroups) < 0) {
-				if(!this.selectedThresholdGroup) {	
+				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
 				$("<option>", {value: group}).appendTo(selectElem)
@@ -256,6 +260,10 @@ define(["d3", "common"], function(d3, common) {
 		if(!custom) {
 			var dataByGroup = {};
 			for(var i = 0; i < data.length; i++) {
+				// filter so only OEHHA tissue advisory levels for now
+				if(!data[i].comments.startsWith("OEHHA Advisory")) {
+					continue;
+				}
 				// ensure numeric type
 				data[i].value = parseFloat(data[i].value);
 				var group = data[i].group;
@@ -280,7 +288,7 @@ define(["d3", "common"], function(d3, common) {
 			}
 			this.thresholds = dataByGroup;
 			this.selectedThresholdGroup = selectThresholdGroup;
-			this.updateThresholdGroupSelect();
+			this.updateThresholdGroupSelect(contaminant);
 		} else {
 			// for user inputs thresholds need to validate
 			if(!data || data.length === 0) { return false; }
@@ -337,19 +345,18 @@ define(["d3", "common"], function(d3, common) {
 	 */
 	Legend.prototype.updateThresholdStyles = function() {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
-		var numThresholds = thresholdsData.length;
-		var stretchFactor = 3; // for a nice gradient instead of just solid colors
+		var stretchFactor = 1; // 3; for a nice gradient instead of just solid colors
 		// set the style function (see MarkerFactory.js)
 		var self = this;
 		this.markerFactory.setStyle({
-			resolution: numThresholds*stretchFactor,
+			resolution: (1+thresholdsData.length)*stretchFactor,
 			valueFunction: function(feature) {
 				return self.getThresholdColorIndex(feature.get("value"));
 			}
 		});
 		// get the color values for each threshold
-		for(var i = 0; i < numThresholds; i++) {
-			thresholdsData[i].color = this.markerFactory.hexMap[(1+i)*stretchFactor];
+		for(var i = 0; i < thresholdsData.length; i++) {
+			thresholdsData[i].color = this.markerFactory.hexMap[(i+1)*stretchFactor];
 		}
 	};
 
@@ -380,19 +387,15 @@ define(["d3", "common"], function(d3, common) {
 	Legend.prototype.getThresholdColorIndex = function(value) {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
 		var numThresholds = thresholdsData.length;
-		var iColor = numThresholds;
+		var iColor = 0;
 		for(var i = 0; i < numThresholds; i++) {
-			if(value <= thresholdsData[i].value) {
-				if(i === 0) {
-					iColor = value/thresholdsData[i].value;
-				} else {
-					iColor = i + (value - thresholdsData[i-1].value)/(thresholdsData[i].value - thresholdsData[i-1].value);
-				}
+			if(value >= thresholdsData[i].value) {
+				iColor++;
+			} else {
 				break;
 			}
 		}
-		iColor /= numThresholds;
-		return iColor;
+		return iColor/this.markerFactory.resolution;
 	};
 
 	//************************************************************************************************************
@@ -427,17 +430,19 @@ define(["d3", "common"], function(d3, common) {
 	 */
 	Legend.prototype.updateLegend = function(query) {
 		var thresholdsData = this.thresholds[this.selectedThresholdGroup];
-		var title;
+		var title = "Most Recent";
 		var capitalizeSpecies = "<span style='text-transform:capitalize;'>" + query.species + "</span>";
 		var yearString = (query.startYear === query.endYear) ? query.startYear : (query.startYear + "-" + query.endYear);
 		if(query.species === 'highest' || query.species === 'lowest') {
-			title = capitalizeSpecies + " Average " + query.contaminant + " Concentration for Any Species";
+			title += ", " + capitalizeSpecies +  " " + query.contaminant + " Concentration<br />for Any Species";
 		} else {
-			title = query.contaminant + " Concentrations in " + capitalizeSpecies;
+			title += " " + query.contaminant + " Concentration<br />in " + capitalizeSpecies;
 		}
 		title += " (" + thresholdsData[0].units + ") " + yearString;
 		$("#legend-title").html(title);
 		var table = $("#legend-table").html("");
+		var lastThreshold = null;
+		//var isOehha = this.selectedThresholdGroup.startsWith("oehha");
 		// do legend in descending order
 		for(var i = thresholdsData.length-1; i >= -1; i--) {
 			var row = "<div class='legend-table-row'>";
@@ -445,22 +450,30 @@ define(["d3", "common"], function(d3, common) {
 				color: this.markerFactory.hexMap[0], 
 				value: 0, 
 				units: thresholdsData[0].units, 
-				comments: "Not Detected"
+				comments: ""
 			};
-			var label = threshold.value + " " + threshold.units;
+			var label;
 			if(i === thresholdsData.length-1) {
-				label = "&ge; " + label;
-			} else if(i === 0) {
-				label = "&lt; " + label;
-			} else if(threshold.value === 0) {
-				label = "ND";
+				label = "&ge; " + threshold.value;
+			} else if(i === -1) {
+				label = "&lt; " + lastThreshold;
+			} else {
+				label = threshold.value + " - " + lastThreshold;
 			}
-			row += "<div class='legend-table-cell' style='width:21px;clear:left;border-radius:4px;background-color:" + threshold.color + ";'>&nbsp;</div>";
-			row += "<div class='legend-table-cell' style='width:55px;margin-right:10px;text-align:right;'>" + label + "</div>";
-			row += "<div class='legend-table-cell' style='display:table;width:280px;clear:right;'><span style='display:table-cell;vertical-align:middle;line-height:120%;'>" + threshold.comments + "</span></div>";
+//			} else if(threshold.value === 0) {
+//				label = "ND";
+//			}
+			lastThreshold = threshold.value;
+			label += " " + threshold.units;
+			row += "<div class='legend-table-cell legend-cell-color' style='background-color:" + threshold.color + ";'>&nbsp;</div>";
+			row += "<div class='legend-table-cell legend-cell-value'>" + label + "</div>";
+			row += "<div class='legend-table-cell legend-cell-desc'><span>" + threshold.comments + "</span></div>";
 			row += "</div>";
 			table.append(row);
 		}
+		table.append(
+			"<div class='legend-table-row legend-row-info'>Hollow symbols denote no records matching query if all stations are set to display.</div>"
+		);
 		// always show legend on update
 		this.legendShow();
 		// dynamically set height
@@ -531,15 +544,14 @@ define(["d3", "common"], function(d3, common) {
 			.append(
 				$("<div id='custom-thresholds-submit' class='button'>Submit</div>").css(buttonStyle)
 			);
-		// center it
-		//thresholdsContainer.center();
-		common.setModal(true, true, panel);
+		common.setModal(true, panel, {
+			onClose: function() {
+				$("#threshold-group-select").val(self.selectedThresholdGroup);
+			}
+		});
 		// close functionality
 		$("#custom-thresholds-cancel").click(function() {
 			common.hideModal();
-			//thresholdsContainer.remove();
-			//thresholdsContainer = null;
-			$("#threshold-group-select").val(self.selectedThresholdGroup);
 		});
 		// submit functionality
 		$("#custom-thresholds-submit").click(function() {
@@ -547,9 +559,7 @@ define(["d3", "common"], function(d3, common) {
 			$(".custom-threshold-input").each(function(i, element) {
 				data.push({value: element.value});
 			});
-			common.hideModal();
-			//thresholdsContainer.remove(); 
-			//thresholdsContainer = null;
+			common.hideModal(true);
 			var updated = self.updateThresholds(self.contaminant, data, null, true);
 			if(updated) {
 				// set to hidden custom option

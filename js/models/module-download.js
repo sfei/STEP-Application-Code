@@ -26,10 +26,10 @@ define(["common"], function(common) {
 				'text-align': 'center'
 			};
 			var downloadDialog = $("<div id='download-confirm'></div>")
-				.addClass("container-styled")
+				//.addClass("container-styled")
 				.css('text-align', 'center');
 			var downloadContent = $("<div id='download-dialog'></div>").appendTo(downloadDialog)
-				.addClass("inner-container-style")
+				//.addClass("inner-container-style")
 				.append("<span style='font-size:18px;font-weight:bolder;'>Download Data Table<span><hr />")
 				.append(
 					$("<p></p>").html(
@@ -61,7 +61,7 @@ define(["common"], function(common) {
 						.click(function() { self.downloadQueryData(downloadContent, query); })
 				);
 			// lock interface
-			common.setModal(true, true, downloadDialog);
+			common.setModal(true, downloadDialog, {showBackground: true});
 		}, 
 		
 		/**
@@ -78,7 +78,7 @@ define(["common"], function(common) {
 					'text-align': 'center', 
 					'margin': '20px 0'
 				})
-				.html("<img src='images/ajax-loader.gif' alt='loading' /> Preparing file for download..")
+				.html("<img src='images/loader.gif' alt='loading' /> Preparing file for download..")
 			);
 			var buttonStyle = {
 				'display': 'inline-block',

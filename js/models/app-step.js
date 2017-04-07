@@ -20,7 +20,7 @@ define([
 	 * Basic constructor, does nothing really on it's own, just sets instance variables.
 	 * @returns {STEP}
 	 */
-	function STEP() {
+	function STEP(options) {
 		// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
 		if(browserType.isIE) {
 			// Edge returns NaN value
@@ -91,6 +91,14 @@ define([
 			collection: null, // stations data as ol.Collection instance
 			layer: null       // layer object
 		};
+		// Water Board Regions
+		this.waterboards = {
+			url: options.mapserverUrl + "watboards.map", 
+			params: {
+				layers: "watboards"
+			}, 
+			layer: null
+		};
 		// CA counties
 		this.counties = {
 			url: "data/ca_counties.geojson", 
@@ -131,7 +139,25 @@ define([
 		
 		// create marker factory - value function is not set here, but instead set when updating thresholds 
 		// (see legend.js) which is triggered by a query return.
-		this.createMarkerFactory();
+		this.modules.markerFactory = new MarkerFactory({
+			shapeFunction: function(feature) {
+				var watertype = feature.get("waterType");
+				if(watertype.search(/reservoir|lake/i) >= 0) {
+					return 'circle';
+				} else if(watertype.search(/coast/i) >= 0) {
+					return 'triangle';
+				} else {
+					return 'diamond';
+				}
+			},
+			colorMap: this.colorMap,
+			showNoData: this.noDataOptions.showNoData, 
+			noDataValue: this.noDataOptions.noDataValue,
+			noDataColor: this.noDataOptions.noDataColor, 
+			resolution: (this.modules.markerFactory) ? this.modules.markerFactory.resolution : null, 
+			valueFunction: (this.modules.markerFactory) ? this.modules.markerFactory.normalizeValue : null
+		});
+		// other modules
 		this.modules.download       = Download;
 		this.modules.stationDetails = new StationDetails(this);
 		this.modules.legend         = new Legend(this);
@@ -140,6 +166,7 @@ define([
 		// init functions
 		this.mapInit();
 		this.addCountyLayer();
+		this.addWaterBoardLayer();
 		this.addMPALayer();
 		this.initStationsLayer();
 		this.modules.queryAndUI.updateStationsSelect();
@@ -147,7 +174,7 @@ define([
 		this.modules.legend.init($("#step-container"));
 		
 		// activate functions -- start by populating query options and loading stations by firing an initial query
-		var getVars = getUrlGetVars();
+		var getVars = common.getUrlGetVars();
 		this.modules.queryAndUI.updateQuery({
 			query: this.modules.queryAndUI.defaultQuery, 
 			selectThresholdGroup: getVars.tgroup, 
@@ -285,21 +312,8 @@ define([
 	//********************************************************************************************************
 	// Symbology functionalities
 	//********************************************************************************************************
-	/**
-	 * Create the marker factory. Done as sometimes reset with no data color available or not
-	 */
-	STEP.prototype.createMarkerFactory = function() {
-		this.modules.markerFactory = new MarkerFactory({
-			shapeFunction: function(feature) {
-				var watertype = feature.get("waterType");
-				if(watertype.search(/reservoir|lake/i) >= 0) {
-					return 'circle';
-				} else if(watertype.search(/coast/i) >= 0) {
-					return 'triangle';
-				} else {
-					return 'diamond';
-				}
-			},
+	STEP.prototype.refreshMarkerFactory = function() {
+		this.modules.markerFactory.setStyle({
 			colorMap: this.colorMap,
 			showNoData: this.noDataOptions.showNoData, 
 			noDataValue: this.noDataOptions.noDataValue,
@@ -383,7 +397,7 @@ define([
 						self.openStationDetails(feature); 
 						return true;	// make sure to return on match to stop cycling through additional features
 					} else if(type === 'mpa') {
-						window.newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
+						common.newWindow(null, feature.get("DFG_URL"), "Marine Protected Areas: Regulations", 800, 600, false);
 						return true;
 					}
 				}
@@ -591,9 +605,25 @@ define([
 		return null;
 	};
 
-	//************************************************************************************************************
-	// County and MPA layer functionalities
-	//************************************************************************************************************
+	//********************************************************************************************************
+	// County, Water Board Region, and MPA layer functionalities
+	//********************************************************************************************************
+	/**
+	 * Add Water Board Region layer to the map.
+	 */
+	STEP.prototype.addWaterBoardLayer = function() {
+		this.waterboards.layer = new ol.layer.Tile({
+			title: 'Water Board Regions', 
+			source: new ol.source.TileWMS({
+				url: this.waterboards.url, 
+				params: this.waterboards.params
+			})
+		});
+		this.waterboards.layer.setZIndex(1);
+		this.waterboards.layer.setVisible(false);
+		this.map.addLayer(this.waterboards.layer);
+	};
+	
 	/**
 	 * Add CA counties layer to the map.
 	 */

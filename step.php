@@ -1,3 +1,6 @@
+<?php
+$ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
+?>
 <!DOCTYPE html>
 <html>
   <head>
@@ -5,15 +8,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
-    <link rel="stylesheet" href="http://openlayers.org/en/v3.10.1/css/ol.css" type="text/css" />
-    <link rel="stylesheet" href="css/chosen.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/nouislider.min.css" />
+    <?php if($ini["devmode"]) { ?>
     <link rel="stylesheet" href="css/style.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    <script src="js/jquery.ui.touch-punch.min.js"></script>
-    <script src="js/chosen.jquery.min.js"></script>
-    <script src="js/require.js" data-main="init"></script>
+    <script src="js/lib/require.js" data-main="js/init"></script>
+    <?php } else { ?>
+    <link rel="stylesheet" href="build/style.css" />
+    <script src="js/lib/require.js" data-main="build/step"></script>
+    <?php } ?>
   </head>
   <body>
     <!--  header -->
@@ -91,6 +92,9 @@
           <div id="reset-controls" class="button">
             Reset To Initial Settings
           </div>
+          <div id="open-dv-compare" class="button">
+            Compare All Stations
+          </div>
         </diV>
         <!-- search by location controls -->
         <div id="control-tab-location" class="control-tab">Find by Location</div>
@@ -114,6 +118,9 @@
           <div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
           <input type="checkbox" id="show-counties-control" disabled />
           <div class="control-spacer"></div>
+          <div title='Water Board Region Subdivisions' class="control-label-inline">Show Water Board Regions Layer:</div>
+          <input type="checkbox" id="show-waterboards-control" disabled />
+          <div class="control-spacer"></div>
           <div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
           <input type="checkbox" id="show-mpa-control" disabled />
         </div>
@@ -125,12 +132,6 @@
       <!-- notification popup thingamajig -->
       <div id="notification-container">
         <div id="notification-tab">Notifications go here</div>
-      </div>
-    </div>
-    <!-- modal blocking (for loading dialog usually) -->
-    <div id="modal-container-outer">
-      <div id="modal-container-inner">
-        <div id="loading-dialog"><img src="images/ajax-loader.gif" alt="loading"> Loading Application..</div>
       </div>
     </div>
   </body>
