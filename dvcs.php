@@ -22,7 +22,6 @@
       <div id="dv-controls-container">
         <div id="dv-title"></div>
         <div id="dv-stations-select-container">Find My Station: </div>
-        <div id="dv-back-to-top">Back to Top</div>
       </div>
       <div id="dv-svg-container"></div>
     </div>

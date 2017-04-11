@@ -28,15 +28,20 @@ function init() {
 			width -= 2*padding;
 			$("#dv-container").width(width).css("padding", padding);
 			
-			$("#dv-back-to-top").on('click', function() {
-				$('body,html').animate(
-					{scrollTop: 0}, 
-					// little weird that this is inconsistent between Chrome and others
-					50 + 100*Math.log(10*$(window.browserType.isChrome ? "body" : "body,html").scrollTop())
-				);
-			});
+//			$("#dv-back-to-top").on('click', function() {
+//				$('body,html').animate(
+//					{scrollTop: 0}, 
+//					// little weird that this is inconsistent between Chrome and others
+//					50 + 100*Math.log(10*$(window.browserType.isChrome ? "body" : "body,html").scrollTop())
+//				);
+//			});
 			
-			var dv = new DVCompareStations({width: width});
+			var dv = new DVCompareStations({
+				width: width, 
+				barHeight: 3, 
+				barSpacing: 0, 
+				supressLabels: true
+			});
 			dv.addGraphContainer("#dv-svg-container");
 			dv.addStationsSelect("#dv-stations-select-container");
 			dv.update(query, function() {
