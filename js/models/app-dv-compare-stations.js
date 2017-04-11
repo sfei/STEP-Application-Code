@@ -18,7 +18,11 @@ define([
 		this.containerHeight = 0;
 		this.height = 0;
 		this.barHeight = options.barHeight ? options.barHeight : 20;
-		this.barSpacing = options.barSpacing ? options.barSpacing : 4;
+		this.barSpacing = options.barSpacing || options.barSpacing === 0 ? options.barSpacing : 4;
+		this.supressLabels = !!options.supressLabels;
+		
+		this.highlightFixed = false;
+		this.highlightFixedIndex = -1;
 		
 		this.data = null;
 		this.containerSelect = null;
@@ -77,7 +81,7 @@ define([
 			.attr("data-placeholder", "Select a Station")
 			.chosen()
 			.change(function() {
-				self._highlightStation($(this).val());
+				self._highlightStation($(this).val(), true);
 			});
 		$(container).find(".chosen-container").css("text-align", "left");
 	};
@@ -112,23 +116,31 @@ define([
 				$("<option>", options[o])
 			);
 		}
-		this.stationsSelect.val(null);
-		this.stationsSelect.trigger('chosen:updated');
+//		this.stationsSelect.val(null);
+//		this.stationsSelect.trigger('chosen:updated');
 	};
 	
-	DVCompareStations.prototype._highlightStation = function(h) {
+	DVCompareStations.prototype._highlightStation = function(h, fix) {
 		if(!this.svg) { return; }
 		var self = this;
 		this.svgGraph.selectAll(".sg-bar")
 			.attr("fill", function(s, i) {
 				return self._colorFunction(s, i, h);
 			});
-		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
-		var scrollLen = Math.abs(scrollTo - $('body,html').scrollTop());
-		$('body,html').animate(
-			{scrollTop: scrollTo}, 
-			50 + 100*Math.log(10*scrollLen)
-		);
+		this.highlightFixed = !!fix;
+		if(this.highlightFixed) {
+			this.stationsSelect.val(h);
+			this.highlightFixedIndex = parseInt(h);
+		} else {
+			this.stationsSelect.val(null);
+		}
+			this.stationsSelect.trigger('chosen:updated');
+//		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
+//		var scrollLen = Math.abs(scrollTo - $('body,html').scrollTop());
+//		$('body,html').animate(
+//			{scrollTop: scrollTo}, 
+//			50 + 100*Math.log(10*scrollLen)
+//		);
 	};
 	
 	DVCompareStations.prototype._pullData = function(options) {
@@ -238,28 +250,32 @@ define([
 			labelPadding = 6, 
 			fontSize = 12, 
 			labelOffset = 6;
+	
+		halfBarSpacing = halfBarSpacing ? halfBarSpacing : self.barHeight;
 
-		// define clip paths
-		this.svg.append("defs").selectAll("clipPath")
-			.data(this.data.stations).enter()
-			.append("clipPath")
-				.attr("id", function(d, i) { return "clip-" + i; })
-			.append("rect")
-				.attr("x", this.margins.left)
-				.attr("y", function(s) { return halfBarSpacing+ self.y.scale(s.name) - self.barHeight; })
-				.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
-				.attr("height", this.barHeight);
+		if(!this.supressLabels) {
+			// define clip paths
+			this.svg.append("defs").selectAll("clipPath")
+				.data(this.data.stations).enter()
+				.append("clipPath")
+					.attr("id", function(d, i) { return "clip-" + i; })
+				.append("rect")
+					.attr("x", this.margins.left)
+					.attr("y", function(s) { return halfBarSpacing+ self.y.scale(s.name) - self.barHeight; })
+					.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
+					.attr("height", this.barHeight);
 		
-		// draw background labels
-		this.svgGraph.selectAll(".sg-label-back")
-			.data(this.data.stations).enter()
-			.append("text")
-				.attr("class", "sg-label sg-label-back")
-				.attr("fill", "black")
-				.attr("x", this.margins.left + labelPadding)
-				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
-				.style("font-size", fontSize)
-				.text(function(s) { return s.name; });
+			// draw background labels
+			this.svgGraph.selectAll(".sg-label-back")
+				.data(this.data.stations).enter()
+				.append("text")
+					.attr("class", "sg-label sg-label-back")
+					.attr("fill", "black")
+					.attr("x", this.margins.left + labelPadding)
+					.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
+					.style("font-size", fontSize)
+					.text(function(s) { return s.name; });
+		}
 	
 		// draw bars
 		this.svgGraph.selectAll(".sg-bar")
@@ -273,19 +289,22 @@ define([
 				.attr("height", this.barHeight)
 				.attr("fill", function(s, i) {
 					return self._colorFunction(s, i, -1);
-				});
+				})
+				.style("cursor", "pointer");
 		
-		// draw foreground labels with clip-path
-		this.svgGraph.selectAll(".sg-label-front")
-			.data(this.data.stations).enter()
-			.append("text")
-				.attr("class", "sg-label sg-label-front")
-				.attr("fill", "white")
-				.attr("x", this.margins.left + labelPadding)
-				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
-				.attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
-				.style("font-size", fontSize)
-				.text(function(s) { return s.name; });
+		if(!this.supressLabels) {
+			// draw foreground labels with clip-path
+			this.svgGraph.selectAll(".sg-label-front")
+				.data(this.data.stations).enter()
+				.append("text")
+					.attr("class", "sg-label sg-label-front")
+					.attr("fill", "white")
+					.attr("x", this.margins.left + labelPadding)
+					.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - labelOffset; })
+					.attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
+					.style("font-size", fontSize)
+					.text(function(s) { return s.name; });
+		}
 		
 		// draw axes last so they're on top
 		this.x.g = this.svgGraph.append("g")
@@ -313,6 +332,7 @@ define([
 	
 	// copied from simple-graph
 	DVCompareStations.prototype._constructTooltipFunctionality = function(textFunction, options) {
+		var self = this;
 		var svg = this.svg;
 		return function(selection) {
 			if(!selection) { return null; }
@@ -363,19 +383,25 @@ define([
 			})
 			.on('mousemove', function(d, i) {
 				if(tooltipDiv) {
-					// Move tooltip
-					var absMousePos = d3.mouse(d3Body.node());
-					var tooltipOffset = (options.offset) ? options.offset : [10, -15];
-					tooltipDiv.style('left', (absMousePos[0] + tooltipOffset[0])+'px');
-					tooltipDiv.style('top', (absMousePos[1] + tooltipOffset[1])+'px');
-					// TODO: selection is no longer array-like, hides it in _groups var -- this seems unideal, update/change when able
-					var tooltipText = (textFunction) ? textFunction(d, d3.mouse(svg.node()), selection._groups[0], i) : null;
-					// If no text, remove tooltip
-					if(!tooltipText) {
+					if(!self.highlightFixed || i === self.highlightFixedIndex) {
+						// Move tooltip
+						var absMousePos = d3.mouse(d3Body.node());
+						var tooltipOffset = (options.offset) ? options.offset : [10, -15];
+						tooltipDiv.style('left', (absMousePos[0] + tooltipOffset[0])+'px');
+						tooltipDiv.style('top', (absMousePos[1] + tooltipOffset[1])+'px');
+						// TODO: selection is no longer array-like, hides it in _groups var -- this seems unideal, update/change when able
+						var tooltipText = (textFunction) ? textFunction(d, d3.mouse(svg.node()), selection._groups[0], i) : null;
+						// If no text, remove tooltip
+						if(!tooltipText) {
+							tooltipDiv.remove();
+							tooltipDiv = null;
+						} else {
+							tooltipDiv.html(tooltipText);
+							self._highlightStation(i, self.highlightFixed);
+						}
+					} else if(tooltipDiv) {
 						tooltipDiv.remove();
 						tooltipDiv = null;
-					} else {
-						tooltipDiv.html(tooltipText);
 					}
 				}
 			})
@@ -385,6 +411,12 @@ define([
 					tooltipDiv.remove();
 					tooltipDiv = null;
 				}
+				if(!self.highlightFixed) {
+					self._highlightStation(-1);
+				}
+			})
+			.on("click", function(d, i) {
+				self._highlightStation(i, !self.highlightFixed);
 			});
 		};
 	};
