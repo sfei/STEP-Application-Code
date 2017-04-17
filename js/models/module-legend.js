@@ -441,7 +441,7 @@ define(["d3", "common"], function(d3, common) {
 			.css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden")
 			.append(
 				"<div class='legend-table-cell legend-cell-color' style='box-sizing:border-box;border:2px solid #000;'>&nbsp;</div>" + 
-				"<div class='legend-table-cell legend-cell-value'>No Samples</div>"
+				"<div class='legend-table-cell legend-cell-value'>Not Sampled</div>"
 			)
 			.appendTo(table);
 		// always show legend on update
