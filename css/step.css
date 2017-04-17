@@ -465,14 +465,18 @@ img.attribution-logo {
   text-align: center;
 }
 #threshold-group-select {
-  width: 96%;
+  width: 320px;
+/*  padding: 3px;
+  text-align: center;
+  font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;*/
+/*  width: 96%;
   height: 25px;
   border: 1px solid #5ae;
   border-radius: 5px;
   margin-top: 8px;
   font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
   background:#555;
-  color:#fff;
+  color:#fff;*/
 }
 #legend-show-adv {
   margin-top: 4px;

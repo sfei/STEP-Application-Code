@@ -68,22 +68,29 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
         <!-- filter/query controls -->
         <div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
         <div id="query-controls" class="controls-group">
+          <!-- species -->
           <div class="control-label">Select a Species: </div>
           <select id="species-control" disabled>
             <option>Loading..</option>
           </select>
           <div class="control-spacer"></div>
+          <!-- contaminants -->
           <div class="control-label">Select a Contaminant: </div>
           <select id="contaminant-control" disabled>
             <option>Loading..</option>
           </select> 
           <div class="control-spacer"></div>
+          <!-- thresholds -->
+          <div class="control-label">Contaminant Thresholds: </div>
+          <select id="threshold-group-select" disabled></select>
+          <div class="control-spacer"></div>
+          <!-- years -->
           <div class="control-label">Select a Year Range:</div>
           <div id="control-year-range-container">
             Loading..
           </div>
           <div class="control-spacer"></div>
-          <div class="control-label"></div>
+          <!-- other controls -->
           <div id="show-no-data-container">
             <input type="checkbox" id="show-no-data-control" disabled />
             Display All Stations

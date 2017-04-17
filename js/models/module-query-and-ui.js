@@ -602,6 +602,7 @@ define([
 		this.parent.refreshMarkerFactory();
 		if(!supressUpdate) { this.parent.refreshStations(); }
 		$("#show-no-data-control").prop("checked", this.parent.noDataOptions.showNoData);
+		$("#legend-row-no-data").css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden");
 	};
 	
 	return QueryAndUI;
