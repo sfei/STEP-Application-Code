@@ -10,7 +10,7 @@ define([
 		this.margins = {
 			left: (!options.margins.left && options.margins.left !== 0) ? 10 : options.margins.left, 
 			right: (!options.margins.right && options.margins.right !== 0) ? 10 : options.margins.right, 
-			top: (!options.margins.top && options.margins.top !== 0) ? 20 : options.margins.top, 
+			top: (!options.margins.top && options.margins.top !== 0) ? 10 : options.margins.top, 
 			bottom: (!options.margins.bottom && options.margins.bottom !== 0) ? 10 : options.margins.bottom
 		};
 		this.containerWidth = options.width ? options.width : 760;
@@ -50,15 +50,20 @@ define([
 			this.colors = [
 				{
 					min: 0,
-					color: "#19d"
+					color: "#5bf"
 				}
 			];
 		}
-		this.selectedColor = options.selectedColor ? options.selectedColor : "#04a";
+		this.selectedColor = options.selectedColor ? options.selectedColor : "#019";
 		
 		this.stationsSelect = null;
 		this.title = null;
 		this.units = null;
+	};
+	
+	DVCompareStations.prototype.getGraphHeight = function(numStations) {
+		var h = 0.5*this.barSpacing + this.barHeight + numStations * (this.barHeight + this.barSpacing);
+		return h > 300 ? h : 300;
 	};
 	
 	DVCompareStations.prototype.addGraphContainer = function(containerSelect) {
@@ -127,6 +132,26 @@ define([
 			.attr("fill", function(s, i) {
 				return self._colorFunction(s, i, h);
 			});
+		this.svgGraph.selectAll(".sg-pointer").remove();
+		if(fix && h >= 0) {
+			// adjusted bar height and spacing
+			var halfBarSpacing = 0.5*this.barSpacing;
+			var adjBarHeight = (this.height - halfBarSpacing) / this.data.stations.length - this.barSpacing;
+			// center y-pos
+			var yPos = this.y.scale(this.data.stations[h].name) + 0.5*adjBarHeight + halfBarSpacing;
+			// width of pointer as function of bar spacing
+			var pointerSize = Math.round(adjBarHeight);
+			pointerSize = (pointerSize > 7 ? (pointerSize < 16 ? pointerSize : 16) : 7);
+			var halfPointerSize = 0.6*pointerSize;
+			this.svgGraph.append("path")
+				.attr("class", "sg-pointer")
+				.attr("d",
+					"M " + (this.margins.left-pointerSize) + " " + (yPos-halfPointerSize) + " " +
+					"L " + (this.margins.left) + " " + yPos + " " + 
+					"L " + (this.margins.left-pointerSize) + " " + (yPos+halfPointerSize)
+				)
+				.attr("fill", this.selectedColor);
+		}
 		this.highlightFixed = !!fix;
 		if(this.highlightFixed) {
 			this.stationsSelect.val(h);
@@ -134,7 +159,7 @@ define([
 		} else {
 			this.stationsSelect.val(null);
 		}
-			this.stationsSelect.trigger('chosen:updated');
+		this.stationsSelect.trigger('chosen:updated');
 //		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
 //		var scrollLen = Math.abs(scrollTo - $('body,html').scrollTop());
 //		$('body,html').animate(
@@ -202,13 +227,16 @@ define([
 		}
 		
 		// clear and reset the SVG
-		var halfBarSpacing = 0.5*this.barSpacing;
 		d3.selectAll("svg > *").remove();
-		this.height = halfBarSpacing + this.barHeight + this.data.stations.length * (this.barHeight + this.barSpacing);
+		this.height = this.getGraphHeight(this.data.stations.length);
 		this.containerHeight = this.height + this.margins.top + this.margins.bottom;
 		this.svg.attr("height", this.containerHeight);
 		this.svgGraph = this.svg.append("g")
 			.attr("transform", "translate(" + this.margins.left + "," + this.margins.top + ")");
+	
+		// adjusted bar height and spacing
+		var halfBarSpacing = 0.5*this.barSpacing;
+		var adjBarHeight = (this.height - halfBarSpacing) / this.data.stations.length - this.barSpacing;
 	
 		// add title
 		this.units = this.data.thresholds[0].units;
@@ -224,12 +252,6 @@ define([
 			);
 		}
 		this.title += " (" + this.units + ") " + this.data.query.startYear + "-" + this.data.query.endYear;
-//		this.svgGraph.append("text")
-//			.attr("class", "sg-title")
-//			.attr("text-anchor", "middle")
-//			.attr("transform", "translate(" + (0.5*this.width) + "," + (30-this.margins.top) + ")")
-//			.style("font-size", 15)
-//			.text(this.title);
 		
 		// create axes
 		this.x = {};
@@ -251,7 +273,7 @@ define([
 			fontSize = 12, 
 			labelOffset = 6;
 	
-		halfBarSpacing = halfBarSpacing ? halfBarSpacing : self.barHeight;
+		halfBarSpacing = halfBarSpacing ? halfBarSpacing : adjBarHeight;
 
 		if(!this.supressLabels) {
 			// define clip paths
@@ -261,9 +283,9 @@ define([
 					.attr("id", function(d, i) { return "clip-" + i; })
 				.append("rect")
 					.attr("x", this.margins.left)
-					.attr("y", function(s) { return halfBarSpacing+ self.y.scale(s.name) - self.barHeight; })
+					.attr("y", function(s) { return halfBarSpacing+ self.y.scale(s.name) - adjBarHeight; })
 					.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
-					.attr("height", this.barHeight);
+					.attr("height", adjBarHeight);
 		
 			// draw background labels
 			this.svgGraph.selectAll(".sg-label-back")
@@ -284,9 +306,9 @@ define([
 				.attr("class", "sg-bar")
 				.attr("id", function(s, i) { return "sg-bar-" + i; })
 				.attr("x", this.margins.left)
-				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - self.barHeight; })
+				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - adjBarHeight; })
 				.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
-				.attr("height", this.barHeight)
+				.attr("height", adjBarHeight)
 				.attr("fill", function(s, i) {
 					return self._colorFunction(s, i, -1);
 				})
@@ -316,6 +338,18 @@ define([
 			.attr("transform", "translate(" + this.margins.left + ",0)")
 			.call(this.y.axis);
 	
+		// IE requires bottom-buffer hack to make the dynamic fit work
+		var btmBuffer = Math.round(100*this.containerHeight/this.containerWidth) + "%";
+		this.svg
+			.attr("width", this.width)
+			.attr("height", this.height)
+			//.attr("preserveAspectRatio", "xMinYMin slice")
+			.attr("viewBox", "0 0 " + this.width + " " + (this.containerHeight+150))
+			//.style('width', "1px") 
+			.style('height', "100%")
+			.style('padding-bottom', btmBuffer)
+			.style('overflow', "visible");
+	
 		// add tooltip
 		this.svgGraph.selectAll(".sg-bar, .sg-label").call(
 			this._constructTooltipFunctionality(
@@ -325,7 +359,7 @@ define([
 						+ d.value.addCommas(precision) + " " + self.units
 					);
 				}, 
-				{offset: [15, 5]}
+				{offset: [15, -25]}
 			)
 		);
 	};
@@ -383,25 +417,19 @@ define([
 			})
 			.on('mousemove', function(d, i) {
 				if(tooltipDiv) {
-					if(!self.highlightFixed || i === self.highlightFixedIndex) {
-						// Move tooltip
-						var absMousePos = d3.mouse(d3Body.node());
-						var tooltipOffset = (options.offset) ? options.offset : [10, -15];
-						tooltipDiv.style('left', (absMousePos[0] + tooltipOffset[0])+'px');
-						tooltipDiv.style('top', (absMousePos[1] + tooltipOffset[1])+'px');
-						// TODO: selection is no longer array-like, hides it in _groups var -- this seems unideal, update/change when able
-						var tooltipText = (textFunction) ? textFunction(d, d3.mouse(svg.node()), selection._groups[0], i) : null;
-						// If no text, remove tooltip
-						if(!tooltipText) {
-							tooltipDiv.remove();
-							tooltipDiv = null;
-						} else {
-							tooltipDiv.html(tooltipText);
-							self._highlightStation(i, self.highlightFixed);
-						}
-					} else if(tooltipDiv) {
+					// Move tooltip
+					var absMousePos = d3.mouse(d3Body.node());
+					var tooltipOffset = (options.offset) ? options.offset : [10, -15];
+					tooltipDiv.style('left', (absMousePos[0] + tooltipOffset[0])+'px');
+					tooltipDiv.style('top', (absMousePos[1] + tooltipOffset[1])+'px');
+					// TODO: selection is no longer array-like, hides it in _groups var -- this seems unideal, update/change when able
+					var tooltipText = (textFunction) ? textFunction(d, d3.mouse(svg.node()), selection._groups[0], i) : null;
+					// If no text, remove tooltip
+					if(!tooltipText) {
 						tooltipDiv.remove();
 						tooltipDiv = null;
+					} else {
+						tooltipDiv.html(tooltipText);
 					}
 				}
 			})
@@ -416,7 +444,11 @@ define([
 				}
 			})
 			.on("click", function(d, i) {
-				self._highlightStation(i, !self.highlightFixed);
+				if(self.highlightFixed && i === self.highlightFixedIndex) {
+					self._highlightStation(i, !self.highlightFixed);
+				} else {
+					self._highlightStation(i, true);
+				}
 			});
 		};
 	};

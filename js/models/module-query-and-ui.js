@@ -279,20 +279,27 @@ define([
 		$("#open-dv-compare")
 			.prop('disabled', false)
 			.click(function() {
+				var barHeight = 3;
+				/* This is a really hacky solution for the dynamic height, but basically copy the estimated 
+				 * graph height (see app-dv-compare-stations and getGraphHeight()) with spacing for controls 
+				 * as total, then check against a min height. */
+				var popupHeight = barHeight*(1 + self.parent.stations.data.length) + 110;
+				popupHeight = popupHeight > 540 ? popupHeight : 540;
 				var width = 760;
 				var params = {
-					species: self.lastQuery.species, 
-					contaminant: self.lastQuery.contaminant, 
-					startYear: self.lastQuery.startYear, 
-					endYear: self.lastQuery.endYear, 
-					width: width-30 // some spacing for scroll bar necessary
+					species     : self.lastQuery.species, 
+					contaminant : self.lastQuery.contaminant, 
+					startYear   : self.lastQuery.startYear, 
+					endYear     : self.lastQuery.endYear, 
+					width       : width, 
+					barHeight   : barHeight
 				};
 				common.newWindow(
 					null, 
 					"dvcs.php?" + $.param(params), 
 					"STEP Compare Stations", 
 					width, 
-					800, 
+					popupHeight, 
 					true
 				);
 			});

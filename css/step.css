@@ -694,10 +694,14 @@ img.attribution-logo {
 
 
 /* Stations Data Viz */
+#dv-container {
+  height: 100vh;
+}
 #dv-controls-container {
   position: fixed;
   top: 0;
   left: 0;
+  min-width: 700px;
   width: 100%;
   height: 65px;
   padding-top: 10px;
@@ -725,6 +729,11 @@ img.attribution-logo {
   color: #6cf;
 }
 #dv-svg-container {
-  margin-top: 50px;
+  width: 100vw;
+  max-width: 760px;
+  height: 100vh;
+}
+#dv-svg-spacer {
+  height: 80px;
 }
 

@@ -21,12 +21,8 @@ function init() {
 			query.contaminant = query.contaminant ? query.contaminant : 'Mercury';
 			query.startYear = query.startYear ? query.startYear : 1900;
 			query.endYear = query.endYear ? query.endYear : 3000;
-			
-			
 			var width = window.parameters.width ? window.parameters.width : 760;
-			var padding = 15;
-			width -= 2*padding;
-			$("#dv-container").width(width).css("padding", padding);
+			var barHeight = window.parameters.barHeight ? window.parameters.barHeight : 3;
 			
 //			$("#dv-back-to-top").on('click', function() {
 //				$('body,html').animate(
@@ -38,7 +34,7 @@ function init() {
 			
 			var dv = new DVCompareStations({
 				width: width, 
-				barHeight: 3, 
+				barHeight: barHeight, 
 				barSpacing: 0, 
 				supressLabels: true
 			});

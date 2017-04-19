@@ -17,13 +17,15 @@
         };
     </script>
   </head>
-  <body style="overflow-x:hidden;overflow-y:auto;">
+  <body style="overflow-x:scroll;overflow-y:hidden;">
     <div id="dv-container">
       <div id="dv-controls-container">
         <div id="dv-title"></div>
         <div id="dv-stations-select-container">Find My Station: </div>
       </div>
-      <div id="dv-svg-container"></div>
+      <div id="dv-svg-container">
+        <div id="dv-svg-spacer"></div>
+      </div>
     </div>
   </body>
 </html>
