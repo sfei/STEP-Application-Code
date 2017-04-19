@@ -1,6 +1,4 @@
-<?php
-$ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
-?>
+<?php require_once("init.php"); ?>
 <!DOCTYPE html>
 <html>
   <head>
