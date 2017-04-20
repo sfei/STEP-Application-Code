@@ -20,7 +20,7 @@ function init() {
 			query.species = query.species ? query.species : 'Largemouth Bass';
 			query.contaminant = query.contaminant ? query.contaminant : 'Mercury';
 			query.startYear = query.startYear ? query.startYear : 1900;
-			query.endYear = query.endYear ? query.endYear : 3000;
+			query.endYear = query.endYear ? query.endYear : 9999;
 			var width = window.parameters.width ? window.parameters.width : 760;
 			var barHeight = window.parameters.barHeight ? window.parameters.barHeight : 3;
 			

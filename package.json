@@ -1,0 +1,6 @@
+{
+    "name": "safe-to-eat-portal",
+    "dependencies": {
+        "requirejs": "~2.2.0"
+    }
+}
