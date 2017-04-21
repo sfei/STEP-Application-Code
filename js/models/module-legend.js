@@ -67,6 +67,24 @@ define(["d3", "common"], function(d3, common) {
 			});
 	};
 
+	Legend.prototype.getThresholdBreaks = function() {
+		return this.thresholds[this.selectedThresholdGroup].map(function(o) {
+			return o.value;
+		});
+	};
+	
+	
+	Legend.prototype.getThresholdColors = function() {
+		var colors = this.thresholds[this.selectedThresholdGroup].map(function(o) {
+			return o.color;
+		});
+		return [this.markerFactory.hexMap[0]].concat(
+			this.thresholds[this.selectedThresholdGroup].map(function(o) {
+				return o.color;
+			})
+		);
+	};
+
 	//************************************************************************************************************
 	// Symbol legend for water types
 	//************************************************************************************************************

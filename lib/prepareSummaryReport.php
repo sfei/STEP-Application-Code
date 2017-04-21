@@ -18,6 +18,4 @@ session_start();
 $_SESSION['data'] = $result;
 $_SESSION['query'] = $query;
 
-echo 0;
-
 ?>

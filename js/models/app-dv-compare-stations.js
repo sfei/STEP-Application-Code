@@ -45,20 +45,18 @@ define([
 			this.axisOptions.styles.stroke = "black";
 		}
 		
-		this.colors = options.colors;
-		if(!this.colors || !this.colors.length) {
-			this.colors = [
-				{
-					min: 0,
-					color: "#5bf"
-				}
-			];
-		}
-		this.selectedColor = options.selectedColor ? options.selectedColor : "#019";
+		this.colors = ["#5bf"];
+		this.thresholds = null;
+		this.selectedColor = options.selectedColor ? options.selectedColor : "#000";
 		
 		this.stationsSelect = null;
 		this.title = null;
 		this.units = null;
+	};
+	
+	DVCompareStations.prototype.setThresholds = function(thresholds, colors) {
+		this.thresholds = thresholds;
+		this.colors = colors;
 	};
 	
 	DVCompareStations.prototype.getGraphHeight = function(numStations) {
@@ -106,16 +104,15 @@ define([
 	DVCompareStations.prototype._updateStationsSelect = function() {
 		if(!this.data) { return; }
 		// first load in array, then sort alphabetically, then append
-		var options = [];
-		for(var s = 0; s < this.data.stations.length; s++) {
-			options.push({
-				text: this.data.stations[s].name, 
-				value: s
+		var options = this.data.stations
+			.map(function(s) {
+				return {
+					text: s.name, 
+					value: s
+				};
+			}).sort(function(a, b) {
+				return a.text > b.text ? 1 : -1;
 			});
-		}
-		options.sort(function(a, b) {
-			return a.text > b.text ? 1 : -1;
-		});
 		for(var o = 0; o < options.length; o++) {
 			this.stationsSelect.append(
 				$("<option>", options[o])
@@ -127,11 +124,6 @@ define([
 	
 	DVCompareStations.prototype._highlightStation = function(h, fix) {
 		if(!this.svg) { return; }
-		var self = this;
-		this.svgGraph.selectAll(".sg-bar")
-			.attr("fill", function(s, i) {
-				return self._colorFunction(s, i, h);
-			});
 		this.svgGraph.selectAll(".sg-pointer").remove();
 		if(fix && h >= 0) {
 			// adjusted bar height and spacing
@@ -160,12 +152,6 @@ define([
 			this.stationsSelect.val(null);
 		}
 		this.stationsSelect.trigger('chosen:updated');
-//		var scrollTo = $("#sg-bar-"+h).offset().top - 130;
-//		var scrollLen = Math.abs(scrollTo - $('body,html').scrollTop());
-//		$('body,html').animate(
-//			{scrollTop: scrollTo}, 
-//			50 + 100*Math.log(10*scrollLen)
-//		);
 	};
 	
 	DVCompareStations.prototype._pullData = function(options) {
@@ -187,14 +173,20 @@ define([
 		});
 	};
 	
-	DVCompareStations.prototype._colorFunction = function(s, i, h) {
-		if(i == h) { // may be comparing int to string so use loose comparison
+	DVCompareStations.prototype._colorFunction = function(s, i, h, t) {
+		if(i >= 0 && i == h) { // may be comparing int to string so use loose comparison
 			return this.selectedColor;
+		}
+		if(t >= 0) {
+			return this.colors[t];
+		}
+		if(!this.thresholds || this.thresholds.length === 1) {
+			return this.colors[0];
 		}
 		var color;
 		for(var c = 0; c < this.colors.length; c++) {
-			color = this.colors[c].color;
-			if(s.value < this.colors[c].min) {
+			color = this.colors[c];
+			if(c < this.thresholds.length && s.value < this.thresholds[c]) {
 				break;
 			}
 		}
@@ -300,19 +292,48 @@ define([
 		}
 	
 		// draw bars
-		this.svgGraph.selectAll(".sg-bar")
-			.data(this.data.stations).enter()
-			.append("rect")
-				.attr("class", "sg-bar")
-				.attr("id", function(s, i) { return "sg-bar-" + i; })
-				.attr("x", this.margins.left)
-				.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - adjBarHeight; })
-				.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
-				.attr("height", adjBarHeight)
-				.attr("fill", function(s, i) {
-					return self._colorFunction(s, i, -1);
-				})
-				.style("cursor", "pointer");
+		if(!this.thresholds) {
+			this.svgGraph.selectAll(".sg-bar")
+				.data(this.data.stations).enter()
+				.append("rect")
+					.attr("class", "sg-bar")
+					.attr("station", s)
+					.attr("x", this.margins.left)
+					.attr("y", function(s) { return halfBarSpacing + self.y.scale(s.name) - adjBarHeight; })
+					.attr("width", function(s) { return self.x.scale(s.value) - self.margins.left; })
+					.attr("height", adjBarHeight)
+					.attr("fill", function(s, i) {
+						return self._colorFunction(s, i, -1);
+					})
+					.style("cursor", "pointer");
+		} else {
+			var lastThreshold = 0;
+			for(var t = 0; t <= this.thresholds.length; t++) {
+				var threshold = t < this.thresholds.length ? this.thresholds[t] : null;
+				for(var s = 0; s < this.data.stations.length; s++) {
+					var station = this.data.stations[s];
+					if(station.value < lastThreshold) {
+						continue;
+					}
+					var startX = this.x.scale(lastThreshold);
+					var drawToX = (
+						!threshold || station.value < threshold
+						? station.value
+						: threshold
+					);
+					this.svgGraph.append("rect")
+						.attr("class", "sg-bar")
+						.attr("station", s)
+						.attr("x", startX)
+						.attr("y", halfBarSpacing + this.y.scale(station.name) - adjBarHeight)
+						.attr("width", this.x.scale(drawToX) - startX)
+						.attr("height", adjBarHeight)
+						.attr("fill", this._colorFunction(-1, -1, -1, t))
+						.style("cursor", "pointer");
+				}
+				lastThreshold = threshold;
+			}
+		}
 		
 		if(!this.supressLabels) {
 			// draw foreground labels with clip-path
@@ -354,6 +375,7 @@ define([
 		this.svgGraph.selectAll(".sg-bar, .sg-label").call(
 			this._constructTooltipFunctionality(
 				function(d, p, s, i) {
+					if(!d || !d.name) { d = self.data.stations[s[i].getAttribute("station")];}
 					return (
 						"<b>" + d.name + "</b><br />"
 						+ d.value.addCommas(precision) + " " + self.units
@@ -433,7 +455,7 @@ define([
 					}
 				}
 			})
-			.on("mouseout", function(d, i) {
+			.on("mouseout", function() {
 				// Remove tooltip
 				if(tooltipDiv) {
 					tooltipDiv.remove();
@@ -443,11 +465,12 @@ define([
 					self._highlightStation(-1);
 				}
 			})
-			.on("click", function(d, i) {
-				if(self.highlightFixed && i === self.highlightFixedIndex) {
-					self._highlightStation(i, !self.highlightFixed);
+			.on("click", function(d, i, e) {
+				var s = e[i].getAttribute("station");
+				if(self.highlightFixed && s === self.highlightFixedIndex) {
+					self._highlightStation(s, !self.highlightFixed);
 				} else {
-					self._highlightStation(i, true);
+					self._highlightStation(s, true);
 				}
 			});
 		};

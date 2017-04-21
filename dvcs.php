@@ -14,13 +14,25 @@
     <script src="js/lib/require.js" data-main="build/dvcs"></script>
     <?php } ?>
     <script>
-        parameters = {
-            width: <?= !empty($_GET["width"]) ? $_GET["width"] : 760; ?>, 
-            species: "<?= !empty($_GET["species"]) ? $_GET["species"] : "Largemouth Bass"; ?>", 
-            contaminant: "<?= !empty($_GET["contaminant"]) ? $_GET["contaminant"] : "Mercury"; ?>", 
-            startYear: "<?= !empty($_GET["startYear"]) ? $_GET["startYear"] : 1900; ?>", 
-            endYear: "<?= !empty($_GET["endYear"]) ? $_GET["endYear"] : 9999; ?>"
+        var parameters = {
+            <?php
+                session_start();
+                // list of variables
+                require_once("lib/dvcsVars.php");
+                $first = true;
+                foreach($dvcsVars as $key) {
+                    if($first) {
+                        $first = false;
+                    } else {
+                        echo ", ";
+                    }
+                    echo $key . ":\"" . addslashes($_SESSION[$key]) . "\"";
+                }
+            ?>
         };
+        parameters.barHeight = parseFloat(parameters.barHeight);
+        parameters.thresholds = JSON.parse(parameters.thresholds);
+        parameters.colors = JSON.parse(parameters.colors);
     </script>
   </head>
   <body style="overflow-x:scroll;overflow-y:hidden;">
