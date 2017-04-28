@@ -76,7 +76,8 @@ class StepQueries {
 
 	private function __construct() {
 		// pull db conn info from ini/config
-		require("../step_conns.php");
+		require("../init.php");
+		require($dbconnPath);
 		// create connection
 		if(!StepQueries::$dbconn) {
 			StepQueries::$dbconn = new PDO("dblib:host=$host;dbname=$dbname", $user, $pass);

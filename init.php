@@ -1,7 +1,9 @@
 <?php
 
 $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
-// for now, as we only have staging on geodata3, which also doesn't support INI_SCANNER_TYPED
-$ini["devmode"] = true;
+// set such that any relative paths are from the location on init.php, despite if this is called as a require
+// from elsewhere
+chdir(dirname(__FILE__));
+$dbconnPath = realpath($ini["path_conns"]) . "/" . ($ini["devmode"] ? $ini["conn_dev"] : $ini["conn_prd"]);
 
 ?>
