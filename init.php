@@ -5,5 +5,10 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
 // from elsewhere
 chdir(dirname(__FILE__));
 $dbconnPath = realpath($ini["path_conns"]) . "/" . ($ini["devmode"] ? $ini["conn_dev"] : $ini["conn_prd"]);
+// error display
+if($ini["devmode"]) {
+	error_reporting(E_ALL);
+	ini_set('display_errors', 1);
+}
 
 ?>

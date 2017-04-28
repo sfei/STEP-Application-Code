@@ -19,7 +19,7 @@ var requirejs = require('requirejs'),
 			optimizeCss:    "default"
 		}
 	};
-	
+
 var lastFunction = null;
 for(var key in builds) {
 	var buildFunc = (function(k, c, f) {
@@ -33,6 +33,7 @@ for(var key in builds) {
 					console.log("Build completed");
 				}
 			}, function(err) {
+				console.log(err);
 				throw err;
 			});
 		};
