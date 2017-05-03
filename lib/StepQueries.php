@@ -146,10 +146,10 @@ class StepQueries {
 	 *		</ul> */
 	public function getAllStations() {
 		$query = StepQueries::$dbconn->prepare(
-			"SELECT * FROM [STEPDEV].[dbo].[STEP_StationGroup] AS a "
+			"SELECT * FROM [dbo].[STEP_StationGroup] AS a "
 				. "CROSS APPLY ("
 					. "SELECT TOP 1 b.WaterType, b.AdvisoryID "
-					. "FROM [STEPDEV].[dbo].[STEP_Stations] AS b "
+					. "FROM [dbo].[STEP_Stations] AS b "
 					. "WHERE a.StationGroupID = b.StationGroupID"
 				. ") AS c "
 				. "LEFT JOIN [dbo].[STEP_Advisories] AS d "

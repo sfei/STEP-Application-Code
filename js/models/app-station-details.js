@@ -942,8 +942,7 @@ define([
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) { onSuccess = true; },
-				error: function(e) { }
+				success: function() { onSuccess = true; }
 			});
 			if(onSuccess) {
 				if(self.reportWindow && !self.reportWindow.closed) {
