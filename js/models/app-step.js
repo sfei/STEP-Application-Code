@@ -39,7 +39,8 @@ define([
 		this.hoverInteraction; // hover interactions stored globally so it can be removed/reapplied
 		this.colorMap = [      // the color gradient for symbology
 			[210, 255, 255], 
-			[ 60, 100, 255], 
+			[110, 180, 200], 
+			[ 45,  35, 230], 
 			[ 95,   0, 180]
 		];
 		// array of loaded base layers (stored this way for base layers switching)

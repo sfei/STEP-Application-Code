@@ -514,12 +514,12 @@ define(["d3", "common"], function(d3, common) {
 		panel.append("<hr />");
 		// add/remove thresholds
 		addThreshold.click(function() {
-			if($(".custom-threshold-control").length < 8) {
+			if($(".custom-threshold-control").length < 4) {
 				self.addThresholdControl(inputs, 0); 
 			}
 		});
 		removeThreshold.click(function() { 
-			if($(".custom-threshold-control").length > 3) {
+			if($(".custom-threshold-control").length > 1) {
 				$(".custom-threshold-control").last().remove(); 
 			}
 		});
