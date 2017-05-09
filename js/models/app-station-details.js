@@ -296,6 +296,17 @@ define([
 			self.isOpen = false;
 			self.element.hide();
 		});
+		
+		var listLinks = $("<ul>");
+		// zoom to station link
+		listLinks.append(
+			$("<li>").append(
+				$("<a>", {href: "#", text: "Zoom to this station"})
+					.on('click', function() {
+						self.parent.zoomToStation(self.station);
+					})
+			)
+		);
 		// advisory link
 		var advisoryName;
 		var advisoryUrl = this.station.get("advisoryUrl");
@@ -310,7 +321,7 @@ define([
 		} else {
 			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
 		}
-		var listLinks = $("<ul></ul>").append(
+		listLinks.append(
 			$("<li></li>").html(
 				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + advisoryName + "</a>"
 			)
@@ -331,7 +342,7 @@ define([
 			));
 		}
 	
-		this.element.find("#details-info").html(listLinks);
+		this.element.find("#details-info").html("").append(listLinks);
 	};
 	
 	
@@ -784,7 +795,7 @@ define([
 								.click(function() {
 									var station = self.parent.getStationByName($(this).html());
 									if(station) {
-										self.parent.zoomToStation(station);
+										//self.parent.zoomToStation(station);
 										self.parent.openStationDetails(station);
 									}
 								});

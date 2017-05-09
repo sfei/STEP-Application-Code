@@ -65,6 +65,11 @@ define(["d3", "common"], function(d3, common) {
 					self.thresholdsChanged();
 				}
 			});
+		// add help tooltip
+		$("#threshold_group_select_chosen").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Symbolize map data by these contaminant thresholds"
+		);
 	};
 
 	Legend.prototype.getThresholdBreaks = function() {
@@ -459,7 +464,7 @@ define(["d3", "common"], function(d3, common) {
 			.css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden")
 			.append(
 				"<div class='legend-table-cell legend-cell-color' style='box-sizing:border-box;border:2px solid #000;'>&nbsp;</div>" + 
-				"<div class='legend-table-cell legend-cell-value'>Not Sampled</div>"
+				"<div id='legend-cell-no-data' class='legend-table-cell legend-cell-desc'>No results matching current filters</div>"
 			)
 			.appendTo(table);
 		// always show legend on update

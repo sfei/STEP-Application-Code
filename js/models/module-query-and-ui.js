@@ -239,6 +239,42 @@ define([
 		this.resetDefaultQuery();
 		// set visible
 		$("#controls-container").css('visibility', 'visible');
+		// add help tooltips
+		$("#control-tab-query").addClass("cm-tooltip-left").attr(
+			"cm-tooltip-msg", 
+			"Change the data being displayed on the map"
+		);
+		$("#control-tab-location").addClass("cm-tooltip-left").attr(
+			"cm-tooltip-msg", 
+			"Find a location by county or name"
+		);
+		$("#control-tab-map").addClass("cm-tooltip-left").attr(
+			"cm-tooltip-msg", 
+			"Change the layers being displayed on the map"
+		);
+
+		$("#species_control_chosen").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Filter map data by this species of interest"
+		);
+		$("#contaminant_control_chosen").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Show map data for this contaminant of interest"
+		);
+		// note due to legacy and changes, threshold controls still handled in legend-module
+		$("#control-year-range").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Filter map data between these years"
+		);
+
+		$("#show-no-data-container").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Hide stations that do not have results matching above filters"
+		);
+		$("#reset-controls").addClass("cm-tooltip-bottom").attr(
+			"cm-tooltip-msg", 
+			"Reset all settings above to default values"
+		);
 	};
 
 	/**
@@ -315,7 +351,7 @@ define([
 			});
 		$("#show-no-data-control")
 			.prop('disabled', false)
-			.prop('checked', this.parent.noDataOptions.showNoData)
+			.prop('checked', !this.parent.noDataOptions.showNoData)
 			.click(function() {
 				if(self.prepSecondQuery) {
 					// this disables able setting no-data display to false when doing the query immediately after,
@@ -581,7 +617,7 @@ define([
 		}
 		this.parent.refreshMarkerFactory();
 		if(!supressUpdate) { this.parent.refreshStations(); }
-		$("#show-no-data-control").prop("checked", this.parent.noDataOptions.showNoData);
+		$("#show-no-data-control").prop("checked", !this.parent.noDataOptions.showNoData);
 		$("#legend-row-no-data").css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden");
 	};
 	

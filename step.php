@@ -64,26 +64,26 @@
       <div id="controls-container" style="visibility:hidden;">
         <!-- <div id="controls-header">Safe-to-Eat Portal</div> -->
         <!-- filter/query controls -->
-        <div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
+        <div id="control-tab-query" class="control-tab"><i></i>Select Species, Contaminant, and Years</div>
         <div id="query-controls" class="controls-group">
           <!-- species -->
-          <div class="control-label">Select a Species: </div>
+          <div id="control-label-species" class="control-label">Select a Species: </div>
           <select id="species-control" disabled>
             <option>Loading..</option>
           </select>
           <div class="control-spacer"></div>
           <!-- contaminants -->
-          <div class="control-label">Select a Contaminant: </div>
+          <div id="control-label-contaminant" class="control-label">Select a Contaminant: </div>
           <select id="contaminant-control" disabled>
             <option>Loading..</option>
           </select> 
           <div class="control-spacer"></div>
           <!-- thresholds -->
-          <div class="control-label">Contaminant Thresholds: </div>
+          <div id="control-label-thresholds" class="control-label">Select Contaminant Thresholds: </div>
           <select id="threshold-group-select" disabled></select>
           <div class="control-spacer"></div>
           <!-- years -->
-          <div class="control-label">Select a Year Range:</div>
+          <div id="control-label-year-range" class="control-label">Select a Year Range:</div>
           <div id="control-year-range-container">
             Loading..
           </div>
@@ -91,7 +91,7 @@
           <!-- other controls -->
           <div id="show-no-data-container">
             <input type="checkbox" id="show-no-data-control" disabled />
-            Display All Stations
+            Hide stations with no results
           </div>
           <div class="control-spacer"></div>
           <div id="reset-controls" class="button">
@@ -99,7 +99,7 @@
           </div>
         </diV>
         <!-- search by location controls -->
-        <div id="control-tab-location" class="control-tab">Find by Location</div>
+        <div id="control-tab-location" class="control-tab"><i></i>Find by Location</div>
         <div id="location-controls" class="controls-group">
           <div class="control-label">Zoom to County:</div>
           <select id="counties-select" data-placeholder="Zoom to County.." disabled>
@@ -112,7 +112,7 @@
           </select>
         </div>
         <!-- map/layer controls -->
-        <div id="control-tab-map" class="control-tab">Map/Layer Options</div>
+        <div id="control-tab-map" class="control-tab"><i></i>Map/Layer Options</div>
         <div id="map-controls" class="controls-group">
           <div class="control-label-inline">Base Layer:</div>
           <div id="base-layer-control-container"></div>
