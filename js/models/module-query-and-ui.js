@@ -276,44 +276,6 @@ define([
 					flashMessage: "Filters and display settings reset to default."
 				});
 			});
-		$("#open-dv-compare")
-			.prop('disabled', false)
-			.click(function() {
-				var width = 760, 
-					barHeight = 4;
-				// async ajax to keep popup callstack shallower (and hopefully avoid angering popup blockers)
-				var success = false;
-				$.ajax({
-					async: false, 
-					url: "lib/prepareDvcs.php", 
-					data: {
-						species     : self.lastQuery.species, 
-						contaminant : self.lastQuery.contaminant, 
-						startYear   : self.lastQuery.startYear, 
-						endYear     : self.lastQuery.endYear, 
-						width       : width, 
-						barHeight   : barHeight, 
-						thresholds  : JSON.stringify(self.parent.modules.legend.getThresholdBreaks()), 
-						colors      : JSON.stringify(self.parent.modules.legend.getThresholdColors())
-					}, 
-					success: function(res) { success = true; }
-				});
-				if(success) {
-					/* This is a really hacky solution for the dynamic height, but basically copy the  
-					 * estimated graph height (see app-dv-compare-stations and getGraphHeight()) with spacing 
-					 * for controls as total, then check against a min height. */
-					var popupHeight = barHeight*(1 + self.parent.stations.data.length) + 110;
-					popupHeight = popupHeight > 540 ? popupHeight : 540;
-					common.newWindow(
-						null, 
-						"dvcs.php", 
-						"STEP Compare Stations", 
-						width, 
-						popupHeight, 
-						true
-					);
-				}
-			});
 		$("#stations-select")
 			.prop('disabled', false)
 			.change(function() {

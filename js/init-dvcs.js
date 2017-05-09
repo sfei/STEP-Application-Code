@@ -30,7 +30,22 @@ function init() {
 					endYear     : params.endYear     ? params.endYear     : 9999
 				}, 
 				function() {
+					// resize if necessary
+					var newHeight = DVCompareStations.getPopupHeight(params.barHeight, dv.data.stations.length);
+					if(Math.abs(window.outerHeight - newHeight) > 20) {
+						DVCompareStations.adjustWindow(newHeight);
+					}
+					// set title
 					$("#dv-title").html(dv.title);
+					// highlight station
+					if(params.station) {
+						for(var i = 0; i < dv.data.stations.length; i++) {
+							if(dv.data.stations[i].name === params.station) {
+								dv._highlightStation(i, true);
+								break;
+							}
+						}
+					}
 				}
 			);
 			window.dv = dv;

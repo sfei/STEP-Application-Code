@@ -1,6 +1,7 @@
 <?php
 
 $dvcsVars = array(
+	"station", 
 	"species", 
 	"contaminant", 
 	"startYear", 

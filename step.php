@@ -97,9 +97,6 @@
           <div id="reset-controls" class="button">
             Reset To Initial Settings
           </div>
-          <div id="open-dv-compare" class="button">
-            Compare All Stations
-          </div>
         </diV>
         <!-- search by location controls -->
         <div id="control-tab-location" class="control-tab">Find by Location</div>
@@ -130,7 +127,7 @@
           <input type="checkbox" id="show-mpa-control" disabled />
         </div>
         <div id="additional-buttons">
-          <div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
+          <div id="zoom-stations-tab" class="button-tab">Fit View to Stations</div>
           <div id="download-tab" class="button-tab">Download Data</div>
         </div>
       </div>

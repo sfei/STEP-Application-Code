@@ -246,8 +246,21 @@ img.attribution-logo {
   color: #fff;
   font-size: 13px;
 }
-.control-tab-active {
-  /*font-weight: bolder;*/
+.control-tab:before, .control-tab-active:before {
+  content: '';
+  margin-bottom: 3px;
+  border: 4px solid transparent;
+  border-top: 4px solid white;
+  display: inline-block;
+  vertical-align: bottom;
+}
+.control-tab:before {
+  transform: rotate(-90deg);
+}
+.control-tab-active:before {
+  margin-bottom: 1px;
+  margin-left: -3px;
+  margin-right: 3px;
 }
 .controls-group {
   display: block;
@@ -259,6 +272,7 @@ img.attribution-logo {
   font-size: 13px;
 }
 .control-label, .control-label-inline {
+  position: relative;
   cursor: default;
   text-align: center;
   margin-right: 4px;
@@ -559,14 +573,6 @@ img.attribution-logo {
   min-width: 500px;
   min-height: 200px;
 }
-#details-title {
-  position: relative;
-  display: block;
-  font-weight: bold;
-  font-size: 18px;
-  margin-left: 8px;
-  margin-bottom: 6px;
-}
 #details-dialog-close {
   float: right;
   position: absolute;
@@ -578,6 +584,14 @@ img.attribution-logo {
   border: 2px solid #777;
   text-align: center;
   line-height: 14px;
+}
+#details-title {
+  position: relative;
+  display: block;
+  font-weight: bold;
+  font-size: 18px;
+  margin-left: 8px;
+  margin-bottom: 6px;
 }
 #details-info {
   margin-bottom: 6px;
@@ -650,6 +664,10 @@ img.attribution-logo {
   max-height: 460px;
   overflow-x: auto;
   overflow-y: scroll;
+}
+#details-dv-compare-stations {
+  margin: 6px;
+  text-align: right;
 }
 .details-table-row, .details-table-header-row {
   position: relative;

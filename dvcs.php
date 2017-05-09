@@ -31,8 +31,8 @@
             ?>
         };
         parameters.barHeight = parseFloat(parameters.barHeight);
-        parameters.thresholds = JSON.parse(parameters.thresholds);
-        parameters.colors = JSON.parse(parameters.colors);
+        parameters.thresholds = parameters.thresholds ? JSON.parse(parameters.thresholds) : null;
+        parameters.colors = parameters.colors ? JSON.parse(parameters.colors) : null;
     </script>
   </head>
   <body style="overflow-x:scroll;overflow-y:hidden;">
