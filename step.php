@@ -64,7 +64,7 @@
       <div id="controls-container" style="visibility:hidden;">
         <!-- <div id="controls-header">Safe-to-Eat Portal</div> -->
         <!-- filter/query controls -->
-        <div id="control-tab-query" class="control-tab"><i></i>Select Species, Contaminant, and Years</div>
+        <div id="control-tab-query" class="control-tab"><i></i>Filter Stations on Map</div>
         <div id="query-controls" class="controls-group">
           <!-- species -->
           <div id="control-label-species" class="control-label">Select a Species: </div>

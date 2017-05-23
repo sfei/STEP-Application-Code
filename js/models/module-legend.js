@@ -80,7 +80,7 @@ define(["d3", "common"], function(d3, common) {
 	
 	
 	Legend.prototype.getThresholdColors = function() {
-		var colors = this.thresholds[this.selectedThresholdGroup].map(function(o) {
+		this.thresholds[this.selectedThresholdGroup].map(function(o) {
 			return o.color;
 		});
 		return [this.markerFactory.hexMap[0]].concat(
@@ -539,7 +539,7 @@ define(["d3", "common"], function(d3, common) {
 			);
 		common.setModal(true, panel, {
 			onClose: function() {
-				$("#threshold-group-select").val(self.selectedThresholdGroup);
+				$("#threshold-group-select").val(self.selectedThresholdGroup).trigger('chosen:updated');
 			}
 		});
 		// close functionality
@@ -554,13 +554,10 @@ define(["d3", "common"], function(d3, common) {
 			});
 			common.hideModal(true);
 			var updated = self.updateThresholds(self.contaminant, data, null, true);
-			if(updated) {
-				// set to hidden custom option
-				$("#threshold-group-select").val("custom");
-			} else {
-				// on failure return to last selection
-				$("#threshold-group-select").val(self.selectedThresholdGroup);
-			}
+			$("#threshold-group-select")
+				// set to hidden custom option or on failure return to last selection
+				.val(updated ? "custom" : self.selectedThresholdGroup)
+				.trigger('chosen:updated');
 		});
 	};
 
