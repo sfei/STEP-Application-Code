@@ -2,6 +2,6 @@
 @import url("ol.css");
 @import url("nouislider.min.css");
 @import url("chosen.min.css");
-@import url("../js/lib/common/common.css");
+@import url("../js/lib/common/common.min.css");
 /* application specific styles */
 @import url("step.css");

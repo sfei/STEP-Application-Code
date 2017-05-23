@@ -554,8 +554,8 @@ define(["d3", "common"], function(d3, common) {
 			});
 			common.hideModal(true);
 			var updated = self.updateThresholds(self.contaminant, data, null, true);
+			// set to hidden custom option or on failure return to last selection
 			$("#threshold-group-select")
-				// set to hidden custom option or on failure return to last selection
 				.val(updated ? "custom" : self.selectedThresholdGroup)
 				.trigger('chosen:updated');
 		});
