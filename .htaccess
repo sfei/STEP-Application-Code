@@ -1,3 +1,0 @@
-
-Header set Access-Control-Allow-Origin http://mapservices.sfei.org
-Header set Access-Control-Allow-Origin http://icons.opengeo.org
