@@ -24,10 +24,6 @@ define(["d3", "common"], function(d3, common) {
 			"standard", 
 			"custom"
 		];
-//		this.nonAdvancedGroups = [
-//			"oehha-men-women-over-45", 
-//			"oehha-women-1845-children"
-//		];
 	};
 	
 	/**
@@ -46,15 +42,6 @@ define(["d3", "common"], function(d3, common) {
 		$("<div id='legend-content'></div>").appendTo(this.legendContainer)
 			.addClass("inner-container-style")
 			.append("<div id='legend-title'></div>")
-			.append(
-				"<div id='thresholds-control'>" + 
-					"<hr />" + 
-//					"<div id='legend-show-adv'>" + 
-//						"<input type='checkbox' id='threshold-show-adv' />Show Advanced Options" + 
-//					"</div>" +
-					"<select id='threshold-group-select'></select>" + 
-				"</div>"
-			)
 			.append("<div id='legend-symbols'><hr/></div>")
 			.append("<div id='legend-table'></div>");
 		$("<div id='hide-legend-tab'>Hide Legend</div>").appendTo(this.legendContainer)
@@ -67,6 +54,8 @@ define(["d3", "common"], function(d3, common) {
 		this.legendContainer.hide();
 		// add functionality to threshold group select here
 		$("#threshold-group-select")
+			.prop("disabled", false)
+			.chosen()
 			.on('change', function() {
 				var group = $("#threshold-group-select option:selected").val();
 				if(group === "customize") {
@@ -76,13 +65,29 @@ define(["d3", "common"], function(d3, common) {
 					self.thresholdsChanged();
 				}
 			});
-		$("#threshold-show-adv").on('change', function() {
-			if(!this.checked && $("#threshold-group-select").find(".non-adv-thres-grp").length === 0) {
-				this.checked = true;
-			} else {
-				$("#threshold-group-select").find(".adv-thres-grp").css("display", this.checked ? "block" : 'none');
-			}
+		// add help tooltip
+		$("#threshold_group_select_chosen").addClass("cm-tooltip-top").attr(
+			"cm-tooltip-msg", 
+			"Symbolize map data by these contaminant thresholds"
+		);
+	};
+
+	Legend.prototype.getThresholdBreaks = function() {
+		return this.thresholds[this.selectedThresholdGroup].map(function(o) {
+			return o.value;
 		});
+	};
+	
+	
+	Legend.prototype.getThresholdColors = function() {
+		this.thresholds[this.selectedThresholdGroup].map(function(o) {
+			return o.color;
+		});
+		return [this.markerFactory.hexMap[0]].concat(
+			this.thresholds[this.selectedThresholdGroup].map(function(o) {
+				return o.color;
+			})
+		);
 	};
 
 	//************************************************************************************************************
@@ -178,14 +183,6 @@ define(["d3", "common"], function(d3, common) {
 				}
 				var option = $("<option>", {value: group}).appendTo(selectElem)
 					.text(this.thresholdGroups[group]);
-//				if($.inArray(group, this.nonAdvancedGroups) < 0) {
-//					option.attr("class", "adv-thres-grp");
-//				} else {
-//					option.attr("class", "non-adv-thres-grp");
-//					if(!nonAdvancedExists) {
-//						nonAdvancedExists = true;
-//					}
-//				}
 				option.attr("class", "adv-thres-grp");
 			}
 		}
@@ -212,12 +209,7 @@ define(["d3", "common"], function(d3, common) {
 			.text(this.thresholdGroups.custom)
 			.prop("disabled", true)
 			.css("display", "none");
-//		if(nonAdvancedExists) {
-//			selectElem.find(".adv-thres-grp").css("display", "none");
-//			$("#threshold-show-adv").prop('checked', false).prop('disabled', false);
-//		} else {
-//			$("#threshold-show-adv").prop('checked', true).prop('disabled', true);
-//		}
+		selectElem.trigger('chosen:updated');
 	};
 
 	/**
@@ -442,7 +434,6 @@ define(["d3", "common"], function(d3, common) {
 		$("#legend-title").html(title);
 		var table = $("#legend-table").html("");
 		var lastThreshold = null;
-		//var isOehha = this.selectedThresholdGroup.startsWith("oehha");
 		// do legend in descending order
 		for(var i = thresholdsData.length-1; i >= -1; i--) {
 			var row = "<div class='legend-table-row'>";
@@ -460,9 +451,6 @@ define(["d3", "common"], function(d3, common) {
 			} else {
 				label = threshold.value + " - " + lastThreshold;
 			}
-//			} else if(threshold.value === 0) {
-//				label = "ND";
-//			}
 			lastThreshold = threshold.value;
 			label += " " + threshold.units;
 			row += "<div class='legend-table-cell legend-cell-color' style='background-color:" + threshold.color + ";'>&nbsp;</div>";
@@ -471,9 +459,14 @@ define(["d3", "common"], function(d3, common) {
 			row += "</div>";
 			table.append(row);
 		}
-		table.append(
-			"<div class='legend-table-row legend-row-info'>Hollow symbols denote no records matching query if all stations are set to display.</div>"
-		);
+		// no data legend item
+		$("<div>", {id: "legend-row-no-data", 'class': "legend-table-row"})
+			.css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden")
+			.append(
+				"<div class='legend-table-cell legend-cell-color' style='box-sizing:border-box;border:2px solid #000;'>&nbsp;</div>" + 
+				"<div id='legend-cell-no-data' class='legend-table-cell legend-cell-desc'>No results matching current filters</div>"
+			)
+			.appendTo(table);
 		// always show legend on update
 		this.legendShow();
 		// dynamically set height
@@ -526,12 +519,12 @@ define(["d3", "common"], function(d3, common) {
 		panel.append("<hr />");
 		// add/remove thresholds
 		addThreshold.click(function() {
-			if($(".custom-threshold-control").length < 8) {
+			if($(".custom-threshold-control").length < 4) {
 				self.addThresholdControl(inputs, 0); 
 			}
 		});
 		removeThreshold.click(function() { 
-			if($(".custom-threshold-control").length > 3) {
+			if($(".custom-threshold-control").length > 1) {
 				$(".custom-threshold-control").last().remove(); 
 			}
 		});
@@ -546,7 +539,7 @@ define(["d3", "common"], function(d3, common) {
 			);
 		common.setModal(true, panel, {
 			onClose: function() {
-				$("#threshold-group-select").val(self.selectedThresholdGroup);
+				$("#threshold-group-select").val(self.selectedThresholdGroup).trigger('chosen:updated');
 			}
 		});
 		// close functionality
@@ -561,13 +554,10 @@ define(["d3", "common"], function(d3, common) {
 			});
 			common.hideModal(true);
 			var updated = self.updateThresholds(self.contaminant, data, null, true);
-			if(updated) {
-				// set to hidden custom option
-				$("#threshold-group-select").val("custom");
-			} else {
-				// on failure return to last selection
-				$("#threshold-group-select").val(self.selectedThresholdGroup);
-			}
+			// set to hidden custom option or on failure return to last selection
+			$("#threshold-group-select")
+				.val(updated ? "custom" : self.selectedThresholdGroup)
+				.trigger('chosen:updated');
 		});
 	};
 

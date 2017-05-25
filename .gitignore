@@ -1,4 +1,8 @@
 index.html
 step_conns.php
+build/dvcs.js
 build/step.js
 build/style.css
+node_modules/
+step_conns.php
+step_conns_dev.php

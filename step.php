@@ -1,6 +1,4 @@
-<?php
-$ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
-?>
+<?php require_once("init.php"); ?>
 <!DOCTYPE html>
 <html>
   <head>
@@ -66,38 +64,42 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
       <div id="controls-container" style="visibility:hidden;">
         <!-- <div id="controls-header">Safe-to-Eat Portal</div> -->
         <!-- filter/query controls -->
-        <div id="control-tab-query" class="control-tab">Select Species, Contaminant, and Years</div>
+        <div id="control-tab-query" class="control-tab"><i></i>Filter Stations on Map</div>
         <div id="query-controls" class="controls-group">
-          <div class="control-label">Select a Species: </div>
+          <!-- species -->
+          <div id="control-label-species" class="control-label">Select a Species: </div>
           <select id="species-control" disabled>
             <option>Loading..</option>
           </select>
           <div class="control-spacer"></div>
-          <div class="control-label">Select a Contaminant: </div>
+          <!-- contaminants -->
+          <div id="control-label-contaminant" class="control-label">Select a Contaminant: </div>
           <select id="contaminant-control" disabled>
             <option>Loading..</option>
           </select> 
           <div class="control-spacer"></div>
-          <div class="control-label">Select a Year Range:</div>
+          <!-- thresholds -->
+          <div id="control-label-thresholds" class="control-label">Select Contaminant Thresholds: </div>
+          <select id="threshold-group-select" disabled></select>
+          <div class="control-spacer"></div>
+          <!-- years -->
+          <div id="control-label-year-range" class="control-label">Select a Year Range:</div>
           <div id="control-year-range-container">
             Loading..
           </div>
           <div class="control-spacer"></div>
-          <div class="control-label"></div>
+          <!-- other controls -->
           <div id="show-no-data-container">
             <input type="checkbox" id="show-no-data-control" disabled />
-            Display All Stations
+            Hide stations with no results
           </div>
           <div class="control-spacer"></div>
           <div id="reset-controls" class="button">
             Reset To Initial Settings
           </div>
-          <div id="open-dv-compare" class="button">
-            Compare All Stations
-          </div>
         </diV>
         <!-- search by location controls -->
-        <div id="control-tab-location" class="control-tab">Find by Location</div>
+        <div id="control-tab-location" class="control-tab"><i></i>Find by Location</div>
         <div id="location-controls" class="controls-group">
           <div class="control-label">Zoom to County:</div>
           <select id="counties-select" data-placeholder="Zoom to County.." disabled>
@@ -110,22 +112,22 @@ $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
           </select>
         </div>
         <!-- map/layer controls -->
-        <div id="control-tab-map" class="control-tab">Map/Layer Options</div>
+        <div id="control-tab-map" class="control-tab"><i></i>Map/Layer Options</div>
         <div id="map-controls" class="controls-group">
           <div class="control-label-inline">Base Layer:</div>
           <div id="base-layer-control-container"></div>
           <div class="control-spacer"></div>
-          <div title='California County Subdivisions' class="control-label-inline">Show Counties Layer:</div>
+          <div title='California County Subdivisions' class="control-label-inline">Show CA Counties Layer:</div>
           <input type="checkbox" id="show-counties-control" disabled />
           <div class="control-spacer"></div>
-          <div title='Water Board Region Subdivisions' class="control-label-inline">Show Water Board Regions Layer:</div>
+          <div title='Water Board Region Subdivisions' class="control-label-inline">Show CA Water Board Regions:</div>
           <input type="checkbox" id="show-waterboards-control" disabled />
           <div class="control-spacer"></div>
-          <div title='Marine Protected Areas in California' class="control-label-inline">Show MPA Layer:</div>
+          <div title='Marine Protected Areas in California' class="control-label-inline">Show Marine Protected Areas:</div>
           <input type="checkbox" id="show-mpa-control" disabled />
         </div>
         <div id="additional-buttons">
-          <div id="zoom-stations-tab" class="button-tab">Zoom to Stations</div>
+          <div id="zoom-stations-tab" class="button-tab">Fit View to Stations</div>
           <div id="download-tab" class="button-tab">Download Data</div>
         </div>
       </div>

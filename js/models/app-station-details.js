@@ -13,8 +13,9 @@ define([
 	"common",
 	"OpenLayers", 
 	"noUiSlider", 
-	"SimpleGraph"
-], function(chosen, common, ol, noUiSlider, SimpleGraph) {
+	"SimpleGraph", 
+	"./app-dv-compare-stations"
+], function(chosen, common, ol, noUiSlider, SimpleGraph, DVCompareStations) {
 	
 	//********************************************************************************************************
 	// Constructor(s)
@@ -34,7 +35,7 @@ define([
 		this.contentPadding = 4;
 		this.style = {
 			title: "font-size:14px;font-weight:bolder;", 
-			titleDiv: "margin:12px 0px;padding-left:"+this.titleDivPadLeft+"px;", 
+			titleDiv: "margin-top:12px;padding-left:"+this.titleDivPadLeft+"px;", 
 			bottomMsg: "height:35px;line-height:35px;text-align:right;font-size:10px;"
 		};
 		// doesn't customize the actual width as doing that isn't consistent cross-browser, but set here so it
@@ -295,6 +296,17 @@ define([
 			self.isOpen = false;
 			self.element.hide();
 		});
+		
+		var listLinks = $("<ul>");
+		// zoom to station link
+		listLinks.append(
+			$("<li>").append(
+				$("<a>", {href: "#", text: "Zoom to this station"})
+					.on('click', function() {
+						self.parent.zoomToStation(self.station);
+					})
+			)
+		);
 		// advisory link
 		var advisoryName;
 		var advisoryUrl = this.station.get("advisoryUrl");
@@ -309,7 +321,7 @@ define([
 		} else {
 			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
 		}
-		var listLinks = $("<ul></ul>").append(
+		listLinks.append(
 			$("<li></li>").html(
 				"<a id='details-advisory' href='" + advisoryUrl + "' target='_blank'>" + advisoryName + "</a>"
 			)
@@ -329,7 +341,8 @@ define([
 					"</a>"
 			));
 		}
-		this.element.find("#details-info").html(listLinks);
+	
+		this.element.find("#details-info").html("").append(listLinks);
 	};
 	
 	
@@ -504,6 +517,15 @@ define([
 				this.tabs.data.titleFunction(this.query) + 
 			"</div>"
 		);
+		// compare stations
+		$("<div>", {id: "details-dv-compare-stations"})
+			.appendTo(contentDiv)
+			.append(
+				$("<a>", {
+					href: "#", 
+					text: "Compare this station to all stations"
+				}).on('click', this.openCompareStations.bind(this))
+			);
 		// create table headers
 		var headers = $("<div></div>").appendTo(contentDiv)
 			.addClass('details-table-header-row')
@@ -773,7 +795,7 @@ define([
 								.click(function() {
 									var station = self.parent.getStationByName($(this).html());
 									if(station) {
-										self.parent.zoomToStation(station);
+										//self.parent.zoomToStation(station);
 										self.parent.openStationDetails(station);
 									}
 								});
@@ -942,8 +964,7 @@ define([
 				url: "lib/prepareSummaryReport.php", 
 				data: reportQuery, 
 				dataType: "json", 
-				success: function(response) { onSuccess = true; },
-				error: function(e) { }
+				success: function() { onSuccess = true; }
 			});
 			if(onSuccess) {
 				if(self.reportWindow && !self.reportWindow.closed) {
@@ -961,6 +982,54 @@ define([
 		// set as active tab and adjust dimension to fit new content
 		this.setActiveTab("report");
 		this.adjustContainerDimensions(this.tabs.report.width);
+	};
+	
+	
+	//********************************************************************************************************
+	// Compare Stations Button
+	//********************************************************************************************************
+	StationDetails.prototype.openCompareStations = function() {
+		// get thresholds
+		var tBreaks, 
+			tColors;
+		if(this.query.contaminant === this.parent.modules.legend.contaminant) {
+			tBreaks = this.parent.modules.legend.getThresholdBreaks();
+			tColors = this.parent.modules.legend.getThresholdColors();
+		}
+		// async ajax to keep popup callstack shallower (and hopefully avoid angering popup blockers)
+		var success = false,
+			self = this, 
+			width = 760, 
+			barHeight = 4;
+		$.ajax({
+			async: false, 
+			url: "lib/prepareDvcs.php", 
+			data: {
+				station     : self.station.get("name"), 
+				species     : self.query.species, 
+				contaminant : self.query.contaminant, 
+				startYear   : self.query.startYear, 
+				endYear     : self.query.endYear, 
+				width       : width, 
+				barHeight   : barHeight, 
+				thresholds  : JSON.stringify(tBreaks), 
+				colors      : JSON.stringify(tColors)
+			}, 
+			success: function() { success = true; }
+		});
+		if(success) {
+			/* This is a really hacky solution for the dynamic height, but basically copy the  
+			 * estimated graph height (see app-dv-compare-stations and getGraphHeight()) with spacing 
+			 * for controls as total, then check against a min height. */
+			common.newWindow(
+				null, 
+				"dvcs.php", 
+				"STEP Compare Stations", 
+				width, 
+				DVCompareStations.getPopupHeight(barHeight, this.parent.stations.data.lenght), 
+				true
+			);
+		}
 	};
 	
 	
