@@ -1,4 +1,10 @@
-var requirejs = require('requirejs'),
+const requirejs = require('requirejs'), 
+      path = require('path'), 
+      fs = require('fs');
+
+var required = [
+		"js/lib/require.js"
+	],
 	builds = {
 		// will build in reverse order just FYI
 		dvcs: {
@@ -19,6 +25,19 @@ var requirejs = require('requirejs'),
 			optimizeCss:    "default"
 		}
 	};
+
+for(var i = 0; i < required.length; i++) {
+	var reqlib = required[i];
+		rs = fs.createReadStream(reqlib), 
+		ws = fs.createWriteStream("build/"+path.basename(reqlib));
+	rs.on("error", function(err) {
+		console.log(err);
+	});
+	ws.on("error", function(err) {
+		console.log(err);
+	});
+	rs.pipe(ws);
+}
 
 var lastFunction = null;
 for(var key in builds) {
