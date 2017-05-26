@@ -11,7 +11,7 @@
     <script src="js/lib/require.js" data-main="js/init-dvcs"></script>
     <?php } else { ?>
     <link rel="stylesheet" href="build/style.css" />
-    <script src="js/lib/require.js" data-main="build/dvcs"></script>
+    <script src="build/require.js" data-main="build/dvcs"></script>
     <?php } ?>
     <script>
         var parameters = {

@@ -1,3 +1,7 @@
+/* library styles */
+@import url("ol.css");
+@import url("../js/lib/common/common.min.css");
+
 @media print {
   body { -webkit-print-color-adjust: exact; }
 }

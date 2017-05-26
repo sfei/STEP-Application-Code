@@ -19,6 +19,11 @@ var required = [
 			baseUrl:        "js", 
 			name:           "init"
 		}, 
+		'css (Summary Report)': {
+			cssIn:          "css/summaryreport.css", 
+			out:            "build/summaryreport.css", 
+			optimizeCss:    "default"
+		}, 
 		css: {
 			cssIn:          "css/style.css", 
 			out:            "build/style.css", 
