@@ -3,6 +3,8 @@ const requirejs = require('requirejs'),
       fs = require('fs');
 
 var required = [
+		"chosen-sprite.png", 
+		"chosen-sprite@2x.png", 
 		"js/lib/require.js"
 	],
 	builds = {
@@ -31,6 +33,7 @@ var required = [
 		}
 	};
 
+console.log("Copying required files..");
 for(var i = 0; i < required.length; i++) {
 	var reqlib = required[i];
 		rs = fs.createReadStream(reqlib), 

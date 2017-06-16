@@ -68,8 +68,13 @@ define([
 	DVCompareStations.adjustWindow = function(newHeight) {
 		if(newHeight > screen.availHeight) { newHeight = screen.availHeight; }
 		window.resizeTo(window.outerWidth, newHeight);
-		var top = ((screen.availHeight / 2) - (window.outerHeight / 2));
-		window.moveTo(window.screenX, top);
+		var left = window.screenX,
+			top = 0.5*(screen.availHeight - newHeight);
+		// Firefox has issues with moveTo if window is open on second screen
+		if(window.browserType.isFirefox && window.screenX >= screen.availWidth) {
+			left -= screen.availWidth;
+		}
+		window.moveTo(left, top);
 	};
 	
 	DVCompareStations.prototype.setThresholds = function(thresholds, colors) {
