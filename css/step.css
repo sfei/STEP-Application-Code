@@ -769,7 +769,7 @@ img.attribution-logo {
 /* Stations Data Viz */
 #dv-container {
   height: 100vh;
-  background: #ccc;
+  /* background: #ccc; */
 }
 #dv-controls-container {
   position: fixed;
