@@ -46,6 +46,13 @@ define([
 		this.yearRangeControl = null;
 		// Object holding the various control panels and common related variables.
 		this.controls = {
+			about: {
+				name: 'about', 
+				id: 'about-controls',
+				element: null,
+				tabId: 'control-tab-about', 
+				tabElement: null
+			}, 
 			query: {
 				name: 'query', 
 				id: 'query-controls',
@@ -110,7 +117,7 @@ define([
 	 *        If so, a number of things are adjusted. The ajax call is actually made synchronous, no query 
 	 *        changes are flashed or notified, and on loading, the map is zoomed to the stations extent.
 	 * @param {string} options.firedBy - Name of the parameter change that fired this specific query (as 
-	 *        inputs update the query on change). This simply tells which controls don't needd to be updated. 
+	 *        inputs update the query on change). This simply tells which controls don't need to be updated. 
 	 *        For example, if the species was changed, the contaminants and years must be updated. If the 
 	 *        contaminants paramter was changed, only the year controls have to be updated. Leave undefined to
 	 *        update all query controls.
@@ -150,8 +157,8 @@ define([
 					self.prepSecondQuery = true;
 				} else if(self.prepSecondQuery && self.parent.noDataOptions.showNoData) {
 					self.toggleNoDataDisplay(false, true);
-					updateMessage = "Stations with no data matching filters will not be displayed.<br />"+
-						"To turn back on, check the \"Display All Stations\" option.";
+					updateMessage = "Stations with no results matching filters will not be displayed.<br />"+
+						"To turn back on, uncheck the \"Hide stations with no results\" option.";
 					updateMessageTime = 5000;
 					self.prepSecondQuery = false;
 				}
@@ -240,6 +247,10 @@ define([
 		// set visible
 		$("#controls-container").css('visibility', 'visible');
 		// add help tooltips
+		$("#control-tab-about").addClass("cm-tooltip-left").attr(
+			"cm-tooltip-msg", 
+			"About the Safe-to-Eat Portal"
+		);
 		$("#control-tab-query").addClass("cm-tooltip-left").attr(
 			"cm-tooltip-msg", 
 			"Change the data being displayed on the map"
@@ -252,29 +263,27 @@ define([
 			"cm-tooltip-msg", 
 			"Change the layers being displayed on the map"
 		);
-
-		$("#species_control_chosen").addClass("cm-tooltip-top").attr(
-			"cm-tooltip-msg", 
-			"Filter map data by this species of interest"
-		);
-		$("#contaminant_control_chosen").addClass("cm-tooltip-top").attr(
-			"cm-tooltip-msg", 
-			"Show map data for this contaminant of interest"
-		);
-		// note due to legacy and changes, threshold controls still handled in legend-module
-		$("#control-year-range").addClass("cm-tooltip-top").attr(
-			"cm-tooltip-msg", 
-			"Filter map data between these years"
-		);
-
+//		$("#species_control_chosen").addClass("cm-tooltip-top").attr(
+//			"cm-tooltip-msg", 
+//			"Filter map data by this species of interest"
+//		);
+//		$("#contaminant_control_chosen").addClass("cm-tooltip-top").attr(
+//			"cm-tooltip-msg", 
+//			"Show map data for this contaminant of interest"
+//		);
+//		// note due to legacy and changes, threshold controls still handled in legend-module
+//		$("#control-year-range").addClass("cm-tooltip-top").attr(
+//			"cm-tooltip-msg", 
+//			"Filter map data between these years"
+//		);
 		$("#show-no-data-container").addClass("cm-tooltip-top").attr(
 			"cm-tooltip-msg", 
 			"Hide stations that do not have results matching above filters"
 		);
-		$("#reset-controls").addClass("cm-tooltip-bottom").attr(
-			"cm-tooltip-msg", 
-			"Reset all settings above to default values"
-		);
+//		$("#reset-controls").addClass("cm-tooltip-bottom").attr(
+//			"cm-tooltip-msg", 
+//			"Reset all settings above to default values"
+//		);
 	};
 
 	/**
@@ -390,6 +399,9 @@ define([
 	};
 
 	QueryAndUI.prototype.createYearSlider = function(minYear, maxYear) {
+		if(minYear >= maxYear) {
+			minYear = maxYear -1;
+		}
 		this.yearRangeControl = noUiSlider.create(document.getElementById('control-year-range'), {
 			range: { 'min': minYear, 'max': maxYear }, 
 			start: [minYear, maxYear],

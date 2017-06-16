@@ -66,10 +66,10 @@ define(["d3", "common"], function(d3, common) {
 				}
 			});
 		// add help tooltip
-		$("#threshold_group_select_chosen").addClass("cm-tooltip-top").attr(
-			"cm-tooltip-msg", 
-			"Symbolize map data by these contaminant thresholds"
-		);
+//		$("#threshold_group_select_chosen").addClass("cm-tooltip-top").attr(
+//			"cm-tooltip-msg", 
+//			"Symbolize map data by these contaminant thresholds"
+//		);
 	};
 
 	Legend.prototype.getThresholdBreaks = function() {

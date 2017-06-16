@@ -3,6 +3,7 @@ define([
 	"OpenLayers", 
 	"common", 
 	"./app-station-details", 
+	"./app-map-instructions", 
 	"./module-download", 
 	"./module-legend", 
 	"./module-marker-factory", 
@@ -10,7 +11,8 @@ define([
 ], function(
 	ol, 
 	common, 
-	StationDetails,
+	StationDetails, 
+	MapInstructions, 
 	Download, 
 	Legend, 
 	MarkerFactory, 
@@ -118,11 +120,12 @@ define([
 		};
 		// Sub-modules
 		this.modules = {
-			download:       null, // handles downloading
-			legend:         null, // handles legend and thresholds
-			markerFactory:  null, // handles markers/symbology
-			queryAndUI:     null, // handles queries and ui elements
-			stationDetails: null  // handles the pop-up details
+			mapInstructions: null, // map instructions
+			download:        null, // handles downloading
+			legend:          null, // handles legend and thresholds
+			markerFactory:   null, // handles markers/symbology
+			queryAndUI:      null, // handles queries and ui elements
+			stationDetails:  null  // handles the pop-up details
 		};
 	};
 
@@ -159,10 +162,11 @@ define([
 			valueFunction: (this.modules.markerFactory) ? this.modules.markerFactory.normalizeValue : null
 		});
 		// other modules
-		this.modules.download       = Download;
-		this.modules.stationDetails = new StationDetails(this);
-		this.modules.legend         = new Legend(this);
-		this.modules.queryAndUI     = new QueryAndUI(this);
+		this.modules.download        = Download;
+		this.modules.stationDetails  = new StationDetails(this);
+		this.modules.legend          = new Legend(this);
+		this.modules.queryAndUI      = new QueryAndUI(this);
+		this.modules.mapInstructions = new MapInstructions(this);
 		
 		// init functions
 		this.mapInit();
@@ -174,21 +178,29 @@ define([
 		this.modules.queryAndUI.init();
 		this.modules.legend.init($("#step-container"));
 		
-		// activate functions -- start by populating query options and loading stations by firing an initial query
+		// activate functions (start by using map instructions to fire first query)
+		var self = this;
 		var getVars = common.getUrlGetVars();
-		this.modules.queryAndUI.updateQuery({
-			query: this.modules.queryAndUI.defaultQuery, 
-			selectThresholdGroup: getVars.tgroup, 
-			firstRun: true	// special option as very first query has to do some extra things
-		});
-		this.addClickInteractions();
-		if(this.enableHoverInteractions) {
-			this.addHoverInteractions();
-		}
-		this.modules.queryAndUI.activate();
+		this.modules.mapInstructions.begin(
+			{
+				query: this.modules.queryAndUI.defaultQuery, 
+				selectThresholdGroup: getVars.tgroup, 
+				firstRun: true // special option as very first query has to do some extra things
+			}, 
+			function(queryOptions) {
+				self.modules.queryAndUI.updateQuery(queryOptions);
+				// enable these after some query is fired to load stations
+				self.addClickInteractions();
+				if(self.enableHoverInteractions) {
+					self.addHoverInteractions();
+				}
+				self.modules.queryAndUI.activate();
+				self.modules.mapInstructions.bindControls($("#a-map-instructions"));
+				// zoom in a bit to start
+				self.map.getView().setZoom(self.initZoomLevel);
+			}
+		);
 		
-		// zoom in a bit to start
-		this.map.getView().setZoom(this.initZoomLevel);
 	};
 
 	/**

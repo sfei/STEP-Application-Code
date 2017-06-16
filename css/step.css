@@ -41,59 +41,6 @@ input, select {
   cursor: -webkit-grabbing;
 }
 
-/* Header + container must equal body height which in the CA portal page is fixed at 800px. Here we manually 
- * adjust in similar screen size increments as template (I'd use flex containers but not compatible with IE10
- * or below). */
-#step-header { height: 160px; }
-#step-container { height: 620px; }
-@media screen and (min-width: 800px) {
-  #step-header { height: 160px; }
-  #step-container { height: 640px; }
-}
-@media screen and (min-width: 1000px) {
-  #step-header { height: 130px; }
-  #step-container { height: 670px; }
-}
-
-/* header and footers */
-#step-header {
-  display: table;
-  width: 100%;
-  vertical-align: top;
-  font-size: 13px;
-}
-.step-header-content-block {
-  display: table-cell;
-  vertical-align: top;
-}
-#step-header-intro {
-  
-}
-#step-header-more-info {
-  width: 200px;
-  padding-left: 15px;
-}
-#step-header-attributions {
-  width: 240px;
-  text-align: center;
-}
-.step-header-logo-link {
-  display: inline-block;
-}
-img.attribution-logo {
-  height: 60px;
-  margin: 0 5px;
-}
-
-/* application container */
-#step-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
-  border: 1px solid #AAA;
-}
-
 /* generic button style */
 .button {
   background-color: #5070aa;
@@ -127,6 +74,21 @@ img.attribution-logo {
   font-size: 12px;
 }
 
+.img-drop-shadow {
+  display: inline-block;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+/* application container */
+#step-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid #AAA;
+}
+
 /* loading dialog related */
 #modal-container-outer {
   position: absolute;
@@ -155,18 +117,57 @@ img.attribution-logo {
   border-radius: 6px;
   text-align: center;
   font-weight: bolder;
-  z-index: 9999;
+}
+
+/* instructions dialog related */
+#modal-instructions {
+  width: 450px;
+  min-height: 120px;
+  padding: 5px 15px;
+}
+#modal-instructions p {
+  text-align: justify;
+}
+.instructions-select {
+  width: 380px;
+  margin-bottom: 10px;
+}
+#instructions-year-container {
+  margin-top: 20px;
+}
+#instructions-year-start, #instructions-year-slider, #instructions-year-end {
+  display: inline-block;
+}
+#instructions-year-slider {
+  width: 210px;
+}
+#instructions-year-start, #instructions-year-end {
+  margin: 0 20px;
+  font-weight: bolder;
+  font-size: 13px;
+}
+#instructions-buttons {
+  margin-bottom: 5px;
+}
+#instructions-next, #instructions-finish {
+  display: inline-block;
+  width: auto;
+  margin: 5px auto;
+  margin-top: 15px;
+  padding: 2px 30px;
+}
+#instructions-skip {
+  font-size: 12px;
+  display: block;
 }
 
 /* download dialog related */
-#download-confirm {
+#download-dialog {
   position: relative;
   width: 290px;
   margin: 0 auto;
-  z-index: 9999;
-}
-#download-dialog {
   padding: 8px 4px;
+  text-align: center;
 }
 
 /* map related */
@@ -200,12 +201,58 @@ img.attribution-logo {
   cursor: -webkit-grabbing;
 }
 
+.ol-zoom {
+  left: auto;
+  right: 352px;
+  top: 126px;
+}
+
+
+/* header and footers */
+#step-header {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.step-header-content-block {
+  display: table-cell;
+  vertical-align: top;
+}
+#step-header-more-info {
+  width: 270px;
+}
+#step-header-more-info ul {
+  padding-left: 30px;
+  margin-bottom: 6px;
+}
+#a-map-instructions {
+  padding-left: 10px;
+}
+#step-header-attributions {
+  width: 240px;
+  text-align: center;
+}
+.step-header-logo-link {
+  display: inline-block;
+}
+img.attribution-logo {
+  height: 60px;
+  margin: 0 5px;
+}
+
+
 /* controls related */
 #controls-container {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 128px;
+  right: 6px;
   width: 340px;
+  border-right: 1px solid #999;
+  border-bottom-right-radius: 6px;
   font-size: 14px;
 }
 #map-controls {
@@ -290,6 +337,11 @@ img.attribution-logo {
 .chosen-container {
   font-size: 13px;
 }
+#about-controls {
+  padding: 10px;
+  text-align: justify;
+  font-size: 12px;
+}
 
 /* query controls related */
 #species-control, #contaminant-control {
@@ -359,6 +411,7 @@ img.attribution-logo {
   border-top: 1px solid #999;
   border-bottom: 1px solid #999;
   border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 .button-tab {
   display: block;

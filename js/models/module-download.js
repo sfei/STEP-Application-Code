@@ -17,18 +17,7 @@ define(["common"], function(common) {
 				yearMsg = "between <b>" + query.startYear + "-" + query.endYear + "</b>";
 			}
 			// create dialog box
-			var buttonStyle = {
-				'display': 'inline-block',
-				'width': 70, 
-				'height': 20, 
-				'line-height': '20px', 
-				'margin': "0 auto", 
-				'text-align': 'center'
-			};
-			var downloadDialog = $("<div id='download-confirm'></div>")
-				//.addClass("container-styled")
-				.css('text-align', 'center');
-			var downloadContent = $("<div id='download-dialog'></div>").appendTo(downloadDialog)
+			var downloadDialog = $("<div id='download-dialog'></div>")
 				//.addClass("inner-container-style")
 				.append("<span style='font-size:18px;font-weight:bolder;'>Download Data Table<span><hr />")
 				.append(
@@ -38,14 +27,22 @@ define(["common"], function(common) {
 					).css({'margin': '15px 0', 'text-align': 'center'})
 				);
 			if(!isASpecies) {
-				downloadContent.append(
+				downloadDialog.append(
 					$("<p></p>").html(
 						"*Highest or lowest average concentration are not available. " +
 						"Instead data for all species will be downloaded."
 					).css({'font-size': '10px', 'text-align': 'center'})
 				);
 			}
-			$("<div id='download-buttons'></div>").appendTo(downloadContent)
+			var buttonStyle = {
+				'display': 'inline-block',
+				'width': 70, 
+				'height': 20, 
+				'line-height': '20px', 
+				'margin': "0 auto", 
+				'text-align': 'center'
+			};
+			$("<div id='download-buttons'></div>").appendTo(downloadDialog)
 				.css('text-align', 'center')
 				.append(
 					$("<div id='download-cancel'>Cancel</div>")
@@ -58,7 +55,7 @@ define(["common"], function(common) {
 						.addClass("button")
 						.css(buttonStyle)
 						.css('margin-left', '4px')
-						.click(function() { self.downloadQueryData(downloadContent, query); })
+						.click(function() { self.downloadQueryData(downloadDialog, query); })
 				);
 			// lock interface
 			common.setModal(true, downloadDialog, {showBackground: true});
