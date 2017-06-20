@@ -363,7 +363,7 @@ input, select {
   text-align: center;
   font-weight: bolder;
 }
-#more-info-controls a {
+#about-controls a, #more-info-controls a {
   color: #6cf;
 }
 #step-header-more-info ul {
