@@ -35,7 +35,7 @@ define([
 		// generic variables
 		this.mapProjection = 'EPSG:3857'; // web mercator wgs84
 		this.wgs84 = 'EPSG:4326';         // assumed coordinate-system for any incoming data
-		this.initZoomLevel = 7;           // init zoom level as zoomToStationsExtent() can be a bit too zoomed out
+		this.initZoomLevel = 6;           // init zoom level as zoomToStationsExtent() can be a bit too zoomed out
 		// map variables
 		this.map;              // openlayers map object
 		this.hoverInteraction; // hover interactions stored globally so it can be removed/reapplied
@@ -199,9 +199,7 @@ define([
 					self.addHoverInteractions();
 				}
 				self.modules.queryAndUI.activate();
-				self.modules.mapInstructions.bindControls($("#a-map-instructions"));
-				// zoom in a bit to start
-				self.map.getView().setZoom(self.initZoomLevel);
+				self.modules.mapInstructions.bindControls($("#btn-map-instructions"));
 			}
 		);
 		
@@ -223,7 +221,7 @@ define([
 		this.map.setView(
 			new ol.View({
 				center: ol.proj.fromLonLat([-120, 37.5]),
-				zoom: 7,
+				zoom: this.initZoomLevel,
 				minZoom: 6,
 				// past this zoom, many areas of the ESRI Oceans Basemap have no tiles
 				maxZoom: 13,

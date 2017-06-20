@@ -6,9 +6,8 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
 }
-p.title {
+p.bold {
   font-weight: bold;
-  color: #5070aa;
 }
 .no-margin {
   margin: 0;
@@ -122,7 +121,7 @@ input, select {
 /* instructions dialog related */
 #modal-instructions {
   width: 450px;
-  min-height: 120px;
+  min-height: 200px;
   padding: 5px 15px;
 }
 #modal-instructions p {
@@ -204,60 +203,19 @@ input, select {
 .ol-zoom {
   left: auto;
   right: 352px;
-  top: 126px;
-}
-
-
-/* header and footers */
-#step-header {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 6px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-.step-header-content-block {
-  display: table-cell;
-  vertical-align: top;
-}
-#step-header-more-info {
-  width: 270px;
-}
-#step-header-more-info ul {
-  padding-left: 30px;
-  margin-bottom: 6px;
-}
-#a-map-instructions {
-  padding-left: 10px;
-}
-#step-header-attributions {
-  width: 240px;
-  text-align: center;
-}
-.step-header-logo-link {
-  display: inline-block;
-}
-img.attribution-logo {
-  height: 60px;
-  margin: 0 5px;
+  top: 4px;
 }
 
 
 /* controls related */
 #controls-container {
   position: absolute;
-  top: 128px;
+  top: 6px;
   right: 6px;
   width: 340px;
   border-right: 1px solid #999;
   border-bottom-right-radius: 6px;
   font-size: 14px;
-}
-#map-controls {
-  text-align: left;
-  padding-left: 20px;
 }
 #controls-header {
   display: block;
@@ -337,14 +295,9 @@ img.attribution-logo {
 .chosen-container {
   font-size: 13px;
 }
-#about-controls {
-  padding: 10px;
-  text-align: justify;
-  font-size: 12px;
-}
 
 /* query controls related */
-#species-control, #contaminant-control {
+#species-control, #contaminant-control, #thresholds-control {
   width: 320px;
 }
 #control-year-range-container {
@@ -374,11 +327,6 @@ img.attribution-logo {
   width:200px;
   text-align:center;
 }
-#open-dv-compare {
-  display:inline-block;
-  width:200px;
-  text-align:center;
-}
 
 /* location controls related */
 #counties-select, #stations-select {
@@ -386,6 +334,10 @@ img.attribution-logo {
 }
 
 /* map/layer controls related */
+#map-controls {
+  text-align: left;
+  padding-left: 20px;
+}
 #base-layer-control-container {
   display:inline-block;
   margin-left:4px;
@@ -396,6 +348,38 @@ img.attribution-logo {
 #show-counties-control, #show-mpa-control {
   position:relative;
   top:3px;
+}
+
+/* about related */
+#about-controls, #more-info-controls {
+  padding: 10px;
+  text-align: left;
+  font-size: 12px;
+}
+#btn-map-instructions {
+  width: 110px;
+  margin: 10px auto;
+  padding: 4px 8px;
+  text-align: center;
+  font-weight: bolder;
+}
+#more-info-controls a {
+  color: #6cf;
+}
+#step-header-more-info ul {
+  padding-left: 30px;
+}
+#step-header-logo-container {
+  margin: auto;
+  text-align: center;
+}
+.step-header-logo-link {
+  display: inline-block;
+  text-align: center;
+}
+img.attribution-logo {
+  height: 60px;
+  margin: 0 5px;
 }
 
 /* those other bottom buttons related */
@@ -525,24 +509,6 @@ img.attribution-logo {
 #legend-symbols {
   margin-top: 10px;
   text-align: center;
-}
-#thresholds-control {
-  margin-bottom: 8px;
-  text-align: center;
-}
-#threshold-group-select {
-  width: 320px;
-/*  padding: 3px;
-  text-align: center;
-  font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;*/
-/*  width: 96%;
-  height: 25px;
-  border: 1px solid #5ae;
-  border-radius: 5px;
-  margin-top: 8px;
-  font-family: 'Century Gothic', CenturyGothic, Geneva, AppleGothic, sans-serif;
-  background:#555;
-  color:#fff;*/
 }
 #legend-show-adv {
   margin-top: 4px;
