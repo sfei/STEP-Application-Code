@@ -157,7 +157,7 @@
           <p class="bold no-margin">More information:</p>
           <ul>
             <li><a href="http://www.mywaterquality.ca.gov/monitoring_council/bioaccumulation_oversight_group/">Monitoring programs and reports</a></li>
-            <li><a href="http://www.ceden.org/">Access Complete Datasets from CEDEN</a></li>
+            <li><a href="http://www.ceden.org/">Access complete datasets from CEDEN</a></li>
             <li><a href="http://www.mywaterquality.ca.gov/safe_to_eat/thresholds">Assessment thresholds</a></li>
           </ul>
         </div>
