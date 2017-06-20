@@ -52,19 +52,6 @@ define(["d3", "common"], function(d3, common) {
 		this.createWaterTypeLegend();
 		// hide on init, show after thresholds loaded
 		this.legendContainer.hide();
-		// add functionality to threshold group select here
-		$("#threshold-group-select")
-			.prop("disabled", false)
-			.chosen()
-			.on('change', function() {
-				var group = $("#threshold-group-select option:selected").val();
-				if(group === "customize") {
-					self.showCustomThresholdsPanel();
-				} else {
-					self.selectedThresholdGroup = group;
-					self.thresholdsChanged();
-				}
-			});
 		// add help tooltip
 //		$("#threshold_group_select_chosen").addClass("cm-tooltip-top").attr(
 //			"cm-tooltip-msg", 
@@ -167,7 +154,7 @@ define(["d3", "common"], function(d3, common) {
 		this.selectedThresholdGroup = null;
 		
 		// empty and fill select
-		var selectElem = $("#threshold-group-select").html("");
+		var selectElem = $("#thresholds-control").html("");
 		var recognizedGroups = [];
 //		var nonAdvancedExists = false;
 		for(var i = 0; i < this.thresholdOrder.length; i++) {

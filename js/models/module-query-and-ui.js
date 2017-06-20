@@ -40,39 +40,49 @@ define([
 		// way, but requires you ensure consistency -- i.e. watch for any toLowercase() or toUppercase() 
 		// conflicts, or at least use a case-insenitive comparison function.
 		this.speciesList;
-		// The active control (i.e. the visible one), which points to one of the values in the controls object below.
-		this.activeControl = null;
 		// noUiSlider instance for year range slider
 		this.yearRangeControl = null;
 		// Object holding the various control panels and common related variables.
 		this.controls = {
-			about: {
-				name: 'about', 
-				id: 'about-controls',
-				element: null,
-				tabId: 'control-tab-about', 
-				tabElement: null
-			}, 
 			query: {
 				name: 'query', 
 				id: 'query-controls',
 				element: null,
 				tabId: 'control-tab-query', 
-				tabElement: null
+				tabElement: null, 
+				isOpen: true
 			}, 
 			location: {
 				name: 'station', 
 				id: 'location-controls',
 				element: null,
 				tabId: 'control-tab-location', 
-				tabElement: null
+				tabElement: null, 
+				isOpen: true
 			}, 
 			map: {
 				name: 'map', 
 				id: 'map-controls',
 				element: null,
 				tabId: 'control-tab-map', 
-				tabElement: null
+				tabElement: null, 
+				isOpen: false
+			}, 
+			about: {
+				name: 'about', 
+				id: 'about-controls',
+				element: null,
+				tabId: 'control-tab-about', 
+				tabElement: null, 
+				isOpen: false
+			}, 
+			moreinfo: {
+				name: 'moreinfo', 
+				id: 'more-info-controls',
+				element: null,
+				tabId: 'control-tab-more-info', 
+				tabElement: null, 
+				isOpen: false
 			}
 		};
 		this.controlStageVertPadding = 12;
@@ -222,6 +232,7 @@ define([
 		// make everything fancy!
 		$("#species-control").chosen();
 		$("#contaminant-control").chosen();
+		$("#thresholds-control").chosen();
 		$("#stations-select").chosen();
 		$("#counties-select").chosen();
 		// year range slider (does not create though, that's done on first update)
@@ -238,10 +249,10 @@ define([
 		// cache the control groups and tabs, hide the groups
 		for(var key in this.controls) {
 			this.controls[key].element = $("#"+this.controls[key].id);
+			// hide all until activate
 			this.controls[key].element.hide();
 			this.controls[key].tabElement = $("#"+this.controls[key].tabId);
 		}
-		this.setActiveControl('query');
 		// set last query to default
 		this.resetDefaultQuery();
 		// set visible
@@ -295,7 +306,10 @@ define([
 		// add tabs event listeners
 		var self = this;
 		for(var key in this.controls) {
-			this.controls[key].tabElement.on('click', this.setActiveControl.bind(this, key));
+			if(this.controls[key].isOpen) {
+				this.controls[key].element.slideDown();
+			}
+			this.controls[key].tabElement.on('click', this.toggleControl.bind(this, key));
 		}
 		// add query controls event listeners
 		$("#species-control")
@@ -308,6 +322,18 @@ define([
 			.prop('disabled', false)
 			.change(function() {
 				self.updateQuery({firedBy: "contaminant"});
+			})
+			.trigger('chosen:updated');
+		$("#thresholds-control")
+			.prop("disabled", false)
+			.change(function() {
+				var group = $("#thresholds-control option:selected").val();
+				if(group === "customize") {
+					self.legend.showCustomThresholdsPanel();
+				} else {
+					self.legend.selectedThresholdGroup = group;
+					self.legend.thresholdsChanged();
+				}
 			})
 			.trigger('chosen:updated');
 		$("#reset-controls")
@@ -427,44 +453,20 @@ define([
 	// General UI functions
 	//************************************************************************************************************
 	/**
-	 * Set css to display the proper tab with the active style (and the rest with inactive). Takes no properties. 
-	 * Is automatically run on switching tabs with {@link #setActiveControl(controlName)} so does not have to be 
-	 * explicitly called.
-	 */
-	QueryAndUI.prototype.setActiveControlTab = function() {
-		for(var key in this.controls) {
-			if(this.controls.hasOwnProperty(key)) {
-				if(this.controls[key] === this.activeControl) {
-					this.controls[key].tabElement.removeClass("control-tab").addClass("control-tab-active");
-				} else {
-					this.controls[key].tabElement.removeClass("control-tab-active").addClass("control-tab");
-				}
-			}
-		}
-	};
-
-	/**
 	 * Set active control by the control panel's name.
 	 * @param {string} controlName - Name of the control to set as active. If no match to any control panel 
 	 *    specified in global {@link #controls} object, does nothing.
 	 */
-	QueryAndUI.prototype.setActiveControl = function(controlName) {
-		var closing = !controlName || this.controls[controlName] === this.activeControl;
-		if(closing || this.controls[controlName]) {
-			var newControl = (!closing) ? this.controls[controlName] : null;
-			// hide active element
-			if(this.activeControl) {
-				this.activeControl.element.slideUp();
-			}
-			if(!closing) {
-				newControl.element.slideDown();
-				this.activeControl = newControl;
-			} else {
-				this.activeControl = null;
-			} 
-			// set tabs
-			this.setActiveControlTab();
+	QueryAndUI.prototype.toggleControl = function(controlName) {
+		var control = this.controls[controlName];
+		if(!control.isOpen) {
+			control.element.slideDown();
+			control.tabElement.removeClass("control-tab").addClass("control-tab-active");
+		} else {
+			control.element.slideUp();
+			control.tabElement.removeClass("control-tab-active").addClass("control-tab");
 		}
+		control.isOpen = !control.isOpen;
 	};
 
 	//************************************************************************************************************
