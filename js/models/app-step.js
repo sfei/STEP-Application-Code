@@ -40,10 +40,14 @@ define([
 		this.map;              // openlayers map object
 		this.hoverInteraction; // hover interactions stored globally so it can be removed/reapplied
 		this.colorMap = [      // the color gradient for symbology
-			[210, 255, 255], 
-			[110, 180, 200], 
-			[ 45,  35, 230], 
-			[ 95,   0, 180]
+//			[210, 255, 255], 
+//			[110, 180, 200], 
+//			[ 45,  35, 230], 
+//			[ 95,   0, 180]
+			[  0,  51, 253], 
+			[ 52, 146, 105], 
+			[188, 220,  54], 
+			[255, 255,   0]
 		];
 		// array of loaded base layers (stored this way for base layers switching)
 		this.baseLayers = [

@@ -652,7 +652,7 @@ define([
 					container: "#details-content", 
 					width: this.tabs.trends.chartWidth, 
 					height: this.tabs.trends.chartHeight, 
-					margins: {top: 20, right: 190, bottom: 30, left: 40}, 
+					margins: {top: 20, right: 190, bottom: 40, left: 60}, 
 					axis: {
 						x: {
 							min: minMax.x[0], 
@@ -673,13 +673,15 @@ define([
 				.addPointsData(graphData, "species", "sampleYear", "value", ["orgValue"])
 				.addLinesDataFromPoints()
 				.drawGrid()
-				.drawAxes("inside top right")
+				.drawAxes("outside middle center", "bottom", 5)
 				.drawLines()
 				.drawPoints()
 				.drawLegend([this.tabs.trends.chartWidth-180, 20])
 				.addTooltipToPoints(function(d, i) {
 					return ("<b>" + d.series + "</b><br />" + d.orgValue + " in " + d.x); 
 				});
+			sg.svg.style("font-size", 12);
+			sg.svg.selectAll(".sg-xaxis, .sg-yaxis, .sg-y2axis, .sg-axis-label").style("font-size", 12);
 		} else {
 			contentDiv.append(this.noDataMessageAsDiv());
 		}
