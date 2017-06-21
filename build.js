@@ -3,8 +3,8 @@ const requirejs = require('requirejs'),
       fs = require('fs');
 
 var required = [
-		"chosen-sprite.png", 
-		"chosen-sprite@2x.png", 
+		"css/chosen-sprite.png", 
+		"css/chosen-sprite@2x.png", 
 		"js/lib/require.js"
 	],
 	builds = {

@@ -150,9 +150,9 @@ define(["d3", "common"], function(d3, common) {
 	/**
 	 * Update the selection options for thresholds
 	 */
-	Legend.prototype.updateThresholdGroupSelect = function(contaminant) {
+	Legend.prototype.updateThresholdGroupSelect = function(contaminant, selectThresholdGroup) {
+		// most cases we're refreshing and selecting a default threshold, but occasionally we may need to save
 		this.selectedThresholdGroup = null;
-		
 		// empty and fill select
 		var selectElem = $("#thresholds-control").html("");
 		var recognizedGroups = [];
@@ -169,8 +169,8 @@ define(["d3", "common"], function(d3, common) {
 					this.selectedThresholdGroup = group;
 				}
 				var option = $("<option>", {value: group}).appendTo(selectElem)
+					//.attr("class", "adv-thres-grp")
 					.text(this.thresholdGroups[group]);
-				option.attr("class", "adv-thres-grp");
 			}
 		}
 		for(var group in this.thresholds) {
@@ -179,11 +179,16 @@ define(["d3", "common"], function(d3, common) {
 					this.selectedThresholdGroup = group;
 				}
 				$("<option>", {value: group}).appendTo(selectElem)
-					.attr("class", "adv-thres-grp")
+					//.attr("class", "adv-thres-grp")
 					.text(this.thresholdGroups[group]);
 			}
 		}
 		
+		if(selectThresholdGroup && $.inArray(selectThresholdGroup, recognizedGroups)) {
+			if(contaminant !== "Mercury" || selectThresholdGroup !== "standard") {
+				this.selectedThresholdGroup = selectThresholdGroup;
+			}
+		}
 		selectElem.val(this.selectedThresholdGroup);
 		
 		// to customize, there is an option specifically to customize (thus it can be reselected)
@@ -266,8 +271,7 @@ define(["d3", "common"], function(d3, common) {
 				});
 			}
 			this.thresholds = dataByGroup;
-			this.selectedThresholdGroup = selectThresholdGroup;
-			this.updateThresholdGroupSelect(contaminant);
+			this.updateThresholdGroupSelect(contaminant, selectThresholdGroup);
 		} else {
 			// for user inputs thresholds need to validate
 			if(!data || data.length === 0) { return false; }

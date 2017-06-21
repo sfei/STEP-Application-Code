@@ -125,6 +125,7 @@ input, select {
   padding: 5px 15px;
 }
 #modal-instructions p {
+  font-size: 13px;
   text-align: justify;
 }
 .instructions-select {
@@ -148,7 +149,7 @@ input, select {
 #instructions-buttons {
   margin-bottom: 5px;
 }
-#instructions-next, #instructions-finish {
+.instruction-btn {
   display: inline-block;
   width: auto;
   margin: 5px auto;
@@ -294,6 +295,10 @@ input, select {
 }
 .chosen-container {
   font-size: 13px;
+}
+
+#station-controls {
+  padding: 10px 4px;
 }
 
 /* query controls related */

@@ -35,42 +35,50 @@ define([
 	};
 	
 	
-	MapInstructions.prototype._appendButtons = function(element, nextCallback, queryOptions, onComplete) {
+	MapInstructions.prototype._appendButtons = function(queryOptions, onComplete, nextCallback, prevCallback) {
+		var container = $("<div>", {'id': "instructions-buttons"}).appendTo("#modal-instructions");
 		var self = this;
-		$("<div>", {'id': "instructions-buttons"}).appendTo(element)
-			.append(
-				$("<div>", {'id': 'instructions-next', 'class': 'button'})
-					.html("Next")
+		if(prevCallback) {
+			container.append(
+				$("<div>", {'id': 'instructions-previous', 'class': 'button instruction-btn'})
+					.html("Back")
 					.on('click', function(e) {
 						e.stopPropagation();
-						nextCallback.call(self, queryOptions, onComplete);
-					})
-			)
-			.append(
-				$("<a>", {'id': 'instructions-skip', 'href': '#'})
-					.html("Skip instructions")
-					.on('click', function(e) {
-						e.preventDefault();
-						onComplete.call(self, queryOptions);
-						common.setModal(false);
+						prevCallback.call(self, queryOptions, onComplete);
 					})
 			);
+		}
+		container.append(
+			$("<div>", {'id': 'instructions-next', 'class': 'button instruction-btn'})
+				.html("Next")
+				.on('click', function(e) {
+					e.stopPropagation();
+					nextCallback.call(self, queryOptions, onComplete);
+				})
+		);
+		container.append(
+			$("<a>", {'id': 'instructions-skip', 'href': '#'})
+				.html("Skip instructions")
+				.on('click', function(e) {
+					e.preventDefault();
+					onComplete.call(self, queryOptions);
+					common.setModal(false);
+				})
+		);
 	};
 	
 	
 	MapInstructions.prototype._intro = function(queryOptions, onComplete) {
 		var html = (
-			"<h1>Safe-to-Eat Portal</h1>" + 
+			"<h1>Customize a Statewide Map of Fish Contamination</h1>" + 
 			"<p>" + 
-				"This interactive map allows you to explore fish contaminant data for your fishing " + 
-				"locations. Data are available from extensive monitoring by SWAMP of lakes and reservoirs " +
-				"in 2007 and 2008, of the coast in 2009 and 2010, of rivers and streams in 2011, and from " +
-				"other studies." + 
+				"The interactive map on this page allows you to explore fish contaminant data for your favorite fishing locations. Data are available from extensive monitoring by the Surface Water Ambient Monitoring Program and from other studies." + 
 			"</p>" + 
 			"<p>" + 
-				"The following steps will guide you through using the filters to explore the dataset. " + 
-				"Click on 'Next' below to continue, or you may skip the instructions and use the default " +
-				"filters provided." + 
+				"The following steps will guide you through customizing the statewide map to show data of greatest interest.  You can customize the species, contaminant, and time period shown.  Mercury is the contaminant posing the most widespread concern and is a good starting point for exploring the data.  You can select one of two sets of thresholds for assessing the mercury data: one for the most sensitive population (women aged 18-45 years and children aged 1-17), or one for the less sensitive population (women over 45 years and men)." + 
+			"</p>" + 
+			"<p>" + 
+				"Click “Next” to be guided through the customizing process, or click “Skip Instructions” if you already know the drill. " + 
 			"</p>"
 		);
 		common.setModal(true, html, {
@@ -79,7 +87,7 @@ define([
 			notExitable: true, 
 			hideCloser: true
 		});
-		this._appendButtons("#modal-instructions", this._selectSpecies, queryOptions, onComplete);
+		this._appendButtons(queryOptions, onComplete, this._selectSpecies);
 	};
 	
 	
@@ -87,9 +95,7 @@ define([
 		$("#modal-instructions").html(
 			"<h1>Select Species</h1>" + 
 			"<p>" + 
-				"Select a species of interest from the available sample data. Alternatively, you may " +
-				"select to display by the most recent sample of any species, using the highest or lowest " + 
-				"sample value for samples falling on the same year." + 
+				"Click on the box below to select a species of interest. Largemouth bass is shown as the default because it is the most widely sampled species across the state, and is a good indicator of mercury contamination.  You can select a species from the pull-down menu, or simply begin typing the name of the species and click on the full name when you see it.  In addition to specific species, you can display the “Species with the Lowest Average Concentration” at each location or the “Species with the Highest Average Concentration” at each location.  These last two options are helpful if you do not know what species were sampled at the location of interest." + 
 			"</p>" + 
 			"<select id='instructions-select-species' class='instructions-select' disabled></select>"
 		);
@@ -120,7 +126,7 @@ define([
 					})
 					.prop('disabled', false)
 					.chosen();
-				self._appendButtons("#modal-instructions", self._selectContaminant, queryOptions, onComplete);
+				self._appendButtons(queryOptions, onComplete, self._selectContaminant, self._intro);
 			}
 		});
 	};
@@ -130,8 +136,7 @@ define([
 		$("#modal-instructions").html(
 			"<h1>Select Contaminant</h1>" + 
 			"<p>" + 
-				"Select a contaminant of interest. Contaminants available for <strong>" + 
-				queryOptions.query.species + "</strong> are given below. " + 
+				"Click on the box below to select a contaminant of interest from the pull-down menu. Mercury is shown as the default because it is the contaminant posing the most widespread concern in California. If you select mercury, you will also need to select a set of thresholds for assessing the mercury data - you will do this in the next step. " + 
 			"</p>"+ 
 			"<select id='instructions-select-contaminant' class='instructions-select' disabled></select>"
 		);
@@ -162,7 +167,14 @@ define([
 					})
 					.prop('disabled', false)
 					.chosen();
-				self._appendButtons("#modal-instructions", self._selectThresholds, queryOptions, onComplete);
+				var specialNextFunction = function(queryOptions, onComplete) {
+					if(queryOptions.query.contaminant === "Mercury") {
+						self._selectThresholds(queryOptions, onComplete);
+					} else {
+						self._selectYearRange(queryOptions, onComplete);
+					}
+				};
+				self._appendButtons(queryOptions, onComplete, specialNextFunction, self._selectSpecies);
 			}
 		});
 	};
@@ -172,10 +184,7 @@ define([
 		$("#modal-instructions").html(
 			"<h1>Select Contaminant Threshold</h1>" + 
 			"<p>" + 
-				"Select a contaminant threshold for <strong>" + queryOptions.query.contaminant + 
-				"</strong>. Thresholds are provided by the Calfiornia Office of Environmental Health " + 
-				"Hazard Assessment (OEHHA) and may be provied by specific groups by gender and age, or as " + 
-				"non-specific, general thresholds." + 
+				"Click on the box to select one of two sets of thresholds for assessing the mercury data: one for the most sensitive population (women aged 18-45 years and children aged 1-17), or one for the less sensitive population (women over 45 years and men)." + 
 			"</p>" + 
 			"<select id='instructions-select-threshold' class='instructions-select' disabled></select>"
 		);
@@ -212,7 +221,7 @@ define([
 					queryOptions.selectThresholdGroup = "standard";
 				} else if(!queryOptions.selectThresholdGroup || queryOptions.selectThresholdGroup === "standard" || !(queryOptions.selectThresholdGroup in recognizedGroups)) {
 					// default value no longer valid
-					queryOptions.selectThresholdGroup = recognizedGroups[1];
+					queryOptions.selectThresholdGroup = recognizedGroups[recognizedGroups.length-1];
 				}
 				select.val(queryOptions.selectThresholdGroup);
 				
@@ -221,7 +230,7 @@ define([
 					})
 					.prop('disabled', false)
 					.chosen();
-				self._appendButtons("#modal-instructions", self._selectYearRange, queryOptions, onComplete);
+				self._appendButtons(queryOptions, onComplete, self._selectYearRange, self._selectContaminant);
 			}
 		});
 	};
@@ -231,9 +240,10 @@ define([
 		$("#modal-instructions").html(
 			"<h1>Select Year Range</h1>" + 
 			"<p>" + 
-				"Select a year range to filter sample results. The years of data available for <strong>" + 
-				queryOptions.query.species + "</strong> and <strong>" + queryOptions.query.contaminant + 
-				"</strong> <span id='instructions-years-replace'>are fit to the slider below</span>. " + 
+				"Use the slider bar to select a year range of interest. " + 
+				"<span id='instructions-years-replace'>Select from years available </span> " + 
+				"for <strong>" + queryOptions.query.contaminant + "</strong> in <strong>" + 
+				queryOptions.query.species + "</strong>. " + 
 			"</p>" + 
 			"<div id='instructions-year-container'>" + 
 				"<div id='instructions-year-start'></div>" + 
@@ -255,9 +265,8 @@ define([
 				queryOptions.query.startYear = range[0];
 				queryOptions.query.endYear = range[1];
 				if(range[0] === range[1]) {
-					console.log(range);
 					$("#instructions-years-replace").html(
-						"are limited to " + range[0]
+						"Data from only the year " + range[0] + " are available"
 					);
 					var yearRangeControl = noUiSlider.create(document.getElementById('instructions-year-slider'), {
 						range: { 'min': range[0]-1, 'max': range[0] },
@@ -270,7 +279,7 @@ define([
 					$("#instructions-year-slider").attr('disabled', true);
 				} else {
 					$("#instructions-years-replace").html(
-						"span from " + range[0] + " to " + range[1]
+						"Data from " + range[0] + " to " + range[1] + " are available"
 					);
 					var yearRangeControl = noUiSlider.create(document.getElementById('instructions-year-slider'), {
 						range: { 'min': range[0], 'max': range[1] }, 
@@ -292,7 +301,14 @@ define([
 						queryOptions.query.endYear = parseInt(range[1]);
 					});
 				}
-				self._appendButtons("#modal-instructions", self._outtro, queryOptions, onComplete);
+				var specialBackFunction = function(queryOptions, onComplete) {
+					if(queryOptions.query.contaminant === "Mercury") {
+						self._selectThresholds(queryOptions, onComplete);
+					} else {
+						self._selectContaminant(queryOptions, onComplete);
+					}
+				};
+				self._appendButtons(queryOptions, onComplete, self._outtro, specialBackFunction);
 			}
 		});
 	};
@@ -310,16 +326,16 @@ define([
 		}
 		$("#modal-instructions").html(
 			"<p>" + 
-				"Map will be initialized displaying <strong>" + queryOptions.query.contaminant + 
+				"Map will display <strong>" + queryOptions.query.contaminant + 
 				"</strong> contamination in <strong>" + queryOptions.query.species + "</strong> samples " + 
 				yearString + 
 			"</p>" + 
 			"<img class='img-drop-shadow' src='images/instructions-filters.png' alt='Filters UI' />" + 
-			"<p>To change the filters at any time, use the \"Filter Stations on Map\" interface.</p>"
+			"<p>TTo change the selections at any time, use the \"Customize the Statewide Map\" menu.</p>"
 		);
 		$("<div>", {'id': "instructions-buttons"}).appendTo("#modal-instructions")
 			.append(
-				$("<div>", {'id': 'instructions-finish', 'class': 'button'})
+				$("<div>", {'id': 'instructions-finish', 'class': 'button instruction-btn'})
 					.html("Finish and go to map")
 					.on('click', function(e) {
 						e.stopPropagation();
