@@ -403,7 +403,7 @@ define(["d3", "common"], function(d3, common) {
 		if($("#legend-content").is(":visible")) {
 			height += $("#legend-content").height() + 3;
 		} else {
-			height += 22;	// min height to leave button visible
+			height += 22;  // min height to leave button visible
 		}
 		$("#legend-container").height(height);
 	};
@@ -452,10 +452,10 @@ define(["d3", "common"], function(d3, common) {
 		}
 		// no data legend item
 		$("<div>", {id: "legend-row-no-data", 'class': "legend-table-row"})
-			.css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden")
+			.css('display', this.parent.noDataOptions.showNoData ? "" : "none")
 			.append(
 				"<div class='legend-table-cell legend-cell-color' style='box-sizing:border-box;border:2px solid #000;'>&nbsp;</div>" + 
-				"<div id='legend-cell-no-data' class='legend-table-cell legend-cell-desc'>No results matching current filters</div>"
+				"<div id='legend-cell-no-data' class='legend-table-cell legend-cell-desc'>Unshaded symbols indicate no data available for the selected species</div>"
 			)
 			.appendTo(table);
 		// always show legend on update

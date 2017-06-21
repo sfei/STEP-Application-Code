@@ -52,22 +52,22 @@ define([
 				tabElement: null, 
 				isOpen: true
 			}, 
-			location: {
-				name: 'station', 
-				id: 'location-controls',
-				element: null,
-				tabId: 'control-tab-location', 
-				tabElement: null, 
-				isOpen: true
-			}, 
-			map: {
-				name: 'map', 
-				id: 'map-controls',
-				element: null,
-				tabId: 'control-tab-map', 
-				tabElement: null, 
-				isOpen: false
-			}, 
+//			location: {
+//				name: 'station', 
+//				id: 'location-controls',
+//				element: null,
+//				tabId: 'control-tab-location', 
+//				tabElement: null, 
+//				isOpen: true
+//			}, 
+//			map: {
+//				name: 'map', 
+//				id: 'map-controls',
+//				element: null,
+//				tabId: 'control-tab-map', 
+//				tabElement: null, 
+//				isOpen: false
+//			}, 
 			about: {
 				name: 'about', 
 				id: 'about-controls',
@@ -216,6 +216,7 @@ define([
 				if(updateMessage) {
 					self.parent.flashNotification(updateMessage, updateMessageTime);
 				}
+				self.legend.adjustLegendContainerHeight();
 			}
 		});
 	};
@@ -242,10 +243,11 @@ define([
 			"<div id='control-year-range-end'></div>"
 		);
 		// add placeholder texts to chosen search
-		$("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a species..");
-		$("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a contaminant..");
-		$("#stations_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a station..");
-		$("#counties_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Search for a county..");
+		$("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the species of interest.  Click on the full name when you see it.");
+		$("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a contaminant from the pull-down menu.");
+		$("#thresholds_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a set of thresholds from the pull-down menu.");
+		$("#stations_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the location of interest.  Click on the full name when you see it.");
+		$("#counties_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing the name of the county of interest.  Click on the full name when you see it.");
 		// cache the control groups and tabs, hide the groups
 		for(var key in this.controls) {
 			this.controls[key].element = $("#"+this.controls[key].id);
@@ -258,22 +260,22 @@ define([
 		// set visible
 		$("#controls-container").css('visibility', 'visible');
 		// add help tooltips
-		$("#control-tab-about").addClass("cm-tooltip-left").attr(
-			"cm-tooltip-msg", 
-			"About the Safe-to-Eat Portal"
-		);
-		$("#control-tab-query").addClass("cm-tooltip-left").attr(
-			"cm-tooltip-msg", 
-			"Change the data being displayed on the map"
-		);
-		$("#control-tab-location").addClass("cm-tooltip-left").attr(
-			"cm-tooltip-msg", 
-			"Find a location by county or name"
-		);
-		$("#control-tab-map").addClass("cm-tooltip-left").attr(
-			"cm-tooltip-msg", 
-			"Change the layers being displayed on the map"
-		);
+//		$("#control-tab-about").addClass("cm-tooltip-left").attr(
+//			"cm-tooltip-msg", 
+//			"About the Safe-to-Eat Portal"
+//		);
+//		$("#control-tab-query").addClass("cm-tooltip-left").attr(
+//			"cm-tooltip-msg", 
+//			"Change the data being displayed on the map"
+//		);
+//		$("#control-tab-location").addClass("cm-tooltip-left").attr(
+//			"cm-tooltip-msg", 
+//			"Find a location by county or name"
+//		);
+//		$("#control-tab-map").addClass("cm-tooltip-left").attr(
+//			"cm-tooltip-msg", 
+//			"Change the layers being displayed on the map"
+//		);
 //		$("#species_control_chosen").addClass("cm-tooltip-top").attr(
 //			"cm-tooltip-msg", 
 //			"Filter map data by this species of interest"
@@ -287,10 +289,10 @@ define([
 //			"cm-tooltip-msg", 
 //			"Filter map data between these years"
 //		);
-		$("#show-no-data-container").addClass("cm-tooltip-top").attr(
-			"cm-tooltip-msg", 
-			"Hide stations that do not have results matching above filters"
-		);
+//		$("#show-no-data-container").addClass("cm-tooltip-top").attr(
+//			"cm-tooltip-msg", 
+//			"Hide stations that do not have results matching above filters"
+//		);
 //		$("#reset-controls").addClass("cm-tooltip-bottom").attr(
 //			"cm-tooltip-msg", 
 //			"Reset all settings above to default values"
@@ -308,10 +310,24 @@ define([
 		for(var key in this.controls) {
 			if(this.controls[key].isOpen) {
 				this.controls[key].element.slideDown();
+				this.controls[key].tabElement.removeClass("control-tab").addClass("control-tab-active");
 			}
 			this.controls[key].tabElement.on('click', this.toggleControl.bind(this, key));
 		}
 		// add query controls event listeners
+		$("#stations-select")
+			.prop('disabled', false)
+			.change(function() {
+				var selectVal = parseInt($("#stations-select").val());
+				if(selectVal >= 0) {
+					var station = self.parent.stations.collection.getArray()[selectVal];
+					self.parent.zoomToStation(station);
+					self.parent.openStationDetails(station);
+					$("#stations-select").find('option:first-child')
+						.prop('selected', true)
+						.end().trigger('chosen:updated');
+				}
+			});
 		$("#species-control")
 			.prop('disabled', false)
 			.change(function() {
@@ -336,6 +352,17 @@ define([
 				}
 			})
 			.trigger('chosen:updated');
+		$("#show-no-data-control")
+			.prop('disabled', false)
+			.prop('checked', !this.parent.noDataOptions.showNoData)
+			.click(function() {
+				if(self.prepSecondQuery) {
+					// this disables able setting no-data display to false when doing the query immediately after,
+					// the first, since user already discovered how to toggle this on/off
+					self.prepSecondQuery = false;
+				}
+				self.toggleNoDataDisplay();
+			});
 		$("#reset-controls")
 			.prop('disabled', false)
 			.click(function() {
@@ -347,19 +374,12 @@ define([
 					flashMessage: "Filters and display settings reset to default."
 				});
 			});
-		$("#stations-select")
-			.prop('disabled', false)
-			.change(function() {
-				var selectVal = parseInt($("#stations-select").val());
-				if(selectVal >= 0) {
-					var station = self.parent.stations.collection.getArray()[selectVal];
-					self.parent.zoomToStation(station);
-					self.parent.openStationDetails(station);
-					$("#stations-select").find('option:first-child')
-						.prop('selected', true)
-						.end().trigger('chosen:updated');
-				}
-			});
+		$("#download-control").click(function() {
+			self.parent.modules.download.showDownloadDialog(self.lastQuery);
+		});
+		$("#zoom-stations-control").click(function() {
+			self.parent.zoomToStations();
+		});
 		$("#show-counties-control")
 			.prop('disabled', false)
 			.prop('checked', this.parent.counties.layer.getVisible())
@@ -372,6 +392,17 @@ define([
 					self.parent.counties.highlightLayer.changed();
 				}
 			});
+		// sub layout for map/layer options
+		$("#map-layer-sub-tab").on('click', function() {
+			var elem = $(this);
+			if(elem.hasClass("active")) {
+				elem.removeClass("active");
+				$("#map-layer-sub-control").slideUp();
+			} else {
+				elem.addClass("active");
+				$("#map-layer-sub-control").slideDown();
+			}
+		});
 		$("#show-waterboards-control")
 			.prop('disabled', false)
 			.prop('checked', this.parent.waterboards.layer.getVisible())
@@ -383,17 +414,6 @@ define([
 			.prop('checked', this.parent.mpa.layer.getVisible())
 			.click(function() {
 				self.parent.mpa.layer.setVisible(!self.parent.mpa.layer.getVisible());
-			});
-		$("#show-no-data-control")
-			.prop('disabled', false)
-			.prop('checked', !this.parent.noDataOptions.showNoData)
-			.click(function() {
-				if(self.prepSecondQuery) {
-					// this disables able setting no-data display to false when doing the query immediately after,
-					// the first, since user already discovered how to toggle this on/off
-					self.prepSecondQuery = false;
-				}
-				self.toggleNoDataDisplay();
 			});
 		// fill counties select
 		var countiesSelect = $("#counties-select");
@@ -416,12 +436,12 @@ define([
 			})
 			.trigger('chosen:updated');
 		// other tab buttons
-		$("#zoom-stations-tab").click(function() {
-			self.parent.zoomToStations();
-		});
-		$("#download-tab").click(function() {
-			self.parent.modules.download.showDownloadDialog(self.lastQuery);
-		});
+//		$("#zoom-stations-tab").click(function() {
+//			self.parent.zoomToStations();
+//		});
+//		$("#download-tab").click(function() {
+//			self.parent.modules.download.showDownloadDialog(self.lastQuery);
+//		});
 	};
 
 	QueryAndUI.prototype.createYearSlider = function(minYear, maxYear) {
@@ -632,7 +652,8 @@ define([
 		this.parent.refreshMarkerFactory();
 		if(!supressUpdate) { this.parent.refreshStations(); }
 		$("#show-no-data-control").prop("checked", !this.parent.noDataOptions.showNoData);
-		$("#legend-row-no-data").css('visibility', this.parent.noDataOptions.showNoData ? "visible" : "hidden");
+		$("#legend-row-no-data").css('display', this.parent.noDataOptions.showNoData ? "" : "none");
+		this.legend.adjustLegendContainerHeight();
 	};
 	
 	return QueryAndUI;

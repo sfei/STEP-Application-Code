@@ -34,7 +34,7 @@ $html .= <<< HTML
       var reportData=$jsonData;
     </script>
   </head>
-  <body>
+  <body style="overflow:scroll;">
     <div id="container">
       <h1 id="title">Sportfish Contamination Report</h1>
       <div id="print-button" class="button" onclick="window.print();">Print Report</div>

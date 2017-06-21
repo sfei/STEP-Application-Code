@@ -301,7 +301,7 @@ define([
 		// zoom to station link
 		listLinks.append(
 			$("<li>").append(
-				$("<a>", {href: "#", text: "Zoom to this station"})
+				$("<a>", {href: "#", text: "Zoom to this location"})
 					.on('click', function() {
 						self.parent.zoomToStation(self.station);
 					})
@@ -319,7 +319,7 @@ define([
 				advisoryUrl = "http://www.oehha.ca.gov/fish/general/broch.html";
 			}
 		} else {
-			advisoryName = "View specific <b>Safe Eating Guidelines</b> for this water body";
+			advisoryName = "View <b>Safe Eating Guidelines</b> for this water body";
 		}
 		listLinks.append(
 			$("<li></li>").html(
@@ -341,6 +341,22 @@ define([
 					"</a>"
 			));
 		}
+		
+		// compare stations
+		var dvCompareText = "Compare ";
+		if(this.query.species !== "highest" && this.query.species !== "lowest") {
+			dvCompareText += this.query.species + " at this location (if sampled) ";
+		} else {
+			dvCompareText += "this location ";
+		}
+		dvCompareText += " to all locations across the state";
+		$("<li>").appendTo(listLinks)
+			.append(
+				$("<a>", {
+					href: "#", 
+					text: dvCompareText
+				}).on('click', this.openCompareStations.bind(this))
+			);
 	
 		this.element.find("#details-info").html("").append(listLinks);
 	};
@@ -517,15 +533,6 @@ define([
 				this.tabs.data.titleFunction(this.query) + 
 			"</div>"
 		);
-		// compare stations
-		$("<div>", {id: "details-dv-compare-stations"})
-			.appendTo(contentDiv)
-			.append(
-				$("<a>", {
-					href: "#", 
-					text: "Compare this station to all stations"
-				}).on('click', this.openCompareStations.bind(this))
-			);
 		// create table headers
 		var headers = $("<div></div>").appendTo(contentDiv)
 			.addClass('details-table-header-row')

@@ -16,15 +16,16 @@ define(["common"], function(common) {
 			} else {
 				yearMsg = "between <b>" + query.startYear + "-" + query.endYear + "</b>";
 			}
+			common.setModal(true, "", {id: "download-dialog", showBackground: true});
 			// create dialog box
-			var downloadDialog = $("<div id='download-dialog'></div>")
+			var downloadDialog = $("#download-dialog")
 				//.addClass("inner-container-style")
-				.append("<span style='font-size:18px;font-weight:bolder;'>Download Data Table<span><hr />")
+				.append("<span style='font-size:18px;font-weight:bolder;'>Download Map Data<span><hr />")
 				.append(
 					$("<p></p>").html(
-						"Download <b>" + query.contaminant + "</b> contaminant data " + 
+						"Download <b>" + query.contaminant + "</b> data " + 
 						"for <b>" + species + "</b> " + yearMsg + "?"
-					).css({'margin': '15px 0', 'text-align': 'center'})
+					)
 				);
 			if(!isASpecies) {
 				downloadDialog.append(
@@ -34,6 +35,9 @@ define(["common"], function(common) {
 					).css({'font-size': '10px', 'text-align': 'center'})
 				);
 			}
+			$("<p>").appendTo(downloadDialog).html(
+				"Click the Download button to download data for the species, contaminant, and time period shown on the map.  The data table will include the data for all locations across the state that match these parameters."
+			);
 			var buttonStyle = {
 				'display': 'inline-block',
 				'width': 70, 
@@ -55,10 +59,11 @@ define(["common"], function(common) {
 						.addClass("button")
 						.css(buttonStyle)
 						.css('margin-left', '4px')
-						.click(function() { self.downloadQueryData(downloadDialog, query); })
+						.click(function(e) {
+							e.stopPropagation();
+							self.downloadQueryData(downloadDialog, query);
+						})
 				);
-			// lock interface
-			common.setModal(true, downloadDialog, {showBackground: true});
 		}, 
 		
 		/**
@@ -73,7 +78,8 @@ define(["common"], function(common) {
 				$("<div id='download-message'></div>")
 				.css({
 					'text-align': 'center', 
-					'margin': '20px 0'
+					'margin': '20px 0', 
+					'font-size': 13
 				})
 				.html("<img src='images/loader.gif' alt='loading' /> Preparing file for download..")
 			);
@@ -102,6 +108,7 @@ define(["common"], function(common) {
 					// use iframe to automatically start download
 					$("<iframe src='"+downloadUrl+"'></iframe>")
 						.css({
+							'display': 'block',
 							'width': 280, 
 							'height': 15, 
 							'border': 'none'
