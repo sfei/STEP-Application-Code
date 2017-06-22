@@ -151,7 +151,7 @@ define(["d3", "common"], function(d3, common) {
 	 * Update the selection options for thresholds
 	 */
 	Legend.prototype.updateThresholdGroupSelect = function(contaminant, selectThresholdGroup) {
-		// most cases we're refreshing and selecting a default threshold, but occasionally we may need to save
+		// before using the supplied, find what would be default threshold group
 		this.selectedThresholdGroup = null;
 		// empty and fill select
 		var selectElem = $("#thresholds-control").html("");
@@ -168,8 +168,7 @@ define(["d3", "common"], function(d3, common) {
 				if(!this.selectedThresholdGroup) {
 					this.selectedThresholdGroup = group;
 				}
-				var option = $("<option>", {value: group}).appendTo(selectElem)
-					//.attr("class", "adv-thres-grp")
+				$("<option>", {value: group}).appendTo(selectElem)
 					.text(this.thresholdGroups[group]);
 			}
 		}
@@ -179,29 +178,28 @@ define(["d3", "common"], function(d3, common) {
 					this.selectedThresholdGroup = group;
 				}
 				$("<option>", {value: group}).appendTo(selectElem)
-					//.attr("class", "adv-thres-grp")
 					.text(this.thresholdGroups[group]);
 			}
 		}
 		
-		if(selectThresholdGroup && $.inArray(selectThresholdGroup, recognizedGroups)) {
+		if(selectThresholdGroup && $.inArray(selectThresholdGroup, recognizedGroups) >= 0) {
+			// standard is in mercury's recognized group but special-case ignored so pick another
 			if(contaminant !== "Mercury" || selectThresholdGroup !== "standard") {
 				this.selectedThresholdGroup = selectThresholdGroup;
 			}
 		}
-		selectElem.val(this.selectedThresholdGroup);
 		
 		// to customize, there is an option specifically to customize (thus it can be reselected)
 		this.thresholds.custom = [];
 		$("<option>", {value: "customize"}).appendTo(selectElem)
-			.attr("class", "adv-thres-grp")
 			.text("Customize Thresholds");
 		// custom option is hidden (only programatically selected after defining custom thresholds)
 		$("<option>", {value: "custom"}).appendTo(selectElem)
 			.text(this.thresholdGroups.custom)
 			.prop("disabled", true)
 			.css("display", "none");
-		selectElem.trigger('chosen:updated');
+	
+		selectElem.val(this.selectedThresholdGroup).trigger('chosen:updated');
 	};
 
 	/**
@@ -315,6 +313,7 @@ define(["d3", "common"], function(d3, common) {
 	};
 
 	Legend.prototype.thresholdsChanged = function() {
+		$("#thresholds-control").val(this.selectedThresholdGroup).trigger("chosen:updated");
 		this.updateThresholdStyles();
 		this.updateLegend(this.parent.modules.queryAndUI.lastQuery);
 		this.parent.refreshStations();

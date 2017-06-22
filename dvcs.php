@@ -12,6 +12,7 @@
     <?php } else { ?>
     <link rel="stylesheet" href="build/style.css" />
     <script src="build/require.js" data-main="build/dvcs"></script>
+    <?php include("analyticstracking.php"); ?>
     <?php } ?>
     <script>
         var parameters = {

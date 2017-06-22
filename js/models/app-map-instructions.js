@@ -12,6 +12,7 @@ define([
 	//********************************************************************************************************
 	function MapInstructions(parentStepApp) {
 		this.step = parentStepApp;
+		this.defaultThreshold = "oehha-women-1845-children";
 	};
 	
 	
@@ -31,6 +32,7 @@ define([
 	
 	
 	MapInstructions.prototype.begin = function(queryOptions, onComplete) {
+		queryOptions.selectThresholdGroup = queryOptions.selectThresholdGroup || this.defaultThreshold;
 		this._intro(queryOptions, onComplete);
 	};
 	
@@ -100,7 +102,7 @@ define([
 				e.preventDefault();
 				onComplete.call(self, queryOptions);
 				common.setModal(false);
-			})
+			});
 	};
 	
 	
@@ -160,6 +162,7 @@ define([
 			if(queryOptions.query.contaminant === "Mercury") {
 				self._selectThresholds(queryOptions, onComplete);
 			} else {
+				queryOptions.selectThresholdGroup = "standard";
 				self._selectYearRange(queryOptions, onComplete);
 			}
 		};

@@ -20,18 +20,23 @@ if($ini["devmode"]) {
     <link rel="stylesheet" href="css/summaryreport.css" />
     <script src="js/lib/require.js" data-main="js/init"></script>
 HTML;
+	echo $html;
 } else {
 	$html .= <<< HTML
     <link rel="stylesheet" href="build/summaryreport.css" />
     <script src="build/require.js" data-main="build/step"></script>
 HTML;
+	echo $html;
+	include("analyticstracking.php");
 }
 
-$html .= <<< HTML
+
+
+$html2 = <<< HTML
     <script>
       var summaryReport = true;
-      var reportQuery=$jsonQuery;
-      var reportData=$jsonData;
+      var reportQuery = $jsonQuery;
+      var reportData = $jsonData;
     </script>
   </head>
   <body style="overflow:scroll;">
@@ -45,7 +50,7 @@ $html .= <<< HTML
   </body>
 </html>
 HTML;
-	
-	echo $html;
+
+echo $html2;
 
 ?>
