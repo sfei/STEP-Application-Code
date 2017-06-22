@@ -188,7 +188,7 @@ define([
 		this.modules.mapInstructions.begin(
 			{
 				query: this.modules.queryAndUI.defaultQuery, 
-				selectThresholdGroup: getVars.tgroup, 
+				selectThresholdGroup: getVars.tgroup ? getVars.tgroup : "oehha-women-1845-children", 
 				firstRun: true // special option as very first query has to do some extra things
 			}, 
 			function(queryOptions) {
