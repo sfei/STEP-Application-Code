@@ -1,6 +1,10 @@
 <?php
 
 $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
+// super-secret dev mode
+if(strtolower($_GET["dev"]) == "true") {
+	$ini["devmode"] = true;
+}
 // set such that any relative paths are from the location on init.php, despite if this is called as a require
 // from elsewhere
 chdir(dirname(__FILE__));
