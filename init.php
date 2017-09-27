@@ -2,13 +2,14 @@
 
 $ini = parse_ini_file("config.ini", false, INI_SCANNER_TYPED);
 // super-secret dev mode
-if(strtolower($_GET["dev"]) == "true") {
-	$ini["devmode"] = true;
-}
+$ini["devdb"] = isset($_GET["dev"]) && strtolower($_GET["dev"]) == "true";
 // set such that any relative paths are from the location on init.php, despite if this is called as a require
 // from elsewhere
 chdir(dirname(__FILE__));
-$dbconnPath = realpath($ini["path_conns"]) . "/" . ($ini["devmode"] ? $ini["conn_dev"] : $ini["conn_prd"]);
+$dbconnPath = (
+	realpath($ini["path_conns"]) . "/" . 
+	($ini["devmode"] || $ini["devdb"] ? $ini["conn_dev"] : $ini["conn_prd"])
+);
 // error display
 if($ini["devmode"]) {
 	error_reporting(E_ALL);
