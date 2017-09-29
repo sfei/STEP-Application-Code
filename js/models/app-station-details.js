@@ -9,13 +9,14 @@
  * @returns {StationDetails}
  */
 define([
+	"jquery.ui", 
 	"chosen", 
 	"common",
 	"OpenLayers", 
 	"noUiSlider", 
 	"SimpleGraph", 
 	"./app-dv-compare-stations"
-], function(chosen, common, ol, noUiSlider, SimpleGraph, DVCompareStations) {
+], function(jQueryUI, chosen, common, ol, noUiSlider, SimpleGraph, DVCompareStations) {
 	
 	//********************************************************************************************************
 	// Constructor(s)

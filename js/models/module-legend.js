@@ -1,5 +1,5 @@
 
-define(["d3", "common"], function(d3, common) {
+define(["d3", "jquery.ui", "common"], function(d3, jQueryUI, common) {
 	
 	function Legend(parentStepApp) {
 		this.parent = parentStepApp;

@@ -1,5 +1,4 @@
 build/*
 node_modules/
-config.ini
 step_conns.php
 step_conns_dev.php

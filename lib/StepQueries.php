@@ -96,6 +96,20 @@ class StepQueries {
 		}
 		return self::$instance;
 	}
+	
+	/**
+	 * Get config options.
+	 * @return array Associative array with config options
+	 *         <ul>
+	 *           <li>(string) mapServerUrl - MapServer base URL</li>
+	 *         </ul>
+	 */
+	public function getConfigOptions() {
+		$ini = parse_ini_file($_SERVER["DOCUMENT_ROOT"]."/config.ini", true, INI_SCANNER_TYPED);
+		return array(
+			'mapServerUrl' => $ini["MapServer"][$ini["MapServer"]["use_ms"]]
+		);
+	}
 
 	/** Get the default thresholds for contaminant.
 	 * @param array $params Associative array of query parameters See {@link getQuery() getQuery()}, only
