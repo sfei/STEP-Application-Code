@@ -1,14 +1,14 @@
 // MapServer
 	// personal development environments
-var mapfileGsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevgs/", 
-	mapfileLfDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevlf/", 
-	mapfileLsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevls/", 
+var mapfileGsDevURL_base  = "https://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevgs/", 
+	mapfileLfDevURL_base  = "https://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevlf/", 
+	mapfileLsDevURL_base  = "https://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevls/", 
 	// testing and staging environments
-	mapfileTesting0_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
-	mapfileTesting1_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/",
-	mapfileTesting2_base  = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
+	mapfileTesting0_base  = "https://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
+	mapfileTesting1_base  = "https://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/",
+	mapfileTesting2_base  = "https://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
 	// production environment
-	mapfileProdURL_base   = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/";
+	mapfileProdURL_base   = "https://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/";
 	// set this variable to one of the above
 var mapfileURL_base       = mapfileProdURL_base;
 
