@@ -73,11 +73,18 @@ class StepQueries {
 	private static $hide_field_names = true;
 	private static $dbconn = null;
 	private static $instance;
+	public static $isDev = false;
 
 	private function __construct() {
+		// first check session to set devdb (so init.php returns correct dbconn path)
+		session_start();
+		if(isset($_SESSION["devdb"]) && $_SESSION["devdb"]) {
+			$_GET["dev"] = "true";
+		}
 		// pull db conn info from ini/config
 		require("../init.php");
 		require($dbconnPath);
+		StepQueries::$isDev = $ini["devmode"] || $ini["devdb"];
 		// create connection
 		if(!StepQueries::$dbconn) {
 			StepQueries::$dbconn = new PDO("dblib:host=$host;dbname=$dbname", $user, $pass);
