@@ -21,8 +21,8 @@ require.config({
 		// library shortcuts
 		//d3:             "//cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min", 
 		d3:             "lib/d3.v4.4.1.min", 
-		common:         "lib/common/common.min", 
-		"common.table": "lib/common/common.table.min", 
+		common:         "lib/common/dist/common.min", 
+		"common.table": "lib/common/dist/common.table.min", 
 		noUiSlider:     "lib/nouislider.min", 
 		OpenLayers:     "lib/ol.3.19.0", //"lib/ol.3.19.0-debug", 
 		SimpleGraph:    "lib/d3-simplegraph/d3.simplegraph.min"

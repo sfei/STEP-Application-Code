@@ -1,7 +1,8 @@
 /* library styles */
+@import url("https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css");
 @import url("ol.css");
 @import url("nouislider.min.css");
 @import url("chosen.min.css");
-@import url("../js/lib/common/common.min.css");
+@import url("../js/lib/common/dist/common.min.css");
 /* application specific styles */
 @import url("step.css");

@@ -9,13 +9,14 @@
  * @returns {StationDetails}
  */
 define([
+	"jquery.ui", 
 	"chosen", 
 	"common",
 	"OpenLayers", 
 	"noUiSlider", 
 	"SimpleGraph", 
 	"./app-dv-compare-stations"
-], function(chosen, common, ol, noUiSlider, SimpleGraph, DVCompareStations) {
+], function(jQueryUI, chosen, common, ol, noUiSlider, SimpleGraph, DVCompareStations) {
 	
 	//********************************************************************************************************
 	// Constructor(s)
@@ -313,10 +314,10 @@ define([
 		if(!advisoryUrl) {
 			if(this.station.get("waterType").search(/reservoir|lake/i) >= 0) {
 				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b> for Lakes/Reservoirs";
-				advisoryUrl = "http://www.oehha.ca.gov/fish/special_reports/advisorylakesres.html";
+				advisoryUrl = "https://www.oehha.ca.gov/fish/special_reports/advisorylakesres.html";
 			} else {
 				advisoryName = "View <b>General Guidance for Safe Fish Consumption</b>";
-				advisoryUrl = "http://www.oehha.ca.gov/fish/general/broch.html";
+				advisoryUrl = "https://www.oehha.ca.gov/fish/general/broch.html";
 			}
 		} else {
 			advisoryName = "View <b>Safe Eating Guidelines</b> for this water body";

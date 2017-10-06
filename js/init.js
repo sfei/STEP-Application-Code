@@ -1,43 +1,37 @@
-// MapServer
-	// personal development environments
-var mapfileGsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevgs/", 
-	mapfileLfDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevlf/", 
-	mapfileLsDevURL_base  = "http://dill.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapserverdevls/", 
-	// testing and staging environments
-	mapfileTesting0_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
-	mapfileTesting1_base  = "http://mapserverdev.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/",
-	mapfileTesting2_base  = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfilesdev/",
-	// production environment
-	mapfileProdURL_base   = "http://mapserver.sfei.org/cgi-bin/mapserv.fcgi?map=/var/mapwork/mapfiles/";
-	// set this variable to one of the above
-var mapfileURL_base       = mapfileProdURL_base;
 
-// outer require pulls shared config
 require(['rconfig'], function(rconfig) {
-	init();
+	require(['jquery'], function(jQuery) {
+		$.ajax({
+			url: "lib/query.php", 
+			data: { query: "getConfigOptions"}, 
+			dataType: "json",
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus + ": " + errorThrown);
+				alert("There was an error loading the application.");
+			}, 
+			success: init
+		});
+	});
 });
 
-// init function
-function init() {
+function init(config) {
 	require([
-		'jquery', 
-		'jquery.ui', 
 		'common', 
 		'domReady', 
 		'models/app-step', 
 		'models/app-summary-report'
-	], function(jquery, jqueryui, common, domReady, STEP, SummaryReport) {
+	], function(common, domReady, STEP, SummaryReport) {
 		// Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
 		if(window.browserType.isIE && window.browserType.ieVersion <= 9) {
 			alert("This application is not compatible with Internet Explorer version 9 or below.");
 		}
 		common.setModalAsLoading();
 		domReady(function() {
-			step = new STEP({mapserverUrl: mapfileURL_base});
+			window.step = new STEP({mapserverUrl: config.mapserverUrl});
 			if(typeof summaryReport !== "undefined" && summaryReport) {
-				SummaryReport(step, reportQuery, reportData);
+				SummaryReport(window.step, reportQuery, reportData);
 			} else {
-				step.init();
+				window.step.init();
 			}
 		});
 	}, function(e) {

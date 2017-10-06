@@ -25,7 +25,7 @@ header("Content-Disposition: attachment; filename=\"$filename\"");
 header('Content-Type: text/csv');
 
 // metadata information as first row (UPDATE THIS LINK AS NECESSARY)
-echo "STEP Data Download: Before using this data please view metadata file at: http://eis.sfei.org/cwqmc/step/metadata.html\r\n";
+echo "STEP Data Download: Before using this data please view metadata file at: http://step.sfei.org/metadata.html \r\n";
 
 // loop through result
 for($i = 0; $i < count($result); $i++) {
