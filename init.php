@@ -11,7 +11,7 @@ $_SESSION["devdb"] = $ini["devmode"] || $ini["devdb"];
 chdir(dirname(__FILE__));
 $dbconnPath = (
 	realpath($ini["path_conns"]) . "/" . 
-	$_SESSION["devdb"] ? $ini["conn_dev"] : $ini["conn_prd"]
+	($_SESSION["devdb"] ? $ini["conn_dev"] : $ini["conn_prd"])
 );
 // error display
 if($ini["devmode"]) {
