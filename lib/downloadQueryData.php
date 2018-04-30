@@ -11,12 +11,12 @@ $instance = StepQueries::getInstance();
 $result = $instance->getAllRecords($query);
 
 if(count($result) == 0) {
-	die("<span style='font-family:san-serif;font-size:12px;color:red;'>Query returned no results</span>");
+    die("<span style='font-family:san-serif;font-size:12px;color:red;'>Query returned no results</span>");
 }
 
 // filename
 if($query['species'] == "highest" || $query['species'] == "lowest") {
-	$query['species'] = "allSpecies";
+    $query['species'] = "allSpecies";
 }
 $filename = "step_".date("Ymd")."_".$query['contaminant']."_".$query['species']."_".$query['startYear']."_".$query['endYear'].".csv";
 
@@ -29,15 +29,15 @@ echo "STEP Data Download: Before using this data please view metadata file at: h
 
 // loop through result
 for($i = 0; $i < count($result); $i++) {
-	// print headers if first row
-	if($i == 0) {
-		echo implode(",", array_keys($result[$i])) . "\r\n";
-	}
-	$values = array();
-	foreach($result[$i] as $key => $value) {
-		$values[] = '"' . str_replace('"', '""', html_entity_decode(strip_tags($value))) . '"';
-	}
-	echo implode(',', $values) . "\r\n";
+    // print headers if first row
+    if($i == 0) {
+        echo implode(",", array_keys($result[$i])) . "\r\n";
+    }
+    $values = array();
+    foreach($result[$i] as $key => $value) {
+        $values[] = '"' . str_replace('"', '""', html_entity_decode(strip_tags($value))) . '"';
+    }
+    echo implode(',', $values) . "\r\n";
 }
 
 ?>

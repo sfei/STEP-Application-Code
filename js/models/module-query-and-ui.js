@@ -13,130 +13,130 @@
 // particularly StepQueries.php which holds all the core query functions.
 //************************************************************************************************************
 define([
-	"common", 
-	"noUiSlider", 
-	"chosen"
+    "common", 
+    "noUiSlider", 
+    "chosen"
 ], function(common, noUiSlider) {
-	
-	function QueryAndUI(parentStepApp, defaultQuery) {
-		this.parent = parentStepApp;
-		// quick reference
-		this.legend = this.parent.modules.legend;
-		// The default query to start or when resetting. Start year is 1900 and end year is the current year. 
-		// This is fine as submitting the query will return a corrected version that fits the data.
-		this.defaultQuery = defaultQuery ? defaultQuery : {};
-		this.defaultQuery.species = this.defaultQuery.species ? this.defaultQuery.species : 'Largemouth Bass';
-		this.defaultQuery.contaminant = this.defaultQuery.contaminant ? this.defaultQuery.contaminant : 'Mercury';
-		// query will automatically adjust years to min/max year
-		this.defaultQuery.startYear = this.defaultQuery.startYear ? this.defaultQuery.startYear : 1900;
-		this.defaultQuery.endYear = this.defaultQuery.endYear ? this.defaultQuery.endYear : new Date().getFullYear();
-		// The last successful query. This is usually not the submitted query but the returned (and corrected) 
-		// query from the submitted.
-		this.lastQuery;
-		// odd var but we need to know when this is the query directly after the first query, since that's 
-		// when we turn off showing no-data stations
-		this.prepSecondQuery = false;
-		// list of available species that keeps original capitalization pattern, easier to use same list that 
-		// way, but requires you ensure consistency -- i.e. watch for any toLowercase() or toUppercase() 
-		// conflicts, or at least use a case-insenitive comparison function.
-		this.speciesList;
-		// noUiSlider instance for year range slider
-		this.yearRangeControl = null;
-		// Object holding the various control panels and common related variables.
-		this.controls = {
-			query: {
-				name: 'query', 
-				id: 'query-controls',
-				element: null,
-				tabId: 'control-tab-query', 
-				tabElement: null, 
-				isOpen: true
-			}, 
-//			location: {
-//				name: 'station', 
-//				id: 'location-controls',
-//				element: null,
-//				tabId: 'control-tab-location', 
-//				tabElement: null, 
-//				isOpen: true
-//			}, 
-//			map: {
-//				name: 'map', 
-//				id: 'map-controls',
-//				element: null,
-//				tabId: 'control-tab-map', 
-//				tabElement: null, 
-//				isOpen: false
-//			}, 
-			about: {
-				name: 'about', 
-				id: 'about-controls',
-				element: null,
-				tabId: 'control-tab-about', 
-				tabElement: null, 
-				isOpen: false
-			}, 
-			moreinfo: {
-				name: 'moreinfo', 
-				id: 'more-info-controls',
-				element: null,
-				tabId: 'control-tab-more-info', 
-				tabElement: null, 
-				isOpen: false
-			}
-		};
-		this.controlStageVertPadding = 12;
-		this.controlStageMinHeight = 2;
-	};
-	
-	
-	//********************************************************************************************************
-	// Query functions
-	//********************************************************************************************************
-	QueryAndUI.prototype.getLastQuery = function() { return this.lastQuery; };
-	
-	QueryAndUI.prototype.getLastQueryCopy = function() {
-		var copyQuery = {};
-		for(var v in this.lastQuery) {
-			copyQuery[v] = this.lastQuery[v];
-		}
-		return copyQuery;
-	};
-	
-	/**
-	 * Reset the lastQuery var to a copy of the defaultQuery.
-	 */
-	QueryAndUI.prototype.resetDefaultQuery = function() {
-		//this.lastQuery = Object.assign({}, defaultQuery);
-		this.lastQuery = {};
-		for(var v in this.defaultQuery) {
-			this.lastQuery[v] = this.defaultQuery[v];
-		}
-	};
-	
-	/**
-	 * Submit a query (or create a query from the HTML control objects), submit this to the server, then 
-	 * update the application with the results. After the query is created, the submission and update is done 
-	 * through an asynchronous ajax call (unless options.firstRun is true). This will automatically update the
-	 * query controls, thresholds, legend, and stations layer on success.
-	 * @param {Object} options - Options.
-	 * @param {Object} options.query - The query object to submit. If null or undefined, this will be created 
-	 *        from the control elements. That is, leave blank to submit a new query based on user selected 
-	 *        parameters.
-	 * @param {boolean} options.firstRun - Whether this is the first/init query to populate the map initially.
-	 *        If so, a number of things are adjusted. The ajax call is actually made synchronous, no query 
-	 *        changes are flashed or notified, and on loading, the map is zoomed to the stations extent.
-	 * @param {string} options.firedBy - Name of the parameter change that fired this specific query (as 
-	 *        inputs update the query on change). This simply tells which controls don't need to be updated. 
-	 *        For example, if the species was changed, the contaminants and years must be updated. If the 
-	 *        contaminants paramter was changed, only the year controls have to be updated. Leave undefined to
-	 *        update all query controls.
-	 * @param {string} options.flashMessage - Optional message to flash after completeing query.
-	 */
-	QueryAndUI.prototype.updateQuery = function(options) {
-		if(!options.query) {
-			// if no query supplied, use from inputs
-			var yearRange = this.yearRangeControl.get();
+    
+    function QueryAndUI(parentStepApp, defaultQuery) {
+        this.parent = parentStepApp;
+        // quick reference
+        this.legend = this.parent.modules.legend;
+        // The default query to start or when resetting. Start year is 1900 and end year is the current year. 
+        // This is fine as submitting the query will return a corrected version that fits the data.
+        this.defaultQuery = defaultQuery ? defaultQuery : {};
+        this.defaultQuery.species = this.defaultQuery.species ? this.defaultQuery.species : 'Largemouth Bass';
+        this.defaultQuery.contaminant = this.defaultQuery.contaminant ? this.defaultQuery.contaminant : 'Mercury';
+        // query will automatically adjust years to min/max year
+        this.defaultQuery.startYear = this.defaultQuery.startYear ? this.defaultQuery.startYear : 1900;
+        this.defaultQuery.endYear = this.defaultQuery.endYear ? this.defaultQuery.endYear : new Date().getFullYear();
+        // The last successful query. This is usually not the submitted query but the returned (and corrected) 
+        // query from the submitted.
+        this.lastQuery;
+        // odd var but we need to know when this is the query directly after the first query, since that's 
+        // when we turn off showing no-data stations
+        this.prepSecondQuery = false;
+        // list of available species that keeps original capitalization pattern, easier to use same list that 
+        // way, but requires you ensure consistency -- i.e. watch for any toLowercase() or toUppercase() 
+        // conflicts, or at least use a case-insenitive comparison function.
+        this.speciesList;
+        // noUiSlider instance for year range slider
+        this.yearRangeControl = null;
+        // Object holding the various control panels and common related variables.
+        this.controls = {
+            query: {
+                name: 'query', 
+                id: 'query-controls',
+                element: null,
+                tabId: 'control-tab-query', 
+                tabElement: null, 
+                isOpen: true
+            }, 
+//            location: {
+//                name: 'station', 
+//                id: 'location-controls',
+//                element: null,
+//                tabId: 'control-tab-location', 
+//                tabElement: null, 
+//                isOpen: true
+//            }, 
+//            map: {
+//                name: 'map', 
+//                id: 'map-controls',
+//                element: null,
+//                tabId: 'control-tab-map', 
+//                tabElement: null, 
+//                isOpen: false
+//            }, 
+            about: {
+                name: 'about', 
+                id: 'about-controls',
+                element: null,
+                tabId: 'control-tab-about', 
+                tabElement: null, 
+                isOpen: false
+            }, 
+            moreinfo: {
+                name: 'moreinfo', 
+                id: 'more-info-controls',
+                element: null,
+                tabId: 'control-tab-more-info', 
+                tabElement: null, 
+                isOpen: false
+            }
+        };
+        this.controlStageVertPadding = 12;
+        this.controlStageMinHeight = 2;
+    };
+    
+    
+    //********************************************************************************************************
+    // Query functions
+    //********************************************************************************************************
+    QueryAndUI.prototype.getLastQuery = function() { return this.lastQuery; };
+    
+    QueryAndUI.prototype.getLastQueryCopy = function() {
+        var copyQuery = {};
+        for(var v in this.lastQuery) {
+            copyQuery[v] = this.lastQuery[v];
+        }
+        return copyQuery;
+    };
+    
+    /**
+     * Reset the lastQuery var to a copy of the defaultQuery.
+     */
+    QueryAndUI.prototype.resetDefaultQuery = function() {
+        //this.lastQuery = Object.assign({}, defaultQuery);
+        this.lastQuery = {};
+        for(var v in this.defaultQuery) {
+            this.lastQuery[v] = this.defaultQuery[v];
+        }
+    };
+    
+    /**
+     * Submit a query (or create a query from the HTML control objects), submit this to the server, then 
+     * update the application with the results. After the query is created, the submission and update is done 
+     * through an asynchronous ajax call (unless options.firstRun is true). This will automatically update the
+     * query controls, thresholds, legend, and stations layer on success.
+     * @param {Object} options - Options.
+     * @param {Object} options.query - The query object to submit. If null or undefined, this will be created 
+     *        from the control elements. That is, leave blank to submit a new query based on user selected 
+     *        parameters.
+     * @param {boolean} options.firstRun - Whether this is the first/init query to populate the map initially.
+     *        If so, a number of things are adjusted. The ajax call is actually made synchronous, no query 
+     *        changes are flashed or notified, and on loading, the map is zoomed to the stations extent.
+     * @param {string} options.firedBy - Name of the parameter change that fired this specific query (as 
+     *        inputs update the query on change). This simply tells which controls don't need to be updated. 
+     *        For example, if the species was changed, the contaminants and years must be updated. If the 
+     *        contaminants paramter was changed, only the year controls have to be updated. Leave undefined to
+     *        update all query controls.
+     * @param {string} options.flashMessage - Optional message to flash after completeing query.
+     */
+    QueryAndUI.prototype.updateQuery = function(options) {
+        if(!options.query) {
+            // if no query supplied, use from inputs
+            var yearRange = this.yearRangeControl.get();
 			options.query = {
 				contaminant: $("#contaminant-control").val(), 
 				species: $("#species-control").val(), 
