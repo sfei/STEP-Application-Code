@@ -180,7 +180,11 @@ define([
         }
         
         // init functions
-        this.mapInit();
+        if(storymapMode) {
+            this.mapInit(null, {interactions: ol.interaction.defaults({mouseWheelZoom:false}),});
+        } else {
+            this.mapInit();
+        }
         this.addCountyLayer();
         if(!storymapMode) {
             this.addWaterBoardLayer();
@@ -204,6 +208,7 @@ define([
             self.modules.queryAndUI.updateQuery(queryOptions);
             // enable these after some query is fired to load stations
             if(self.enableHoverInteractions) self.addHoverInteractions();
+            this.modules.legend.legendHide();
             common.closeModal();
             
         } else {

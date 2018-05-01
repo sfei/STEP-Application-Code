@@ -36,7 +36,7 @@ define(["d3", "jquery.ui", "common"], function(d3, jQueryUI, common) {
         $("<div id='show-legend-tab'>Show Legend</div>").appendTo(container)
             .click(function() { self.legendShow(); })
             .hide();
-        this.legendContainer = $("<div id='legend-container'>").appendTo("body")
+        this.legendContainer = $("<div id='legend-container'>").appendTo(container)
             .addClass("container-styled")
             .draggable({containment: "body"});
         $("<div id='legend-content'></div>").appendTo(this.legendContainer)
