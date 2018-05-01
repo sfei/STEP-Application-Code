@@ -24,7 +24,10 @@ require.config({
         common:         "lib/common/dist/common.min", 
         "common.table": "lib/common/dist/common.table.min", 
         noUiSlider:     "lib/nouislider.min", 
-        OpenLayers:     "lib/ol.3.19.0", //"lib/ol.3.19.0-debug", 
-        SimpleGraph:    "lib/d3-simplegraph/d3.simplegraph.min"
+        OpenLayers:     "lib/ol.4.6.5", //"lib/ol.4.5.6-debug", 
+        SimpleGraph:    "lib/d3-simplegraph/d3.simplegraph.min", 
+        // other external libraries
+        scrollama:               "//unpkg.com/scrollama?", 
+        "intersection-observer": "//unpkg.com/intersection-observer?"
     }
 });
