@@ -28,32 +28,14 @@ body {
 }
 
 #storymap-container {
-  position: relative;
-  width: 100%;
   background: #41525a;
 }
 #narrative {
-  overflow: auto;
   width: 275px;
   background: #b9cad8;
 }
 #visual {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: auto;
-  -webkit-transform: translate3d(0, 0, 0);
-  -moz-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
   width: calc(100% - 275px);
-}
-#visual.active {
-  position: fixed;
-}
-#visual.exit-bottom {
-  position: absolute;
-  bottom: 0;
-  top: auto !important;
 }
 
 @media screen and (min-width: 600px) {
@@ -89,31 +71,62 @@ body {
   }
 }
 
-.sm-step {
-  box-sizing: border-box;
+[sm-container="scene"] {
+  position: relative;
+  width: 100%;
+}
+[sm-container="narrative"] {
   overflow: auto;
+  width: 275px;
+}
+[sm-container="visuals"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: auto;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  width: calc(100% - 275px);
+}
+[sm-container="visuals"].active {
+  position: fixed;
+}
+[sm-container="visuals"].exit-bottom {
+  position: absolute;
+  bottom: 0;
+  top: auto !important;
+}
+.sm-step, .sm-visual {
+  box-sizing: border-box;
+  overflow: visible;
   width: 100%;
   min-height: 200px;
 }
-.sm-step div {
+.sm-visual {
+  height: 100vh;
+}
+.sm-step div, .sm-visual div {
   box-sizing: border-box;
 }
-
-#narrative .sm-step {
+.sm-step {
   padding: 50px 10px 0px 20px;
 }
-#narrative .sm-step[sm-action*="release"] {
-  margin-bottom: 50px;
-}
-#narrative .sm-step[sm-action*="hold"] {
-  margin-top: 50px;
-}
-#narrative .sm-step[sm-action*="last"] {
+.sm-step[sm-action*="release"] {
   min-height: 100vh;
+  padding-bottom: 50px;
 }
-
-#visual .sm-step {
+.sm-step[sm-action*="hold"] {
+  min-height: 100vh;
+  padding-top: 50px;
+}
+.sm-step[sm-action*="last"] {
+  position: absolute;
+  bottom: 0;
   height: 100vh;
+  padding: 0;
+  margin: 0;
+  z-index: -9999;
 }
 
 #step-container {

@@ -5,7 +5,7 @@ require(['rconfig'], function(rconfig) {
             wait = 3, 
             config, 
             checkComplete = function() {
-                if(++count === wait) init(config);
+                if(++count === wait) init(window, config);
             };
         $.ajax({
             url: "lib/query.php", 
@@ -45,17 +45,27 @@ require(['rconfig'], function(rconfig) {
     });
 });
 
-function init(config) {
+function init(root, config) {
     require([
         'domReady!', 
         'models/app-step', 
         'models/app-scene'
     ], function(domReady, STEP, Scene) {
         // init STEP
-        window.step = new STEP({mapserverUrl: config.mapserverUrl});
-        window.step.init({mode: "storymap"});
+        root.step = new STEP({mapserverUrl: config.mapserverUrl});
+        root.step.init({
+            mode: "storymap",
+            defaultQuery: {
+                species: "Largemouth Bass", 
+                contaminant: "Mercury", 
+                startYear: 2007,
+                endYear: 2014
+            }
+        });
+        // turn off no-data points
+        root.step.modules.queryAndUI.toggleNoDataDisplay(false, true);
         // init storymap scene
-        window.scene = new Scene({
+        root.scene = new Scene({
             container: "#storymap-container", 
             narrative: "#narrative", 
             visuals:   "#visual", 
@@ -63,23 +73,24 @@ function init(config) {
         });
         // add actions
         var currentView = {
-            center: window.step.map.getView().getCenter(), 
-            zoom: window.step.map.getView().getZoom()
+            center: root.step.map.getView().getCenter(), 
+            zoom: root.step.map.getView().getZoom()
         };
-        window.scene.addAction(
+        root.scene.addAction(
             "zoomToBay", 
             function() {
-                window.step.map.getView().animate({
+                root.step.map.getView().animate({
                     center: [-13614222.36580416, 4554343.933348742], 
                     zoom: 10
                 });
             }, 
             function() {
-                window.step.map.getView().animate(currentView);
+                root.step.map.getView().animate(currentView);
             }
         );
         // fade out loading
         var loadingDiv = document.querySelector("#storymap-loading");
+        loadingDiv.innerHTML = "";
         loadingDiv.style["opacity"] = 0;
         setTimeout(function() {
             loadingDiv.remove();

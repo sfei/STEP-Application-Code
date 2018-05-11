@@ -18,7 +18,7 @@
   </head>
   <body style="overflow-y:hidden;">
     <div id="storymap-intro" class="sm-page">
-      <h2 style="text-align:center;margin-top:30%">Storymap Splash</h2>
+      <h2 style="text-align:center;margin-top:25%">Contaminants in California Sport Fish</h2>
     </div>
     <div id="storymap-container">
       <div id="narrative"></div>

@@ -11,37 +11,40 @@ define([
     var _knownActions = ["hold", "release", "next", "last"];
     
     function Scene(options) {
-        this.container = $(options.container);
-        this.narrative = $(options.narrative);
-        this.visuals   = $(options.visuals);
-        
+        this.container   = $(options.container).attr("sm-container", "scene");
+        this.narrative   = $(options.narrative).attr("sm-container", "narrative");
+        this.visuals     = $(options.visuals).attr("sm-container", "visuals");
+        // debug mode logs things into console
+        this._debugMode  = !!options.debugMode;
+        // add 'invisible' element to track viewport at end of scene (scrollama is buggy here)
+        this._lastHidden = $("<div>", {'class': "sm-step", 'sm-action': 'last'}).appendTo(this.narrative);
+        // initiate scrollama
         this.scroller  = scrollama().setup({
             container: options.container, 
             text: options.narrative, 
             graphic: options.visuals, 
             step: options.narrative + " .sm-step", 
             offset: 0, 
-            progress: true
+            progress: true, 
+            threshold: 1
         });
-        
-        this._inTransition  = false;
-        this._visualStep    = 0;
-        this._lastProgress  = 0;
-        this._customActions = {};
-        this._debugMode     = !!options.debugMode;
-        
+        // vars to keep track of visuals transitions
+        this._inTransition   = false;
+        this._visualStep     = 0;
+        this._lastProgress   = 0;
+        // custom trigger functions
+        this._customActions  = {};
+        // resize listener
         this._resizeListener = null;
-        
-        var lastNarrative = this.narrative.find(":last-child.sm-step"), 
-            actions       = this._getActions(lastNarrative[0]);
-        if(!actions.last) {
-            actions._actions.push("last");
-            lastNarrative.attr("sm-action", actions._actions.join(" "));
-        }
+        this._activeResize   = false;
+        // activate scrollama listeners
         this.__activate();
     };
     
     Scene.prototype.destroy = function() {
+        this.container.attr("sm-container", "");
+        this.narrative.attr("sm-container", "");
+        this.visuals.attr("sm-container", "");
         window.removeEventListener("resize", this._resizeListener);
         this.scroller.destroy();
         this.scroller = null;
@@ -62,11 +65,7 @@ define([
     Scene.prototype._getActions = function(element) {
         // get actions
         var actions = element.getAttribute("sm-action");
-        if(!actions) {
-            actions = [];
-        } else {
-            actions = actions.split();
-        }
+        actions = actions ? actions.split(" ") : [];
         // match actions
         var found = {_actions: actions};
         for(var i = 0; i < _knownActions.length; ++i) {
@@ -74,12 +73,7 @@ define([
         }
         // get call functions
         actions = element.getAttribute("sm-call");
-        if(!actions) {
-            actions = [];
-        } else {
-            actions = actions.split();
-        }
-        found._call = actions;
+        found._call = actions ? actions.split(" ") : [];
         return found;
     };
     
@@ -91,36 +85,47 @@ define([
             } else {
                 self.visuals.css("top", -self._visualStep*$(window).height());
             }
+            self.scrollama.resize();
+            self._activeResizer = false;
         };
-        window.addEventListener("rise", this._resizeListener);
+        window.addEventListener("rise", function() {
+            if(self._activeResizer) {
+                clearTimeout(self._resizeListener);
+            }
+            window.setTimeout(self._resizeListener, 50);
+        });
         
-        this.scroller
+        this.scroller.resize()
             // scene enter/exit functions
             .onContainerEnter(function(res) {
-                if(res.direction === "down") {
-                    self._log("container enter (down)");
-                    self.visuals.addClass("active").removeClass("exit-bottom")
-                        .css("top", "");
+                if(!self._activeResizer) { 
+                    if(res.direction === "down") {
+                        self._log("container enter (down)");
+                        self.visuals.addClass("active").removeClass("exit-bottom")
+                            .css("top", "");
+                    } else if(res.direction === "up") {
+                        self._log("container enter (up)");
+                        self.visuals.addClass("active").removeClass("exit-bottom");
+                    }
                 }
             })
             .onContainerExit(function(res) {
-                if(res.direction === "up") {
+                if(!self._activeResizer &&res.direction === "up") {
                     self._log("container exit (up)");
                     self._inTransition = false;
                     self.visuals.removeClass("active").css("top", "");
+                    self._visualStep = 0;
                 }
             })
             // narrative step enter (handles down movement only)
             .onStepEnter(function(res) {
-                if(res.direction === "down") {
+                if(!self._activeResizer && res.direction === "down") {
                     var actions = self._getActions(res.element);
                     if(actions.last) {
-                        self._log("container exit (down)");
+                        self._log("fix bottom");
+                        self.visuals.addClass("exit-bottom").removeClass("active");
                         self._inTransition = false;
-                        self.visuals.addClass("exit-bottom").removeClass("active")
-                            .css("top", -self._visualStep*$(window).height());
-                    }
-                    if(actions.release) {
+                    } else if(actions.release) {
                         self._log("release (down)");
                         self._inTransition = true;
                         ++self._visualStep;
@@ -140,13 +145,13 @@ define([
             })
             // narrative step exit
             .onStepExit(function(res) {
-                if(res.direction === "up") {
+                if(!self._activeResizer && res.direction === "up") {
                     var actions = self._getActions(res.element);
                     if(actions.last) {
-                        self._log("container enter (up)");
+                        self._log("unfix bottom");
                         self.visuals.addClass("active").removeClass("exit-bottom");
-                    }
-                    if(actions.release) {
+                        self._inTransition = false;
+                    } else if(actions.release) {
                         self._log("hold (up)");
                         self.visuals.css("top", -(--self._visualStep)*$(window).height());
                         self._inTransition = false;
@@ -164,7 +169,7 @@ define([
                 }
             })
             // narrative step progress
-            .onStepProgress(function(res) {
+            .onStepProgress(!self._activeResizer && function(res) {
                 if(self._inTransition) {
                     self._lastProgress = res.progress;
                     self.visuals.css("top", -(self._visualStep-1+res.progress)*$(window).height());

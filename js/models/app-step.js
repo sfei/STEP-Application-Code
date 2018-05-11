@@ -172,7 +172,7 @@ define([
         });
         // other modules
         this.modules.legend              = new Legend(this);
-        this.modules.queryAndUI          = new QueryAndUI(this);
+        this.modules.queryAndUI          = new QueryAndUI(this, options.defaultQuery);
         if(!storymapMode) {
             this.modules.download        = Download;
             this.modules.stationDetails  = new StationDetails(this);
@@ -208,7 +208,6 @@ define([
             self.modules.queryAndUI.updateQuery(queryOptions);
             // enable these after some query is fired to load stations
             if(self.enableHoverInteractions) self.addHoverInteractions();
-            this.modules.legend.legendHide();
             common.closeModal();
             
         } else {
