@@ -142,6 +142,8 @@ define([
      * common mapInit() function.
      */
     STEP.prototype.init = function(options) {
+        options = options || {};
+        
         // storymap mode
         var storymapMode = options && options.mode === "storymap";
         
@@ -218,13 +220,13 @@ define([
                     firstRun: true // special option as very first query has to do some extra things
                 }, 
                 function(queryOptions) {
+                    self.modules.queryAndUI.activate();
                     self.modules.queryAndUI.updateQuery(queryOptions);
                     // enable these after some query is fired to load stations
                     self.addClickInteractions();
                     if(self.enableHoverInteractions) {
                         self.addHoverInteractions();
                     }
-                    self.modules.queryAndUI.activate();
                     self.modules.mapInstructions.bindControls($("#btn-map-instructions"));
                 }
             );
