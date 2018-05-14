@@ -5,27 +5,68 @@ const requirejs = require('requirejs'),
 var required = [
         "css/chosen-sprite.png", 
         "css/chosen-sprite@2x.png", 
-        "js/lib/require.js"
+        "js/lib/require.js", 
+        "js/rconfig.js"
     ],
+    libraries = [
+        'domReady', 
+        'jquery',
+        'jquery.ui', 
+        "jquery.ui.touch-punch", 
+        'chosen', 
+        'd3', 
+        'common', 
+        "common.table", 
+        'noUiSlider', 
+        'OpenLayers', 
+        'SimpleGraph', 
+        'scrollama', 
+        "intersection-observer"
+    ],
+    buildLibraries = true, 
     builds = {
         // will build in reverse order just FYI
-        dvcs: {
+        'dvcs': {
             mainConfigFile: "js/rconfig.js", 
             out:            "build/dvcs.js", 
             baseUrl:        "js", 
-            name:           "init-dvcs"
+            name:           "init-dvcs", 
+            exclude:        libraries.concat(["rconfig"])
         }, 
-        storymap: {
+        'storymap': {
             mainConfigFile: "js/rconfig.js", 
             out:            "build/storymap.js", 
             baseUrl:        "js", 
-            name:           "init-storymap"
+            name:           "init-storymap", 
+            exclude:        libraries.concat(["rconfig", "models/app-step"])
         }, 
-        app: {
+        'step-init': {
             mainConfigFile: "js/rconfig.js", 
             out:            "build/step.js", 
             baseUrl:        "js", 
-            name:           "init"
+            name:           "init", 
+            exclude:        libraries.concat(["rconfig", "models/app-step", "models/app-summary-report"])
+        }, 
+        'summary-report': {
+            mainConfigFile: "js/rconfig.js", 
+            out:            "build/sreport.js", 
+            baseUrl:        "js", 
+            name:           "models/app-summary-report", 
+            exclude:        libraries.concat(["rconfig"])
+        }, 
+        'app-step': {
+            mainConfigFile: "js/rconfig.js", 
+            out:            "build/step-app.js", 
+            baseUrl:        "js", 
+            name:           "models/app-step", 
+            exclude:        libraries.concat(["rconfig", "models/app-summary-report"])
+        }, 
+        'libraries': {
+            mainConfigFile: "js/rconfig.js", 
+            out:            "build/libs.js", 
+            baseUrl:        "js", 
+            name:           "rconfig", 
+            include:        libraries
         }, 
         'css (Summary Report)': {
             cssIn:          "css/summaryreport.css", 
@@ -37,7 +78,7 @@ var required = [
             out:            "build/storymap.css", 
             optimizeCss:    "default"
         }, 
-        css: {
+        'css': {
             cssIn:          "css/style.css", 
             out:            "build/style.css", 
             optimizeCss:    "default"
@@ -62,6 +103,10 @@ var lastFunction = null;
 for(var key in builds) {
     var buildFunc = (function(k, c, f) {
         return function() {
+            if(k === "libraries" && !buildLibraries) {
+                f();
+                return;
+            }
             console.log("Building " + k + "..");
             requirejs.optimize(c, function(buildResponse) {
                 console.log(buildResponse);

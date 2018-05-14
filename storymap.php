@@ -8,12 +8,9 @@
     <?php if($ini["devmode"]) { ?> 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/storymap.css" />
-    <script src="js/lib/require.js" data-main="js/init-storymap"></script>
     <?php } else { ?> 
     <link rel="stylesheet" href="build/style.css" />
-    <link rel="stylesheet" href="css/storymap.css" />
-    <script src="build/require.js" data-main="build/storymap"></script>
-    <?php include("analyticstracking.php"); ?> 
+    <link rel="stylesheet" href="build/storymap.css" />
     <?php } ?>
   </head>
   <body style="overflow-y:hidden;">
@@ -28,5 +25,13 @@
       <h2 style="text-align:center;margin-top:100px;">Storymap Credits</h2>
     </div>
     <div id="storymap-loading">Loading...</div>
+    
+    <?php if($ini["devmode"]) { ?> 
+    <script src="js/lib/require.js" data-main="js/init-storymap"></script>
+    <?php } else { ?> 
+    <script src="build/require.js"></script>
+    <script>require(["build/libs","build/step-app","build/sreport"],function(){require(["../build/storymap"]);});</script>
+    <?php include("analyticstracking.php"); ?> 
+    <?php } ?>
   </body>
 </html>
