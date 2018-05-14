@@ -161,6 +161,7 @@ define([
                         self._inTransition = false;
                         self.visuals.removeClass("active").css("top", "");
                         self._visualStep = 0;
+                        self._inContainer = false;
                     } else if(self._lastHidden.offset().top <= window.pageYOffset) {
                         self._inContainer = false;
                     }
