@@ -8,7 +8,7 @@ define([
     scrollama
 ) {
     
-    var _knownActions = ["hold", "release", "next", "last"];
+    var _knownActions = ["hold", "release", "last"];
     
     function Scene(options) {
         this.container   = $(options.container).attr("sm-container", "scene");
@@ -32,11 +32,27 @@ define([
         this._inTransition   = false;
         this._visualStep     = 0;
         this._lastProgress   = 0;
+        this._inContainer    = false;
         // custom trigger functions
         this._customActions  = {};
         // resize listener
         this._resizeListener = null;
+        this._resizeEnabler  = null;
         this._activeResize   = false;
+        this._activeRenabler = false;
+        
+        // add expected step number to narrative steps
+        var self = this, step = 0, moving = false;
+        this.narrative.find(".sm-step").each(function() {
+            var actions = self._getActions(this);
+            if(moving) {
+                ++step;
+                if(actions.hold) moving = false;
+            } else if(actions.release) {
+                moving = true;
+            }
+            this.setAttribute("sm-step", step);
+        });
         // activate scrollama listeners
         this.__activate();
     };
@@ -74,31 +90,48 @@ define([
         // get call functions
         actions = element.getAttribute("sm-call");
         found._call = actions ? actions.split(" ") : [];
+        // expected step
+        found._step = parseInt(element.getAttribute("sm-step"));
         return found;
     };
     
     Scene.prototype.__activate = function() {
-        var self = this;
-        this._resizeListener = function() {
-            if(self._inTransition) {
-                self.visuals.css("top", -(self._visualStep-1+self._lastProgress)*$(window).height());
-            } else {
-                self.visuals.css("top", -self._visualStep*$(window).height());
-            }
-            self.scrollama.resize();
+        var self = this, lastStep = 0;
+        this._resizeEnabler = function() {
+            console.log('enable');
+            self.scroller.enable();
             self._activeResizer = false;
+            self._activeRenabler = false;
         };
-        window.addEventListener("rise", function() {
+        this._resizeListener = function() {
+            if(self._inContainer) {
+                if(self._inTransition) {
+                    self.visuals.css("top", -(lastStep-1+self._lastProgress)*$(window).height());
+                } else {
+                    self.visuals.css("top", -lastStep*$(window).height());
+                }
+            }
+            self.scroller.resize();
+            // add a minor delay to activating again
+            if(self._activeRenabler) {
+                window.clearTimeout(self._activeRenabler);
+            }
+            self._activeRenabler = window.setTimeout(self._resizeEnabler, 400);
+        };
+        window.addEventListener("resize", function() {
+            self.scroller.disable();
             if(self._activeResizer) {
                 clearTimeout(self._resizeListener);
+            } else {
+                lastStep = self._visualStep;
             }
-            window.setTimeout(self._resizeListener, 50);
+            self._activeResizer = window.setTimeout(self._resizeListener, 100);
         });
         
         this.scroller.resize()
             // scene enter/exit functions
             .onContainerEnter(function(res) {
-                if(!self._activeResizer) { 
+                if(!self._activeResizer && !self._inContainer) {
                     if(res.direction === "down") {
                         self._log("container enter (down)");
                         self.visuals.addClass("active").removeClass("exit-bottom")
@@ -107,15 +140,17 @@ define([
                         self._log("container enter (up)");
                         self.visuals.addClass("active").removeClass("exit-bottom");
                     }
+                    self._inContainer = true;
                 }
             })
             .onContainerExit(function(res) {
-                if(!self._activeResizer &&res.direction === "up") {
+                if(!self._activeResizer && res.direction === "up" && self._inContainer) {
                     self._log("container exit (up)");
                     self._inTransition = false;
                     self.visuals.removeClass("active").css("top", "");
                     self._visualStep = 0;
                 }
+                self._inContainer = false;
             })
             // narrative step enter (handles down movement only)
             .onStepEnter(function(res) {
@@ -141,6 +176,21 @@ define([
                         var callbacks = self._customActions[actions._call[i]];
                         if(callbacks && callbacks[0]) callbacks[0]();
                     }
+                    // missteps common after resize
+                    if(self._visualStep !== actions._step + (self._inTransition ? 1 : 0)) {
+                        self._log("step mismatch (down) " + self._visualStep + " != " + actions._step);
+                        self._visualStep = actions._step;
+                        if(actions.last) {
+                            self._log("fix bottom");
+                            self.visuals.addClass("exit-bottom").removeClass("active");
+                            self._inTransition = false;
+                        } else if(!self._inTransition) {
+                            self.visuals.css("top", -self._visualStep*$(window).height());
+                        } else {
+                            self._visualStep += 1;
+                            self.visuals.css("top", -(self._visualStep-1+self._lastProgress)*$(window).height());
+                        }
+                    }
                 }
             })
             // narrative step exit
@@ -165,6 +215,19 @@ define([
                     for(var i = actions._call.length-1; i >= 0; --i) {
                         var callbacks = self._customActions[actions._call[i]];
                         if(callbacks && callbacks[1]) callbacks[1]();
+                    }
+                    if(self._visualStep !== actions._step) {
+                        self._log("step mismatch (down) " + self._visualStep + " != " + actions._step);
+                        self._visualStep = actions._step;
+                        if(actions.last) {
+                            self._log("unfix bottom");
+                            self.visuals.addClass("active").removeClass("exit-bottom");
+                            self._inTransition = false;
+                        } else if(!self._inTransition) {
+                            self.visuals.css("top", -(--self._visualStep)*$(window).height());
+                        } else {
+                            self.visuals.css("top", -(self._visualStep-1+self._lastProgress)*$(window).height());
+                        }
                     }
                 }
             })
