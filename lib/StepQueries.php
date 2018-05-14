@@ -89,8 +89,13 @@ class StepQueries {
         StepQueries::$isDev = $ini["devmode"] || $ini["devdb"];
         // create connection
         if(!StepQueries::$dbconn) {
-            //StepQueries::$dbconn = new PDO("dblib:host=$host;dbname=$dbname", $user, $pass);
-            StepQueries::$dbconn = new PDO("odbc:Driver={SQL Server};Server=$host;Database=$dbname", $user, $pass);
+            if($ini["driver"] == "odbc") {
+                StepQueries::$dbconn = new PDO("odbc:Driver={SQL Server};Server=$host;Database=$dbname", $user, $pass);
+            } else if($ini["driver"] == "dblib") {
+                StepQueries::$dbconn = new PDO("dblib:host=$host;dbname=$dbname", $user, $pass);
+            } else {
+                die("Unspecified PDO driver");
+            }
             if(!StepQueries::$dbconn) {
                 die('Could not connect to server');
             }
