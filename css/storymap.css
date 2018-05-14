@@ -1,6 +1,8 @@
 body {
   overflow-x: hidden;
   overflow-y: auto;
+  min-width: 300px;
+  background: #41525a;
 }
 
 #storymap-loading {
@@ -22,39 +24,31 @@ body {
 
 .sm-page {
   width: 100%;
-  height: 100vh;
   overflow: auto;
   background: #D7E8EF;
 }
 
-#storymap-container {
-  background: #41525a;
-}
 #narrative {
   width: 275px;
   background: #b9cad8;
 }
+.narrative-content {
+  padding: 40px 10px 40px 20px;
+}
+
 #visual {
   width: calc(100% - 275px);
 }
 
-@media screen and (min-width: 600px) {
-  #narrative {
-    width: 300px;
-  }
-  #visual {
-    width: calc(100% - 300px);
-  }
-}
-@media screen and (min-width: 700px) {
-  #narrative {
-    width: 50%;
-  }
-  #visual {
-    width: 50%;
-  }
-}
 @media screen and (min-width: 800px) {
+  #narrative {
+    width: 40%;
+  }
+  #visual {
+    width: 60%;
+  }
+}
+@media screen and (max-width: 800px) {
   #narrative {
     width: 45%;
   }
@@ -62,12 +56,37 @@ body {
     width: 55%;
   }
 }
-@media screen and (min-width: 900px) {
+@media screen and (max-width: 700px) {
   #narrative {
-    width: 40%;
+    width: 50%;
   }
   #visual {
-    width: 60%;
+    width: 50%;
+  }
+}
+@media screen and (max-width: 600px) {
+  #narrative {
+    width: 300px;
+  }
+  #visual {
+    width: calc(100% - 300px);
+  }
+}
+
+@media screen and (max-width: 500px) {
+  #narrative {
+    width: 100%;
+    background: none;
+    z-index: 99;
+    pointer-events: none;
+  }
+  .narrative-content {
+    background: rgba(255,255,255,0.8);
+    padding: 40px 20px;
+  }
+  #visual {
+    width: 100%;
+    z-index: -1;
   }
 }
 
@@ -109,21 +128,15 @@ body {
 .sm-step div, .sm-visual div {
   box-sizing: border-box;
 }
-.sm-step {
-  padding: 50px 10px 0px 20px;
-}
 .sm-step[sm-action*="release"] {
-  min-height: 100vh;
   padding-bottom: 50px;
 }
 .sm-step[sm-action*="hold"] {
-  min-height: 100vh;
   padding-top: 50px;
 }
 .sm-step[sm-action*="last"] {
   position: absolute;
   bottom: 0;
-  height: 100vh;
   padding: 0;
   margin: 0;
   z-index: -9999;

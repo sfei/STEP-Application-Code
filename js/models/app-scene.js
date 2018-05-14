@@ -96,19 +96,27 @@ define([
     };
     
     Scene.prototype.__activate = function() {
-        var self = this, lastStep = 0;
+        var resizeElems = $(".sm-page, .sm-step[sm-action*=\"release\"], .sm-step[sm-action*=\"hold\"], .sm-step[sm-action*=\"last\"]"), 
+            self = this, 
+            lastStep = 0;
+        
         this._resizeEnabler = function() {
             console.log('enable');
             self.scroller.enable();
             self._activeResizer = false;
             self._activeRenabler = false;
         };
+        
         this._resizeListener = function() {
+            var winHeight = $(window).height();
+            // resize elems that are supposed to be 100vh
+            resizeElems.height(winHeight);
+            // position and resize scroll elements
             if(self._inContainer) {
                 if(self._inTransition) {
-                    self.visuals.css("top", -(lastStep-1+self._lastProgress)*$(window).height());
+                    self.visuals.css("top", -(lastStep-1+self._lastProgress)*winHeight);
                 } else {
-                    self.visuals.css("top", -lastStep*$(window).height());
+                    self.visuals.css("top", -lastStep*winHeight);
                 }
             }
             self.scroller.resize();
@@ -118,6 +126,7 @@ define([
             }
             self._activeRenabler = window.setTimeout(self._resizeEnabler, 400);
         };
+        
         window.addEventListener("resize", function() {
             self.scroller.disable();
             if(self._activeResizer) {
@@ -127,6 +136,8 @@ define([
             }
             self._activeResizer = window.setTimeout(self._resizeListener, 100);
         });
+        
+        resizeElems.height($(window).height());
         
         this.scroller.resize()
             // scene enter/exit functions
@@ -144,17 +155,20 @@ define([
                 }
             })
             .onContainerExit(function(res) {
-                if(!self._activeResizer && res.direction === "up" && self._inContainer) {
-                    self._log("container exit (up)");
-                    self._inTransition = false;
-                    self.visuals.removeClass("active").css("top", "");
-                    self._visualStep = 0;
+                if(!self._activeResizer && self._inContainer) {
+                    if(res.direction === "up") {
+                        self._log("container exit (up)");
+                        self._inTransition = false;
+                        self.visuals.removeClass("active").css("top", "");
+                        self._visualStep = 0;
+                    } else if(self._lastHidden.offset().top <= window.pageYOffset) {
+                        self._inContainer = false;
+                    }
                 }
-                self._inContainer = false;
             })
             // narrative step enter (handles down movement only)
             .onStepEnter(function(res) {
-                if(!self._activeResizer && res.direction === "down") {
+                if(self._inContainer && !self._activeResizer && res.direction === "down") {
                     var actions = self._getActions(res.element);
                     if(actions.last) {
                         self._log("fix bottom");
@@ -195,7 +209,7 @@ define([
             })
             // narrative step exit
             .onStepExit(function(res) {
-                if(!self._activeResizer && res.direction === "up") {
+                if(self._inContainer && !self._activeResizer && res.direction === "up") {
                     var actions = self._getActions(res.element);
                     if(actions.last) {
                         self._log("unfix bottom");
@@ -217,7 +231,7 @@ define([
                         if(callbacks && callbacks[1]) callbacks[1]();
                     }
                     if(self._visualStep !== actions._step) {
-                        self._log("step mismatch (down) " + self._visualStep + " != " + actions._step);
+                        self._log("step mismatch (up) " + self._visualStep + " != " + actions._step);
                         self._visualStep = actions._step;
                         if(actions.last) {
                             self._log("unfix bottom");

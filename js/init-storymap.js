@@ -77,15 +77,17 @@ function init(root, config) {
             zoom: root.step.map.getView().getZoom()
         };
         root.scene.addAction(
-            "zoomToBay", 
+            "mapFunctionA", 
             function() {
                 root.step.map.getView().animate({
-                    center: [-13614222.36580416, 4554343.933348742], 
-                    zoom: 10
+                    center: [-12796399.011894481, 3947754.771558293], 
+                    zoom: 8
                 });
+                root.step.modules.legend.legendHide();
             }, 
             function() {
                 root.step.map.getView().animate(currentView);
+                root.step.modules.legend.legendShow();
             }
         );
         // fade out loading
