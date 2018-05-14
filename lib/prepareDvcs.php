@@ -10,7 +10,7 @@
 require_once("dvcsVars.php");
 
 // save results to session
-session_start();
+if(!isset($_SESSION)) { session_start(); }
 foreach($dvcsVars as $key) {
     $_SESSION[$key] = $_REQUEST[$key];
 }
