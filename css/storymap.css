@@ -1,0 +1,152 @@
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 300px;
+  background: #41525a;
+}
+
+#storymap-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #e5f0f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  opacity: 1;
+  -moz-transition: opacity 800ms;
+  -webkit-transition: opacity 800ms;
+  transition: opacity 800ms;
+}
+
+.sm-page {
+  width: 100%;
+  overflow: auto;
+  background: #D7E8EF;
+}
+
+#narrative {
+  width: 275px;
+  background: #b9cad8;
+}
+.narrative-content {
+  padding: 40px 10px 40px 20px;
+}
+
+#visual {
+  width: calc(100% - 275px);
+}
+
+@media screen and (min-width: 800px) {
+  #narrative {
+    width: 40%;
+  }
+  #visual {
+    width: 60%;
+  }
+}
+@media screen and (max-width: 800px) {
+  #narrative {
+    width: 45%;
+  }
+  #visual {
+    width: 55%;
+  }
+}
+@media screen and (max-width: 700px) {
+  #narrative {
+    width: 50%;
+  }
+  #visual {
+    width: 50%;
+  }
+}
+@media screen and (max-width: 600px) {
+  #narrative {
+    width: 300px;
+  }
+  #visual {
+    width: calc(100% - 300px);
+  }
+}
+
+@media screen and (max-width: 500px) {
+  #narrative {
+    width: 100%;
+    background: none;
+    z-index: 99;
+    pointer-events: none;
+  }
+  .narrative-content {
+    background: rgba(255,255,255,0.8);
+    padding: 40px 20px;
+  }
+  #visual {
+    width: 100%;
+    z-index: -1;
+  }
+}
+
+[sm-container="scene"] {
+  position: relative;
+  width: 100%;
+}
+[sm-container="narrative"] {
+  overflow: auto;
+  width: 275px;
+}
+[sm-container="visuals"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: auto;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  width: calc(100% - 275px);
+}
+[sm-container="visuals"].active {
+  position: fixed;
+}
+[sm-container="visuals"].exit-bottom {
+  position: absolute;
+  bottom: 0;
+  top: auto !important;
+}
+.sm-step, .sm-visual {
+  box-sizing: border-box;
+  overflow: visible;
+  width: 100%;
+  min-height: 200px;
+}
+.sm-visual {
+  height: 100vh;
+}
+.sm-step div, .sm-visual div {
+  box-sizing: border-box;
+}
+.sm-step[sm-action*="release"] {
+  padding-bottom: 50px;
+}
+.sm-step[sm-action*="hold"] {
+  padding-top: 50px;
+}
+.sm-step[sm-action*="last"] {
+  position: absolute;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  z-index: -9999;
+}
+
+#step-container {
+  width: 100%;
+}
+.ol-zoom {
+  left: 4px;
+  right: auto;
+  top: 4px;
+}

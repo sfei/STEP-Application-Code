@@ -13,649 +13,653 @@
 // particularly StepQueries.php which holds all the core query functions.
 //************************************************************************************************************
 define([
-	"common", 
-	"noUiSlider", 
-	"chosen"
+    "common", 
+    "noUiSlider", 
+    "chosen"
 ], function(common, noUiSlider) {
-	
-	function QueryAndUI(parentStepApp, defaultQuery) {
-		this.parent = parentStepApp;
-		// quick reference
-		this.legend = this.parent.modules.legend;
-		// The default query to start or when resetting. Start year is 1900 and end year is the current year. 
-		// This is fine as submitting the query will return a corrected version that fits the data.
-		this.defaultQuery = defaultQuery ? defaultQuery : {};
-		this.defaultQuery.species = this.defaultQuery.species ? this.defaultQuery.species : 'Largemouth Bass';
-		this.defaultQuery.contaminant = this.defaultQuery.contaminant ? this.defaultQuery.contaminant : 'Mercury';
-		// query will automatically adjust years to min/max year
-		this.defaultQuery.startYear = this.defaultQuery.startYear ? this.defaultQuery.startYear : 1900;
-		this.defaultQuery.endYear = this.defaultQuery.endYear ? this.defaultQuery.endYear : new Date().getFullYear();
-		// The last successful query. This is usually not the submitted query but the returned (and corrected) 
-		// query from the submitted.
-		this.lastQuery;
-		// odd var but we need to know when this is the query directly after the first query, since that's 
-		// when we turn off showing no-data stations
-		this.prepSecondQuery = false;
-		// list of available species that keeps original capitalization pattern, easier to use same list that 
-		// way, but requires you ensure consistency -- i.e. watch for any toLowercase() or toUppercase() 
-		// conflicts, or at least use a case-insenitive comparison function.
-		this.speciesList;
-		// noUiSlider instance for year range slider
-		this.yearRangeControl = null;
-		// Object holding the various control panels and common related variables.
-		this.controls = {
-			query: {
-				name: 'query', 
-				id: 'query-controls',
-				element: null,
-				tabId: 'control-tab-query', 
-				tabElement: null, 
-				isOpen: true
-			}, 
-//			location: {
-//				name: 'station', 
-//				id: 'location-controls',
-//				element: null,
-//				tabId: 'control-tab-location', 
-//				tabElement: null, 
-//				isOpen: true
-//			}, 
-//			map: {
-//				name: 'map', 
-//				id: 'map-controls',
-//				element: null,
-//				tabId: 'control-tab-map', 
-//				tabElement: null, 
-//				isOpen: false
-//			}, 
-			about: {
-				name: 'about', 
-				id: 'about-controls',
-				element: null,
-				tabId: 'control-tab-about', 
-				tabElement: null, 
-				isOpen: false
-			}, 
-			moreinfo: {
-				name: 'moreinfo', 
-				id: 'more-info-controls',
-				element: null,
-				tabId: 'control-tab-more-info', 
-				tabElement: null, 
-				isOpen: false
-			}
-		};
-		this.controlStageVertPadding = 12;
-		this.controlStageMinHeight = 2;
-	};
-	
-	
-	//********************************************************************************************************
-	// Query functions
-	//********************************************************************************************************
-	QueryAndUI.prototype.getLastQuery = function() { return this.lastQuery; };
-	
-	QueryAndUI.prototype.getLastQueryCopy = function() {
-		var copyQuery = {};
-		for(var v in this.lastQuery) {
-			copyQuery[v] = this.lastQuery[v];
-		}
-		return copyQuery;
-	};
-	
-	/**
-	 * Reset the lastQuery var to a copy of the defaultQuery.
-	 */
-	QueryAndUI.prototype.resetDefaultQuery = function() {
-		//this.lastQuery = Object.assign({}, defaultQuery);
-		this.lastQuery = {};
-		for(var v in this.defaultQuery) {
-			this.lastQuery[v] = this.defaultQuery[v];
-		}
-	};
-	
-	/**
-	 * Submit a query (or create a query from the HTML control objects), submit this to the server, then 
-	 * update the application with the results. After the query is created, the submission and update is done 
-	 * through an asynchronous ajax call (unless options.firstRun is true). This will automatically update the
-	 * query controls, thresholds, legend, and stations layer on success.
-	 * @param {Object} options - Options.
-	 * @param {Object} options.query - The query object to submit. If null or undefined, this will be created 
-	 *        from the control elements. That is, leave blank to submit a new query based on user selected 
-	 *        parameters.
-	 * @param {boolean} options.firstRun - Whether this is the first/init query to populate the map initially.
-	 *        If so, a number of things are adjusted. The ajax call is actually made synchronous, no query 
-	 *        changes are flashed or notified, and on loading, the map is zoomed to the stations extent.
-	 * @param {string} options.firedBy - Name of the parameter change that fired this specific query (as 
-	 *        inputs update the query on change). This simply tells which controls don't need to be updated. 
-	 *        For example, if the species was changed, the contaminants and years must be updated. If the 
-	 *        contaminants paramter was changed, only the year controls have to be updated. Leave undefined to
-	 *        update all query controls.
-	 * @param {string} options.flashMessage - Optional message to flash after completeing query.
-	 */
-	QueryAndUI.prototype.updateQuery = function(options) {
-		if(!options.query) {
-			// if no query supplied, use from inputs
-			var yearRange = this.yearRangeControl.get();
-			options.query = {
-				contaminant: $("#contaminant-control").val(), 
-				species: $("#species-control").val(), 
-				startYear: parseInt(yearRange[0]), 
-				endYear: parseInt(yearRange[1])
-			};
-		}
-		// lock interface
-		common.setModalAsLoading(true, false);
-		$("#species-control").prop('disabled', true);
-		$("#stations-select").prop('disabled', true);
-		var updateMessage = options.flashMessage;
-		var updateMessageTime = 3000;
-		
-		var self = this;
-		$.ajax({
-			async: !options.firstRun,
-			url: "lib/queryStations.php", 
-			data: options.query, 
-			dataType: "json", 
-			success: function(data) {
-				//console.log(options.query);
-				//console.log(data);
-				// update last successful query
-				self.lastQuery = data.query;
-				// turn off showing of no-data stations after first user-submitted query
-				if(options.firstRun) {
-					self.prepSecondQuery = true;
-				} else if(self.prepSecondQuery && self.parent.noDataOptions.showNoData) {
-					self.toggleNoDataDisplay(false, true);
-					updateMessage = "Stations with no results matching filters will not be displayed.<br />"+
-						"To turn back on, uncheck the \"Hide stations with no results\" option.";
-					updateMessageTime = 5000;
-					self.prepSecondQuery = false;
-				}
-				// update legend
-				if(options.firstRun || options.firedBy === 'contaminant') {
-					// update thresholds only if contaminant changed
-					self.legend.updateThresholds(options.query.contaminant, data.thresholds, options.selectThresholdGroup);
-				} else {
-					self.legend.updateLegend(self.lastQuery);
-				}
-				// update stations to match query
-				self.parent.updateStations(data.stations);
-				// change inputs options down hierarchy as necessary depending on what select fired the query
-				if(options.firedBy === 'species') {
-					self.updateContaminantsSelect(data.contaminants);
-					self.updateYearsSelect(data.years);
-				} else if(options.firedBy === 'contaminant') {
-					self.updateYearsSelect(data.years);
-				} else {
-					// if unknown or undefined firing event, just update everything
-					self.updateSpeciesList();
-					self.updateContaminantsSelect(data.contaminants);
-					self.updateYearsSelect(data.years);
-				}
-				// flash changes, set zoom to fit new extent
-				var queryChanged = self.flashQueryChanges(options.query, options.firstRun);
-				if(queryChanged) {
-					if(updateMessage) {
-						updateMessage = "Filters updated to match query results.<br /><br />"+updateMessage;
-					} else {
-						updateMessage = "Filters updated to match query results.";
-					}
-				}
-			}, 
-			error: function(e) {
-				updateMessage = "Error updating filters.";
-				alert(defaultErrorMessage + "(Error Query)");
-			}, 
-			complete: function() {
-				// unlock interface
-				common.setModal(false);
-				$("#species-control").prop('disabled', false);
-				// for some reason the trigger doesn't work in the updateStationsSelect() function but works here
-				$("#stations-select").prop('disabled', false).trigger('chosen:updated');
-				if(updateMessage) {
-					self.parent.flashNotification(updateMessage, updateMessageTime);
-				}
-				self.legend.adjustLegendContainerHeight();
-			}
-		});
-	};
-	
-	//********************************************************************************************************
-	// Init and activate functions
-	//********************************************************************************************************
-	/**
-	 * Initialize map controls. However, it does not activate them as you may want to wait until the rest of 
-	 * the application has loaded. Thus follow up with {@link #controlsActivate()} when ready.
-	 */
-	QueryAndUI.prototype.init = function() {
-		//$("#notification-tab").hide();
-		// make everything fancy!
-		$("#species-control").chosen();
-		$("#contaminant-control").chosen();
-		$("#thresholds-control").chosen();
-		$("#stations-select").chosen();
-		$("#counties-select").chosen();
-		// year range slider (does not create though, that's done on first update)
-		$("#control-year-range-container").html(
-			"<div id='control-year-range-start'></div>" + 
-			"<div id='control-year-range'></div>" +
-			"<div id='control-year-range-end'></div>"
-		);
-		// add placeholder texts to chosen search
-		$("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the species of interest.  Click on the full name when you see it.");
-		$("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a contaminant from the pull-down menu.");
-		$("#thresholds_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a set of thresholds from the pull-down menu.");
-		$("#stations_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the location of interest.  Click on the full name when you see it.");
-		$("#counties_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing the name of the county of interest.  Click on the full name when you see it.");
-		// cache the control groups and tabs, hide the groups
-		for(var key in this.controls) {
-			this.controls[key].element = $("#"+this.controls[key].id);
-			// hide all until activate
-			this.controls[key].element.hide();
-			this.controls[key].tabElement = $("#"+this.controls[key].tabId);
-		}
-		// set last query to default
-		this.resetDefaultQuery();
-		// set visible
-		$("#controls-container").css('visibility', 'visible');
-		// add help tooltips
-//		$("#control-tab-about").addClass("cm-tooltip-left").attr(
-//			"cm-tooltip-msg", 
-//			"About the Safe-to-Eat Portal"
-//		);
-//		$("#control-tab-query").addClass("cm-tooltip-left").attr(
-//			"cm-tooltip-msg", 
-//			"Change the data being displayed on the map"
-//		);
-//		$("#control-tab-location").addClass("cm-tooltip-left").attr(
-//			"cm-tooltip-msg", 
-//			"Find a location by county or name"
-//		);
-//		$("#control-tab-map").addClass("cm-tooltip-left").attr(
-//			"cm-tooltip-msg", 
-//			"Change the layers being displayed on the map"
-//		);
-//		$("#species_control_chosen").addClass("cm-tooltip-top").attr(
-//			"cm-tooltip-msg", 
-//			"Filter map data by this species of interest"
-//		);
-//		$("#contaminant_control_chosen").addClass("cm-tooltip-top").attr(
-//			"cm-tooltip-msg", 
-//			"Show map data for this contaminant of interest"
-//		);
-//		// note due to legacy and changes, threshold controls still handled in legend-module
-//		$("#control-year-range").addClass("cm-tooltip-top").attr(
-//			"cm-tooltip-msg", 
-//			"Filter map data between these years"
-//		);
-//		$("#show-no-data-container").addClass("cm-tooltip-top").attr(
-//			"cm-tooltip-msg", 
-//			"Hide stations that do not have results matching above filters"
-//		);
-//		$("#reset-controls").addClass("cm-tooltip-bottom").attr(
-//			"cm-tooltip-msg", 
-//			"Reset all settings above to default values"
-//		);
-	};
+    
+    function QueryAndUI(parentStepApp, defaultQuery) {
+        this.parent = parentStepApp;
+        // quick reference
+        this.legend = this.parent.modules.legend;
+        // The default query to start or when resetting. Start year is 1900 and end year is the current year. 
+        // This is fine as submitting the query will return a corrected version that fits the data.
+        this.defaultQuery = defaultQuery ? defaultQuery : {};
+        this.defaultQuery.species = this.defaultQuery.species ? this.defaultQuery.species : 'Largemouth Bass';
+        this.defaultQuery.contaminant = this.defaultQuery.contaminant ? this.defaultQuery.contaminant : 'Mercury';
+        // query will automatically adjust years to min/max year
+        this.defaultQuery.startYear = this.defaultQuery.startYear ? this.defaultQuery.startYear : 1900;
+        this.defaultQuery.endYear = this.defaultQuery.endYear ? this.defaultQuery.endYear : new Date().getFullYear();
+        // The last successful query. This is usually not the submitted query but the returned (and corrected) 
+        // query from the submitted.
+        this.lastQuery;
+        // odd var but we need to know when this is the query directly after the first query, since that's 
+        // when we turn off showing no-data stations
+        this.prepSecondQuery = false;
+        // list of available species that keeps original capitalization pattern, easier to use same list that 
+        // way, but requires you ensure consistency -- i.e. watch for any toLowercase() or toUppercase() 
+        // conflicts, or at least use a case-insenitive comparison function.
+        this.speciesList;
+        // noUiSlider instance for year range slider
+        this.yearRangeControl = null;
+        // Object holding the various control panels and common related variables.
+        this.controls = {
+            query: {
+                name: 'query', 
+                id: 'query-controls',
+                element: null,
+                tabId: 'control-tab-query', 
+                tabElement: null, 
+                isOpen: true
+            }, 
+//            location: {
+//                name: 'station', 
+//                id: 'location-controls',
+//                element: null,
+//                tabId: 'control-tab-location', 
+//                tabElement: null, 
+//                isOpen: true
+//            }, 
+//            map: {
+//                name: 'map', 
+//                id: 'map-controls',
+//                element: null,
+//                tabId: 'control-tab-map', 
+//                tabElement: null, 
+//                isOpen: false
+//            }, 
+            about: {
+                name: 'about', 
+                id: 'about-controls',
+                element: null,
+                tabId: 'control-tab-about', 
+                tabElement: null, 
+                isOpen: false
+            }, 
+            moreinfo: {
+                name: 'moreinfo', 
+                id: 'more-info-controls',
+                element: null,
+                tabId: 'control-tab-more-info', 
+                tabElement: null, 
+                isOpen: false
+            }
+        };
+        this.controlStageVertPadding = 12;
+        this.controlStageMinHeight = 2;
+        this.__uiActivated = false;
+    };
+    
+    
+    //********************************************************************************************************
+    // Query functions
+    //********************************************************************************************************
+    QueryAndUI.prototype.getLastQuery = function() { return this.lastQuery; };
+    
+    QueryAndUI.prototype.getLastQueryCopy = function() {
+        var copyQuery = {};
+        for(var v in this.lastQuery) {
+            copyQuery[v] = this.lastQuery[v];
+        }
+        return copyQuery;
+    };
+    
+    /**
+     * Reset the lastQuery var to a copy of the defaultQuery.
+     */
+    QueryAndUI.prototype.resetDefaultQuery = function() {
+        //this.lastQuery = Object.assign({}, defaultQuery);
+        this.lastQuery = {};
+        for(var v in this.defaultQuery) {
+            this.lastQuery[v] = this.defaultQuery[v];
+        }
+    };
+    
+    /**
+     * Submit a query (or create a query from the HTML control objects), submit this to the server, then 
+     * update the application with the results. After the query is created, the submission and update is done 
+     * through an asynchronous ajax call (unless options.firstRun is true). This will automatically update the
+     * query controls, thresholds, legend, and stations layer on success.
+     * @param {Object} options - Options.
+     * @param {Object} options.query - The query object to submit. If null or undefined, this will be created 
+     *        from the control elements. That is, leave blank to submit a new query based on user selected 
+     *        parameters.
+     * @param {boolean} options.firstRun - Whether this is the first/init query to populate the map initially.
+     *        If so, a number of things are adjusted. The ajax call is actually made synchronous, no query 
+     *        changes are flashed or notified, and on loading, the map is zoomed to the stations extent.
+     * @param {string} options.firedBy - Name of the parameter change that fired this specific query (as 
+     *        inputs update the query on change). This simply tells which controls don't need to be updated. 
+     *        For example, if the species was changed, the contaminants and years must be updated. If the 
+     *        contaminants paramter was changed, only the year controls have to be updated. Leave undefined to
+     *        update all query controls.
+     * @param {string} options.flashMessage - Optional message to flash after completeing query.
+     */
+    QueryAndUI.prototype.updateQuery = function(options) {
+        if(!options.query) {
+            // if no query supplied, use from inputs
+            var yearRange = this.yearRangeControl.get();
+            options.query = {
+                contaminant: $("#contaminant-control").val(), 
+                species: $("#species-control").val(), 
+                startYear: parseInt(yearRange[0]), 
+                endYear: parseInt(yearRange[1])
+            };
+        }
+        // lock interface
+        common.setModalAsLoading(true, false);
+        $("#species-control").prop('disabled', true);
+        $("#stations-select").prop('disabled', true);
+        var updateMessage = options.flashMessage;
+        var updateMessageTime = 3000;
+        
+        var self = this;
+        $.ajax({
+            async: !options.firstRun,
+            url: "lib/queryStations.php", 
+            data: options.query, 
+            dataType: "json", 
+            success: function(data) {
+                //console.log(options.query);
+                //console.log(data);
+                // update last successful query
+                self.lastQuery = data.query;
+                // turn off showing of no-data stations after first user-submitted query
+                if(options.firstRun) {
+                    self.prepSecondQuery = true;
+                } else if(self.prepSecondQuery && self.parent.noDataOptions.showNoData) {
+                    self.toggleNoDataDisplay(false, true);
+                    updateMessage = "Stations with no results matching filters will not be displayed.<br />"+
+                        "To turn back on, uncheck the \"Hide stations with no results\" option.";
+                    updateMessageTime = 5000;
+                    self.prepSecondQuery = false;
+                }
+                // update legend
+                if(options.firstRun || options.firedBy === 'contaminant') {
+                    // update thresholds only if contaminant changed
+                    self.legend.updateThresholds(options.query.contaminant, data.thresholds, options.selectThresholdGroup);
+                } else {
+                    self.legend.updateLegend(self.lastQuery);
+                }
+                // update stations to match query
+                self.parent.updateStations(data.stations);
+                
+                if(!self.__uiActivated) return;
+                // change inputs options down hierarchy as necessary depending on what select fired the query
+                if(options.firedBy === 'species') {
+                    self.updateContaminantsSelect(data.contaminants);
+                    self.updateYearsSelect(data.years);
+                } else if(options.firedBy === 'contaminant') {
+                    self.updateYearsSelect(data.years);
+                } else {
+                    // if unknown or undefined firing event, just update everything
+                    self.updateSpeciesList();
+                    self.updateContaminantsSelect(data.contaminants);
+                    self.updateYearsSelect(data.years);
+                }
+                // flash changes, set zoom to fit new extent
+                var queryChanged = self.flashQueryChanges(options.query, options.firstRun);
+                if(queryChanged) {
+                    if(updateMessage) {
+                        updateMessage = "Filters updated to match query results.<br /><br />"+updateMessage;
+                    } else {
+                        updateMessage = "Filters updated to match query results.";
+                    }
+                }
+            }, 
+            error: function(e) {
+                updateMessage = "Error updating filters.";
+                alert(defaultErrorMessage + "(Error Query)");
+            }, 
+            complete: function() {
+                // unlock interface
+                common.setModal(false);
+                $("#species-control").prop('disabled', false);
+                // for some reason the trigger doesn't work in the updateStationsSelect() function but works here
+                $("#stations-select").prop('disabled', false).trigger('chosen:updated');
+                if(updateMessage) {
+                    self.parent.flashNotification(updateMessage, updateMessageTime);
+                }
+                self.legend.adjustLegendContainerHeight();
+            }
+        });
+    };
+    
+    //********************************************************************************************************
+    // Init and activate functions
+    //********************************************************************************************************
+    /**
+     * Initialize map controls. However, it does not activate them as you may want to wait until the rest of 
+     * the application has loaded. Thus follow up with {@link #controlsActivate()} when ready.
+     */
+    QueryAndUI.prototype.init = function() {
+        //$("#notification-tab").hide();
+        // make everything fancy!
+        $("#species-control").chosen();
+        $("#contaminant-control").chosen();
+        $("#thresholds-control").chosen();
+        $("#stations-select").chosen();
+        $("#counties-select").chosen();
+        // year range slider (does not create though, that's done on first update)
+        $("#control-year-range-container").html(
+            "<div id='control-year-range-start'></div>" + 
+            "<div id='control-year-range'></div>" +
+            "<div id='control-year-range-end'></div>"
+        );
+        // add placeholder texts to chosen search
+        $("#species_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the species of interest.  Click on the full name when you see it.");
+        $("#contaminant_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a contaminant from the pull-down menu.");
+        $("#thresholds_control_chosen .chosen-drop .chosen-search input").attr("placeholder", "Select a set of thresholds from the pull-down menu.");
+        $("#stations_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing any part of the name of the location of interest.  Click on the full name when you see it.");
+        $("#counties_select_chosen .chosen-drop .chosen-search input").attr("placeholder", "Begin typing the name of the county of interest.  Click on the full name when you see it.");
+        // cache the control groups and tabs, hide the groups
+        for(var key in this.controls) {
+            this.controls[key].element = $("#"+this.controls[key].id);
+            // hide all until activate
+            this.controls[key].element.hide();
+            this.controls[key].tabElement = $("#"+this.controls[key].tabId);
+        }
+        // set last query to default
+        this.resetDefaultQuery();
+        // set visible
+        $("#controls-container").css('visibility', 'visible');
+        // add help tooltips
+//        $("#control-tab-about").addClass("cm-tooltip-left").attr(
+//            "cm-tooltip-msg", 
+//            "About the Safe-to-Eat Portal"
+//        );
+//        $("#control-tab-query").addClass("cm-tooltip-left").attr(
+//            "cm-tooltip-msg", 
+//            "Change the data being displayed on the map"
+//        );
+//        $("#control-tab-location").addClass("cm-tooltip-left").attr(
+//            "cm-tooltip-msg", 
+//            "Find a location by county or name"
+//        );
+//        $("#control-tab-map").addClass("cm-tooltip-left").attr(
+//            "cm-tooltip-msg", 
+//            "Change the layers being displayed on the map"
+//        );
+//        $("#species_control_chosen").addClass("cm-tooltip-top").attr(
+//            "cm-tooltip-msg", 
+//            "Filter map data by this species of interest"
+//        );
+//        $("#contaminant_control_chosen").addClass("cm-tooltip-top").attr(
+//            "cm-tooltip-msg", 
+//            "Show map data for this contaminant of interest"
+//        );
+//        // note due to legacy and changes, threshold controls still handled in legend-module
+//        $("#control-year-range").addClass("cm-tooltip-top").attr(
+//            "cm-tooltip-msg", 
+//            "Filter map data between these years"
+//        );
+//        $("#show-no-data-container").addClass("cm-tooltip-top").attr(
+//            "cm-tooltip-msg", 
+//            "Hide stations that do not have results matching above filters"
+//        );
+//        $("#reset-controls").addClass("cm-tooltip-bottom").attr(
+//            "cm-tooltip-msg", 
+//            "Reset all settings above to default values"
+//        );
+    };
 
-	/**
-	 * Actives the controls. Should be called after all data has loaded and first query has fired successfully 
-	 * (thus loading select data).
-	 * @see {@link controlsInit()}
-	 */
-	QueryAndUI.prototype.activate = function() {
-		// add tabs event listeners
-		var self = this;
-		for(var key in this.controls) {
-			if(this.controls[key].isOpen) {
-				this.controls[key].element.slideDown();
-				this.controls[key].tabElement.removeClass("control-tab").addClass("control-tab-active");
-			}
-			this.controls[key].tabElement.on('click', this.toggleControl.bind(this, key));
-		}
-		// add query controls event listeners
-		$("#stations-select")
-			.prop('disabled', false)
-			.change(function() {
-				var selectVal = parseInt($("#stations-select").val());
-				if(selectVal >= 0) {
-					var station = self.parent.stations.collection.getArray()[selectVal];
-					self.parent.zoomToStation(station);
-					self.parent.openStationDetails(station);
-					$("#stations-select").find('option:first-child')
-						.prop('selected', true)
-						.end().trigger('chosen:updated');
-				}
-			});
-		$("#species-control")
-			.prop('disabled', false)
-			.change(function() {
-				self.updateQuery({firedBy: "species"});
-			})
-			.trigger('chosen:updated');
-		$("#contaminant-control")
-			.prop('disabled', false)
-			.change(function() {
-				self.updateQuery({firedBy: "contaminant"});
-			})
-			.trigger('chosen:updated');
-		$("#thresholds-control")
-			.prop("disabled", false)
-			.change(function() {
-				var group = $("#thresholds-control option:selected").val();
-				if(group === "customize") {
-					self.legend.showCustomThresholdsPanel();
-				} else {
-					self.legend.selectedThresholdGroup = group;
-					self.legend.thresholdsChanged();
-				}
-			})
-			.trigger('chosen:updated');
-		$("#show-no-data-control")
-			.prop('disabled', false)
-			.prop('checked', !this.parent.noDataOptions.showNoData)
-			.click(function() {
-				if(self.prepSecondQuery) {
-					// this disables able setting no-data display to false when doing the query immediately after,
-					// the first, since user already discovered how to toggle this on/off
-					self.prepSecondQuery = false;
-				}
-				self.toggleNoDataDisplay();
-			});
-		$("#reset-controls")
-			.prop('disabled', false)
-			.click(function() {
-				// reset to show no-data symbology
-				self.toggleNoDataDisplay(true, true);
-				self.updateQuery({
-					query: self.defaultQuery,
-					firstRun: true, 
-					flashMessage: "Filters and display settings reset to default."
-				});
-			});
-		$("#download-control").click(function() {
-			self.parent.modules.download.showDownloadDialog(self.lastQuery);
-		});
-		$("#zoom-stations-control").click(function() {
-			self.parent.zoomToStations();
-		});
-		$("#show-counties-control")
-			.prop('disabled', false)
-			.prop('checked', this.parent.counties.layer.getVisible())
-			.click(function() {
-				self.parent.counties.layer.setVisible(!self.parent.counties.layer.getVisible());
-				// if turning off, reset any selected county
-				if(!self.parent.counties.layer.getVisible()) {
-					self.parent.counties.selected = null;
-					self.parent.counties.highlightLayer.setVisible(false);
-					self.parent.counties.highlightLayer.changed();
-				}
-			});
-		// sub layout for map/layer options
-		$("#map-layer-sub-tab").on('click', function() {
-			var elem = $(this);
-			if(elem.hasClass("active")) {
-				elem.removeClass("active");
-				$("#map-layer-sub-control").slideUp();
-			} else {
-				elem.addClass("active");
-				$("#map-layer-sub-control").slideDown();
-			}
-		});
-		$("#show-waterboards-control")
-			.prop('disabled', false)
-			.prop('checked', this.parent.waterboards.layer.getVisible())
-			.click(function() {
-				self.parent.waterboards.layer.setVisible(!self.parent.waterboards.layer.getVisible());
-			});
-		$("#show-mpa-control")
-			.prop('disabled', false)
-			.prop('checked', this.parent.mpa.layer.getVisible())
-			.click(function() {
-				self.parent.mpa.layer.setVisible(!self.parent.mpa.layer.getVisible());
-			});
-		// fill counties select
-		var countiesSelect = $("#counties-select");
-		countiesSelect.html("<option disabled value=' '></option>");
-		for(var i = 0; i < this.parent.counties.names.length; i++) {
-			countiesSelect.append(
-				"<option value='" + this.parent.counties.names[i].toLowerCase() + "'>" + 
-					this.parent.counties.names[i] + 
-				"</option>"
-			);
-		}
-		countiesSelect
-			.val('')
-			.prop('disabled', false)
-			.on('change', function() {
-				self.parent.zoomToCountyByName(countiesSelect.val()); 
-				countiesSelect.find('option:first-child')
-					.prop('selected', true)
-					.end().trigger('chosen:updated');
-			})
-			.trigger('chosen:updated');
-		// other tab buttons
-//		$("#zoom-stations-tab").click(function() {
-//			self.parent.zoomToStations();
-//		});
-//		$("#download-tab").click(function() {
-//			self.parent.modules.download.showDownloadDialog(self.lastQuery);
-//		});
-	};
+    /**
+     * Actives the controls. Should be called after all data has loaded and first query has fired successfully 
+     * (thus loading select data).
+     * @see {@link controlsInit()}
+     */
+    QueryAndUI.prototype.activate = function() {
+        // add tabs event listeners
+        var self = this;
+        for(var key in this.controls) {
+            if(this.controls[key].isOpen) {
+                this.controls[key].element.slideDown();
+                this.controls[key].tabElement.removeClass("control-tab").addClass("control-tab-active");
+            }
+            this.controls[key].tabElement.on('click', this.toggleControl.bind(this, key));
+        }
+        // add query controls event listeners
+        $("#stations-select")
+            .prop('disabled', false)
+            .change(function() {
+                var selectVal = parseInt($("#stations-select").val());
+                if(selectVal >= 0) {
+                    var station = self.parent.stations.collection.getArray()[selectVal];
+                    self.parent.zoomToStation(station);
+                    self.parent.openStationDetails(station);
+                    $("#stations-select").find('option:first-child')
+                        .prop('selected', true)
+                        .end().trigger('chosen:updated');
+                }
+            });
+        $("#species-control")
+            .prop('disabled', false)
+            .change(function() {
+                self.updateQuery({firedBy: "species"});
+            })
+            .trigger('chosen:updated');
+        $("#contaminant-control")
+            .prop('disabled', false)
+            .change(function() {
+                self.updateQuery({firedBy: "contaminant"});
+            })
+            .trigger('chosen:updated');
+        $("#thresholds-control")
+            .prop("disabled", false)
+            .change(function() {
+                var group = $("#thresholds-control option:selected").val();
+                if(group === "customize") {
+                    self.legend.showCustomThresholdsPanel();
+                } else {
+                    self.legend.selectedThresholdGroup = group;
+                    self.legend.thresholdsChanged();
+                }
+            })
+            .trigger('chosen:updated');
+        $("#show-no-data-control")
+            .prop('disabled', false)
+            .prop('checked', !this.parent.noDataOptions.showNoData)
+            .click(function() {
+                if(self.prepSecondQuery) {
+                    // this disables able setting no-data display to false when doing the query immediately after,
+                    // the first, since user already discovered how to toggle this on/off
+                    self.prepSecondQuery = false;
+                }
+                self.toggleNoDataDisplay();
+            });
+        $("#reset-controls")
+            .prop('disabled', false)
+            .click(function() {
+                // reset to show no-data symbology
+                self.toggleNoDataDisplay(true, true);
+                self.updateQuery({
+                    query: self.defaultQuery,
+                    firstRun: true, 
+                    flashMessage: "Filters and display settings reset to default."
+                });
+            });
+        $("#download-control").click(function() {
+            self.parent.modules.download.showDownloadDialog(self.lastQuery);
+        });
+        $("#zoom-stations-control").click(function() {
+            self.parent.zoomToStations();
+        });
+        $("#show-counties-control")
+            .prop('disabled', false)
+            .prop('checked', this.parent.counties.layer.getVisible())
+            .click(function() {
+                self.parent.counties.layer.setVisible(!self.parent.counties.layer.getVisible());
+                // if turning off, reset any selected county
+                if(!self.parent.counties.layer.getVisible()) {
+                    self.parent.counties.selected = null;
+                    self.parent.counties.highlightLayer.setVisible(false);
+                    self.parent.counties.highlightLayer.changed();
+                }
+            });
+        // sub layout for map/layer options
+        $("#map-layer-sub-tab").on('click', function() {
+            var elem = $(this);
+            if(elem.hasClass("active")) {
+                elem.removeClass("active");
+                $("#map-layer-sub-control").slideUp();
+            } else {
+                elem.addClass("active");
+                $("#map-layer-sub-control").slideDown();
+            }
+        });
+        $("#show-waterboards-control")
+            .prop('disabled', false)
+            .prop('checked', this.parent.waterboards.layer.getVisible())
+            .click(function() {
+                self.parent.waterboards.layer.setVisible(!self.parent.waterboards.layer.getVisible());
+            });
+        $("#show-mpa-control")
+            .prop('disabled', false)
+            .prop('checked', this.parent.mpa.layer.getVisible())
+            .click(function() {
+                self.parent.mpa.layer.setVisible(!self.parent.mpa.layer.getVisible());
+            });
+        // fill counties select
+        var countiesSelect = $("#counties-select");
+        countiesSelect.html("<option disabled value=' '></option>");
+        for(var i = 0; i < this.parent.counties.names.length; i++) {
+            countiesSelect.append(
+                "<option value='" + this.parent.counties.names[i].toLowerCase() + "'>" + 
+                    this.parent.counties.names[i] + 
+                "</option>"
+            );
+        }
+        countiesSelect
+            .val('')
+            .prop('disabled', false)
+            .on('change', function() {
+                self.parent.zoomToCountyByName(countiesSelect.val()); 
+                countiesSelect.find('option:first-child')
+                    .prop('selected', true)
+                    .end().trigger('chosen:updated');
+            })
+            .trigger('chosen:updated');
+        // other tab buttons
+//        $("#zoom-stations-tab").click(function() {
+//            self.parent.zoomToStations();
+//        });
+//        $("#download-tab").click(function() {
+//            self.parent.modules.download.showDownloadDialog(self.lastQuery);
+//        });
+        this.__uiActivated = true;
+    };
 
-	QueryAndUI.prototype.createYearSlider = function(minYear, maxYear) {
-		if(minYear >= maxYear) {
-			minYear = maxYear -1;
-		}
-		this.yearRangeControl = noUiSlider.create(document.getElementById('control-year-range'), {
-			range: { 'min': minYear, 'max': maxYear }, 
-			start: [minYear, maxYear],
-			step: 1, 
-			connect: true, 
-			behaviour: 'tap-drag'
-		});
-		// bind values to display
-		var display = [
-			document.getElementById("control-year-range-start"), 
-			document.getElementById("control-year-range-end")
-		];
-		this.yearRangeControl.on('update', function(values, handle) {
-			display[handle].innerHTML = parseInt(values[handle]);
-		});
-		var self = this;
-		this.yearRangeControl.on('change', function() {
-			self.updateQuery({firedBy: "year-range"});
-		});
-	};
+    QueryAndUI.prototype.createYearSlider = function(minYear, maxYear) {
+        if(minYear >= maxYear) {
+            minYear = maxYear -1;
+        }
+        this.yearRangeControl = noUiSlider.create(document.getElementById('control-year-range'), {
+            range: { 'min': minYear, 'max': maxYear }, 
+            start: [minYear, maxYear],
+            step: 1, 
+            connect: true, 
+            behaviour: 'tap-drag'
+        });
+        // bind values to display
+        var display = [
+            document.getElementById("control-year-range-start"), 
+            document.getElementById("control-year-range-end")
+        ];
+        this.yearRangeControl.on('update', function(values, handle) {
+            display[handle].innerHTML = parseInt(values[handle]);
+        });
+        var self = this;
+        this.yearRangeControl.on('change', function() {
+            self.updateQuery({firedBy: "year-range"});
+        });
+    };
 
-	//************************************************************************************************************
-	// General UI functions
-	//************************************************************************************************************
-	/**
-	 * Set active control by the control panel's name.
-	 * @param {string} controlName - Name of the control to set as active. If no match to any control panel 
-	 *    specified in global {@link #controls} object, does nothing.
-	 */
-	QueryAndUI.prototype.toggleControl = function(controlName) {
-		var control = this.controls[controlName];
-		if(!control.isOpen) {
-			control.element.slideDown();
-			control.tabElement.removeClass("control-tab").addClass("control-tab-active");
-		} else {
-			control.element.slideUp();
-			control.tabElement.removeClass("control-tab-active").addClass("control-tab");
-		}
-		control.isOpen = !control.isOpen;
-	};
+    //************************************************************************************************************
+    // General UI functions
+    //************************************************************************************************************
+    /**
+     * Set active control by the control panel's name.
+     * @param {string} controlName - Name of the control to set as active. If no match to any control panel 
+     *    specified in global {@link #controls} object, does nothing.
+     */
+    QueryAndUI.prototype.toggleControl = function(controlName) {
+        var control = this.controls[controlName];
+        if(!control.isOpen) {
+            control.element.slideDown();
+            control.tabElement.removeClass("control-tab").addClass("control-tab-active");
+        } else {
+            control.element.slideUp();
+            control.tabElement.removeClass("control-tab-active").addClass("control-tab");
+        }
+        control.isOpen = !control.isOpen;
+    };
 
-	//************************************************************************************************************
-	// Query ui and controls
-	//************************************************************************************************************
-	/**
-	 * Check query against the last successful query. Generally this is done after a query, using a copy of the 
-	 * query object before the query function returns and overwrites the last successful query (which is modified
-	 * server-side to be valid). Any changes from the query initially specified are flashed in the appropriate 
-	 * query controls (to signify they had to be modified to return a valid query).
-	 * @param {Object} query - Query object.
-	 * @param {boolean} firstRun - If true, inhibits flashing. Obviously used for the first/initial query which 
-	 *		is not user-specified and done to populate the initial map.
-	 * @return {boolean} true if one or more queries had to be corrected and the element was flashed to indicate 
-	 *		change
-	 */
-	QueryAndUI.prototype.flashQueryChanges = function(query, firstRun) {
-		// store in list so we can fire them fairly simultaneously
-		var elements = [];
-		if(query.contaminant !== this.lastQuery.contaminant) {
-			//elements.push($("#contaminant-control"));
-			elements.push($("#contaminant_control_chosen a span"));
-		}
-		if(query.startYear !== this.lastQuery.startYear) {
-			//elements.push($("#start-year-control"));
-			elements.push($("#start_year_control_chosen a span"));
-		}
-		if(query.endYear !== this.lastQuery.endYear) {
-			//elements.push($("#end-year-control"));
-			elements.push($("#end_year_control_chosen a span"));
-		}
-		if(elements.length > 0 && !firstRun) {
-			// flash select boxes (with chosen it's bit harder so just flash the text color twice)
-			elements.forEach(function(el) {
-				el.animate({color: "#3376E9"}, 400)
-				.animate({color: "#000"}, 200)
-				.animate({color: "#3376E9"}, 400)
-				.animate({color: "#000"}, 200)
-				.removeAttr('style', '');
-			});
-			return true;
-		}
-		return false;
-	};
+    //************************************************************************************************************
+    // Query ui and controls
+    //************************************************************************************************************
+    /**
+     * Check query against the last successful query. Generally this is done after a query, using a copy of the 
+     * query object before the query function returns and overwrites the last successful query (which is modified
+     * server-side to be valid). Any changes from the query initially specified are flashed in the appropriate 
+     * query controls (to signify they had to be modified to return a valid query).
+     * @param {Object} query - Query object.
+     * @param {boolean} firstRun - If true, inhibits flashing. Obviously used for the first/initial query which 
+     *        is not user-specified and done to populate the initial map.
+     * @return {boolean} true if one or more queries had to be corrected and the element was flashed to indicate 
+     *        change
+     */
+    QueryAndUI.prototype.flashQueryChanges = function(query, firstRun) {
+        // store in list so we can fire them fairly simultaneously
+        var elements = [];
+        if(query.contaminant !== this.lastQuery.contaminant) {
+            //elements.push($("#contaminant-control"));
+            elements.push($("#contaminant_control_chosen a span"));
+        }
+        if(query.startYear !== this.lastQuery.startYear) {
+            //elements.push($("#start-year-control"));
+            elements.push($("#start_year_control_chosen a span"));
+        }
+        if(query.endYear !== this.lastQuery.endYear) {
+            //elements.push($("#end-year-control"));
+            elements.push($("#end_year_control_chosen a span"));
+        }
+        if(elements.length > 0 && !firstRun) {
+            // flash select boxes (with chosen it's bit harder so just flash the text color twice)
+            elements.forEach(function(el) {
+                el.animate({color: "#3376E9"}, 400)
+                .animate({color: "#000"}, 200)
+                .animate({color: "#3376E9"}, 400)
+                .animate({color: "#000"}, 200)
+                .removeAttr('style', '');
+            });
+            return true;
+        }
+        return false;
+    };
 
-	/**
-	 * Updates {@link #speciesList} from server to grab all unique species and the updates the species control. 
-	 * Strings come in their original values (i.e. not standarized in upper/lower case). Really only needs to be 
-	 * called once. Asynchronous ajax call.
-	 */
-	QueryAndUI.prototype.updateSpeciesList = function() {
-		var self = this;
-		$.ajax({
-			url: "lib/query.php", 
-			data: { query: "getAllSpecies" }, 
-			dataType: "json", 
-			success: function(data) {
-				self.speciesList = data;
-				self.updateSpeciesSelect();
-			}, 
-			error: function(e) {
-				alert(defaultErrorMessage + "(Error SpeciesList)");
-			}
-		});
-	};
+    /**
+     * Updates {@link #speciesList} from server to grab all unique species and the updates the species control. 
+     * Strings come in their original values (i.e. not standarized in upper/lower case). Really only needs to be 
+     * called once. Asynchronous ajax call.
+     */
+    QueryAndUI.prototype.updateSpeciesList = function() {
+        var self = this;
+        $.ajax({
+            url: "lib/query.php", 
+            data: { query: "getAllSpecies" }, 
+            dataType: "json", 
+            success: function(data) {
+                self.speciesList = data;
+                self.updateSpeciesSelect();
+            }, 
+            error: function(e) {
+                alert(defaultErrorMessage + "(Error SpeciesList)");
+            }
+        });
+    };
 
-	/**
-	 * Update the species control (the select list), including adding highest/lowest average options first. Takes 
-	 * no parameters, instead uses {@link #speciesList} global var to population options. Select values are kept 
-	 * as is (that is, not upper/lower-cased).
-	 */
-	QueryAndUI.prototype.updateSpeciesSelect = function() {
-		var optionsHtml = "<option value='highest'>Species with Highest Avg Concentration</option>"
-			+ "<option value='lowest'>Species with Lowest Avg Concentration</option>";
-		for(var i = 0; i < this.speciesList.length; i++) {
-			optionsHtml += "<option value='" + this.speciesList[i][0] + "'>" + this.speciesList[i][0] + "</option>";
-		}
-		$("#species-control")
-			.html(optionsHtml)
-			.val(this.lastQuery.species)
-			.trigger("chosen:updated");
-	};
+    /**
+     * Update the species control (the select list), including adding highest/lowest average options first. Takes 
+     * no parameters, instead uses {@link #speciesList} global var to population options. Select values are kept 
+     * as is (that is, not upper/lower-cased).
+     */
+    QueryAndUI.prototype.updateSpeciesSelect = function() {
+        var optionsHtml = "<option value='highest'>Species with Highest Avg Concentration</option>"
+            + "<option value='lowest'>Species with Lowest Avg Concentration</option>";
+        for(var i = 0; i < this.speciesList.length; i++) {
+            optionsHtml += "<option value='" + this.speciesList[i][0] + "'>" + this.speciesList[i][0] + "</option>";
+        }
+        $("#species-control")
+            .html(optionsHtml)
+            .val(this.lastQuery.species)
+            .trigger("chosen:updated");
+    };
 
-	/**
-	 * Update the contaminants control (the contaminants list).
-	 * @param {Object[]} data - Query results for the list of contaminants. Expects an array of single-length 
-	 *    arrays. E.g. [ ['Mercury'], ['DDT'] ] as that's just how the raw SQL query is returned. Select values  
-	 *    are kept as is (that is, not upper/lower-cased).
-	 */
-	QueryAndUI.prototype.updateContaminantsSelect = function(data) {
-		var optionsHtml = "";
-		for(var i = 0; i < data.length; i++) {
-			optionsHtml += "<option value='" + data[i][0] + "'>" + data[i][0] + "</option>";
-		}
-		var controlDiv = $("#contaminant-control")
-			.html(optionsHtml)
-			.val(this.lastQuery.contaminant);
-		// check value, if null, just select first available
-		if(!controlDiv.val()) {
-			controlDiv.val(data[0][0]);
-		}
-		controlDiv.trigger('chosen:updated');
-	};
+    /**
+     * Update the contaminants control (the contaminants list).
+     * @param {Object[]} data - Query results for the list of contaminants. Expects an array of single-length 
+     *    arrays. E.g. [ ['Mercury'], ['DDT'] ] as that's just how the raw SQL query is returned. Select values  
+     *    are kept as is (that is, not upper/lower-cased).
+     */
+    QueryAndUI.prototype.updateContaminantsSelect = function(data) {
+        var optionsHtml = "";
+        for(var i = 0; i < data.length; i++) {
+            optionsHtml += "<option value='" + data[i][0] + "'>" + data[i][0] + "</option>";
+        }
+        var controlDiv = $("#contaminant-control")
+            .html(optionsHtml)
+            .val(this.lastQuery.contaminant);
+        // check value, if null, just select first available
+        if(!controlDiv.val()) {
+            controlDiv.val(data[0][0]);
+        }
+        controlDiv.trigger('chosen:updated');
+    };
 
-	/**
-	 * Updates the year controls (start and end year lists).
-	 * @param {Object[]} data - Query results for the min and max year.
-	 * @param {number} data[].min - Earliest year with data.
-	 * @param {number} data[].max - Latest year with data.
-	 */
-	QueryAndUI.prototype.updateYearsSelect = function(data) {
-		var yearMin = parseInt(data.min), 
-			yearMax = parseInt(data.max);
-		if(!this.yearRangeControl) {
-			this.createYearSlider(yearMin, yearMax);
-		}
-		if(yearMin === yearMax) {
-			this.yearRangeControl.updateOptions({
-				range: { 'min': yearMin-1, 'max': yearMax },
-				step: 1, 
-				connect: true
-			});
-			this.yearRangeControl.set([this.lastQuery.startYear-1, this.lastQuery.endYear]);
-			$("#control-year-range-start").html(yearMin);
-			$("#control-year-range-end").html(yearMax);
-			$("#control-year-range").attr('disabled', true);
-		} else {
-			$("#control-year-range").attr('disabled', false);
-			this.yearRangeControl.updateOptions({
-				range: { 'min': yearMin, 'max': yearMax },
-				step: 1, 
-				connect: true, 
-				behaviour: 'tap-drag'
-			});
-			this.yearRangeControl.set([this.lastQuery.startYear, this.lastQuery.endYear]);
-			$("#control-year-range-start").html(this.lastQuery.startYear);
-			$("#control-year-range-end").html(this.lastQuery.endYear);
-		}
-	};
+    /**
+     * Updates the year controls (start and end year lists).
+     * @param {Object[]} data - Query results for the min and max year.
+     * @param {number} data[].min - Earliest year with data.
+     * @param {number} data[].max - Latest year with data.
+     */
+    QueryAndUI.prototype.updateYearsSelect = function(data) {
+        var yearMin = parseInt(data.min), 
+            yearMax = parseInt(data.max);
+        if(!this.yearRangeControl) {
+            this.createYearSlider(yearMin, yearMax);
+        }
+        if(yearMin === yearMax) {
+            this.yearRangeControl.updateOptions({
+                range: { 'min': yearMin-1, 'max': yearMax },
+                step: 1, 
+                connect: true
+            });
+            this.yearRangeControl.set([this.lastQuery.startYear-1, this.lastQuery.endYear]);
+            $("#control-year-range-start").html(yearMin);
+            $("#control-year-range-end").html(yearMax);
+            $("#control-year-range").attr('disabled', true);
+        } else {
+            $("#control-year-range").attr('disabled', false);
+            this.yearRangeControl.updateOptions({
+                range: { 'min': yearMin, 'max': yearMax },
+                step: 1, 
+                connect: true, 
+                behaviour: 'tap-drag'
+            });
+            this.yearRangeControl.set([this.lastQuery.startYear, this.lastQuery.endYear]);
+            $("#control-year-range-start").html(this.lastQuery.startYear);
+            $("#control-year-range-end").html(this.lastQuery.endYear);
+        }
+    };
 
-	/**
-	 * Update the stations controls (stations list). Takes no parameters. Uses global {@link #stations} to 
-	 * populate values. Select values are numeric rather than the station name.
-	 */
-	QueryAndUI.prototype.updateStationsSelect = function() {
-		var optionsHtml = "<option disabled value=' '></option>";
-		for(var i = 0; i < this.parent.stations.collection.getLength(); i++) {
-			var stationName = this.parent.stations.collection.item(i).get("name");
-			optionsHtml += "<option value=" + i + ">" + stationName + "</option>";
-		}
-		$("#stations-select")
-			.html(optionsHtml)
-			.val(-1)
-			.trigger("chosen:updated");
-	};
-	
-	QueryAndUI.prototype.toggleNoDataDisplay = function(displayNoData, supressUpdate) {
-		if(typeof displayNoData !== "undefined") {
-			this.parent.noDataOptions.showNoData = displayNoData;
-		} else {
-			this.parent.noDataOptions.showNoData = !this.parent.noDataOptions.showNoData;
-		}
-		this.parent.refreshMarkerFactory();
-		if(!supressUpdate) { this.parent.refreshStations(); }
-		$("#show-no-data-control").prop("checked", !this.parent.noDataOptions.showNoData);
-		$("#legend-row-no-data").css('display', this.parent.noDataOptions.showNoData ? "" : "none");
-		this.legend.adjustLegendContainerHeight();
-	};
-	
-	return QueryAndUI;
-	
+    /**
+     * Update the stations controls (stations list). Takes no parameters. Uses global {@link #stations} to 
+     * populate values. Select values are numeric rather than the station name.
+     */
+    QueryAndUI.prototype.updateStationsSelect = function() {
+        var optionsHtml = "<option disabled value=' '></option>";
+        for(var i = 0; i < this.parent.stations.collection.getLength(); i++) {
+            var stationName = this.parent.stations.collection.item(i).get("name");
+            optionsHtml += "<option value=" + i + ">" + stationName + "</option>";
+        }
+        $("#stations-select")
+            .html(optionsHtml)
+            .val(-1)
+            .trigger("chosen:updated");
+    };
+    
+    QueryAndUI.prototype.toggleNoDataDisplay = function(displayNoData, supressUpdate) {
+        if(typeof displayNoData !== "undefined") {
+            this.parent.noDataOptions.showNoData = displayNoData;
+        } else {
+            this.parent.noDataOptions.showNoData = !this.parent.noDataOptions.showNoData;
+        }
+        this.parent.refreshMarkerFactory();
+        if(!supressUpdate) { this.parent.refreshStations(); }
+        $("#show-no-data-control").prop("checked", !this.parent.noDataOptions.showNoData);
+        $("#legend-row-no-data").css('display', this.parent.noDataOptions.showNoData ? "" : "none");
+        this.legend.adjustLegendContainerHeight();
+    };
+    
+    return QueryAndUI;
+    
 });

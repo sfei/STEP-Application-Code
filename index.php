@@ -5,13 +5,10 @@
     <title>STEP Portal</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
-    <?php if($ini["devmode"]) { ?>
+    <?php if($ini["devmode"]) { ?> 
     <link rel="stylesheet" href="css/style.css" />
-    <script src="js/lib/require.js" data-main="js/init"></script>
-    <?php } else { ?>
+    <?php } else { ?> 
     <link rel="stylesheet" href="build/style.css" />
-    <script src="build/require.js" data-main="build/step"></script>
-    <?php include("analyticstracking.php"); ?>
     <?php } ?>
   </head>
   <body>
@@ -139,5 +136,13 @@
         <div id="notification-tab">Notifications go here</div>
       </div>
     </div>
+    
+    <?php if($ini["devmode"]) { ?> 
+    <script src="js/lib/require.js" data-main="js/init"></script>
+    <?php } else { ?> 
+    <script src="build/require.js"></script>
+    <script>require(["build/libs","build/step-app","build/sreport"],function(){require(["../build/step"]);});</script>
+    <?php include("analyticstracking.php"); ?>
+    <?php } ?>
   </body>
 </html>

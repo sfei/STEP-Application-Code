@@ -14,7 +14,7 @@ $instance = StepQueries::getInstance();
 $result = $instance->get10NearestStationsRecords($query);
 
 // save results to session
-session_start();
+if(!isset($_SESSION)) { session_start(); }
 $_SESSION['data'] = $result;
 $_SESSION['query'] = $query;
 
