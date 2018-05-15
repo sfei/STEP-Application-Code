@@ -62,6 +62,16 @@ function init(root, config) {
                 endYear: 2014
             }
         });
+        // legend show/hide modified since we put tab on top of screen now
+        root.step.modules.legend.legendHide = function() {
+            $("#legend-container").hide();
+            $("#show-legend-tab").show("slide", { direction: "up" }, 400);
+        };
+        $("#hide-legend-tab").off('click').on('click', root.step.modules.legend.legendHide);
+        root.step.modules.legend.legendShow = function() {
+            $("#legend-container").show();
+            $("#show-legend-tab").hide("slide", { direction: "up" }, 100);
+        };
         // turn off no-data points
         root.step.modules.queryAndUI.toggleNoDataDisplay(false, true);
         // init storymap scene

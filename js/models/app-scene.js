@@ -163,6 +163,7 @@ define([
                         self._visualStep = 0;
                         self._inContainer = false;
                     } else if(self._lastHidden.offset().top <= window.pageYOffset) {
+                        self._log("container exit (down)");
                         self._inContainer = false;
                     }
                 }

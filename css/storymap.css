@@ -150,3 +150,24 @@ body {
   right: auto;
   top: 4px;
 }
+#legend-container {
+  top: 30px;
+  left: auto;
+  right: 20px;
+}
+#hide-legend-tab {
+  height: 19px;
+}
+#show-legend-tab {
+  bottom: auto;
+  top: 0;
+  left: auto;
+  right: 10px;
+  min-width: 108px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-bottom-color: #29A376;
+  border-top-color: #4797d1;
+}
