@@ -5,6 +5,18 @@ body {
   background: #41525a;
 }
 
+.flex, .flex-row, .flex-column {
+  display: flex;
+}
+.flex-row {
+  flex-direction: row;
+  justify-content: center;
+}
+.flex-column {
+  flex-direction: column;
+  justify-content: center;
+}
+
 #storymap-loading {
   position: fixed;
   top: 0;
@@ -22,10 +34,21 @@ body {
   transition: opacity 800ms;
 }
 
-.sm-page {
+#storymap-intro, #storymap-outro {
   width: 100%;
-  overflow: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+#storymap-intro {
   background: #D7E8EF;
+}
+#storymap-outro {
+  background: #fff;
+  font-size: 0.9em;
+}
+#storymap-outro img {
+  height: 75px;
+  margin: 4px;
 }
 
 #narrative {
@@ -87,6 +110,19 @@ body {
   #visual {
     width: 100%;
     z-index: -1;
+  }
+}
+
+.sm-page {
+  width: 100%;
+  overflow: auto;
+}
+.sm-mobile-spacer {
+  display: none;
+}
+@media screen and (max-width: 500px) {
+  .sm-mobile-spacer {
+    display: block !important;
   }
 }
 

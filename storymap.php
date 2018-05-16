@@ -14,15 +14,23 @@
     <?php } ?>
   </head>
   <body style="overflow-y:hidden;">
-    <div id="storymap-intro" class="sm-page">
-      <h2 style="text-align:center;margin-top:25%">Contaminants in California Sport Fish</h2>
+    <div id="storymap-intro" class="sm-page flex-column">
+      <h2 style="text-align:center;">Contaminants in California Sport Fish</h2>
     </div>
     <div id="storymap-container">
       <div id="narrative"></div>
       <div id="visual"></div>
     </div>
-    <div id="storymap-outro" class="sm-page" style="height:300px;">
-      <h2 style="text-align:center;margin-top:100px;">Storymap Credits</h2>
+    <div id="storymap-outro" class="flex-column">
+      <div class="flex-row">
+        <img src="images/SFEI.png" alt="SFEI" />
+        <img src="images/poweredbyceden.jpg" alt="CEDEN" />
+        <img src="images/swamp.gif" alt="SWAMP" />
+      </div>
+      <div style="margin:auto;padding-top:12px;text-align:center;">
+        <strong>Photo Credits:</strong><br />
+        Jay Davis, Shira Bezalel
+      </div>
     </div>
     <div id="storymap-loading">Loading...</div>
     

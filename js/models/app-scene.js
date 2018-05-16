@@ -54,7 +54,7 @@ define([
             this.setAttribute("sm-step", step);
         });
         // activate scrollama listeners
-        this.__activate();
+        this.__activate(options);
     };
     
     Scene.prototype.destroy = function() {
@@ -95,10 +95,13 @@ define([
         return found;
     };
     
-    Scene.prototype.__activate = function() {
-        var resizeElems = $(".sm-page, .sm-step[sm-action*=\"release\"], .sm-step[sm-action*=\"hold\"], .sm-step[sm-action*=\"last\"]"), 
+    Scene.prototype.__activate = function(options) {
+        var resizeElems = $(".sm-step[sm-action*=\"release\"], .sm-step[sm-action*=\"hold\"], .sm-step[sm-action*=\"last\"]"), 
             self = this, 
             lastStep = 0;
+        if(options.resizeHeightElems) {
+            resizeElems = resizeElems.add(options.resizeHeightElems);
+        }
         
         this._resizeEnabler = function() {
             console.log('enable');

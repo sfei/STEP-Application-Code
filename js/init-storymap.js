@@ -76,10 +76,11 @@ function init(root, config) {
         root.step.modules.queryAndUI.toggleNoDataDisplay(false, true);
         // init storymap scene
         root.scene = new Scene({
-            container: "#storymap-container", 
-            narrative: "#narrative", 
-            visuals:   "#visual", 
-            debugMode: true
+            container:         "#storymap-container", 
+            narrative:         "#narrative", 
+            visuals:           "#visual", 
+            debugMode:         true, 
+            resizeHeightElems: ".sm-page, .sm-spacer, .sm-mobile-spacer"
         });
         // add actions
         var currentView = {
