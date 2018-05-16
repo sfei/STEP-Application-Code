@@ -96,7 +96,7 @@ define([
     };
     
     Scene.prototype.__activate = function(options) {
-        var resizeElems = $(".sm-step[sm-action*=\"release\"], .sm-step[sm-action*=\"hold\"], .sm-step[sm-action*=\"last\"]"), 
+        var resizeElems = $(".sm-visual, .sm-step[sm-action*=\"release\"], .sm-step[sm-action*=\"hold\"], .sm-step[sm-action*=\"last\"]"), 
             self = this, 
             lastStep = 0;
         if(options.resizeHeightElems) {

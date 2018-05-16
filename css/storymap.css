@@ -1,8 +1,8 @@
 body {
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
   min-width: 300px;
-  background: #41525a;
+  background: #000;
 }
 
 .flex, .flex-row, .flex-column {
@@ -40,10 +40,18 @@ body {
   box-sizing: border-box;
 }
 #storymap-intro {
-  background: #D7E8EF;
+  background: #1d2b31;
+  box-shadow: inset 0 200px 70px -40px #84a7cc, 
+              inset 0 400px 70px -40px #5681ad, 
+              inset 0 600px 70px -40px #314b67, 
+              inset 0 800px 70px -40px #30444e;
+  color: #fff;
+  padding-left: calc(100vw - 100% + 15px);
+  padding-right: calc(100% - 100vw + 15px);
 }
 #storymap-outro {
-  background: #fff;
+  background: #000;
+  color: #fff;
   font-size: 0.9em;
 }
 #storymap-outro img {
@@ -53,7 +61,7 @@ body {
 
 #narrative {
   width: 275px;
-  background: #b9cad8;
+  background: #e4eff9;
 }
 .narrative-content {
   padding: 40px 10px 40px 20px;
@@ -97,6 +105,9 @@ body {
 }
 
 @media screen and (max-width: 500px) {
+  #storymap-intro {
+    font-size: 0.9em;
+  }
   #narrative {
     width: 100%;
     background: none;
@@ -115,7 +126,6 @@ body {
 
 .sm-page {
   width: 100%;
-  overflow: auto;
 }
 .sm-mobile-spacer {
   display: none;
