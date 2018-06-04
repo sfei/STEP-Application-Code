@@ -220,6 +220,8 @@ define([
                     self.parent.flashNotification(updateMessage, updateMessageTime);
                 }
                 self.legend.adjustLegendContainerHeight();
+                // on complete
+                if(options.onComplete) options.onComplete();
             }
         });
     };

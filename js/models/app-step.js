@@ -175,15 +175,15 @@ define([
         // other modules
         this.modules.legend              = new Legend(this);
         this.modules.queryAndUI          = new QueryAndUI(this, options.defaultQuery);
+        this.modules.stationDetails      = new StationDetails(this);
         if(!storymapMode) {
             this.modules.download        = Download;
-            this.modules.stationDetails  = new StationDetails(this);
             this.modules.mapInstructions = new MapInstructions(this);
         }
         
         // init functions
         if(storymapMode) {
-            this.mapInit(null, {interactions: ol.interaction.defaults({mouseWheelZoom:false}),});
+            this.mapInit(null, {interactions: ol.interaction.defaults({mouseWheelZoom:false})});
         } else {
             this.mapInit();
         }
@@ -205,12 +205,16 @@ define([
             var queryOptions = {
                 query: this.modules.queryAndUI.defaultQuery, 
                 selectThresholdGroup: getVars.tgroup, 
-                firstRun: true // special option as very first query has to do some extra things
+                firstRun: true, // special option as very first query has to do some extra things
+                // enable these after some query is fired to load stations
+                onComplete: function() {
+                    self.modules.queryAndUI.updateSpeciesList(); // needed for station details (not fired automatically as UI not activated)
+                    self.addClickInteractions();
+                    if(self.enableHoverInteractions) self.addHoverInteractions();
+                    common.closeModal();
+                }
             };
             self.modules.queryAndUI.updateQuery(queryOptions);
-            // enable these after some query is fired to load stations
-            if(self.enableHoverInteractions) self.addHoverInteractions();
-            common.closeModal();
             
         } else {
             this.modules.mapInstructions.begin(

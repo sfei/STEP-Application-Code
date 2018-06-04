@@ -123,7 +123,7 @@ define([
         if($("#details-container").length === 0) {
             this.createDetailsDialog();
         } else {
-            this.element = $("#details-container");
+            this.createDetailsDialog("#details-container");
         }
         // open data/query
         this.isOpen = false;
@@ -146,19 +146,23 @@ define([
     };
     
     
-    StationDetails.prototype.createDetailsDialog = function() {
-        this.element = $(
-            "<div id='details-container' class='container-styled' style='padding:"+this.containerPadding+"px;'>" + 
-                "<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
-                    "<div id='details-title' class='grab'></div>" + // title set elsewhere
-                    "<div id='details-info'></div>" +
-                    "<div id='details-tabs-container'>" + 
-                        "<ul id='details-dialog-tabs'></ul>" + 
-                    "</div>" + 
-                    "<div id='details-content'></div>" + 
+    StationDetails.prototype.createDetailsDialog = function(container) {
+        if(container) {
+            this.element = $(container);
+        } else {
+            this.element = $("<div>", {id: "details-container"}).appendTo("body");
+        }
+        this.element.css({padding: this.contianerPadding});
+        this.element.html(
+            "<div id='details-dialog' class='inner-container-style' style='padding:"+this.contentPadding+"px;'>" + 
+                "<div id='details-title' class='grab'></div>" + // title set elsewhere
+                "<div id='details-info'></div>" +
+                "<div id='details-tabs-container'>" + 
+                    "<ul id='details-dialog-tabs'></ul>" + 
                 "</div>" + 
+                "<div id='details-content'></div>" + 
             "</div>"
-        ).appendTo("body");
+        );
         // add tabs programmatically
         var self = this;
         var tabsList = this.element.find("#details-dialog-tabs");

@@ -171,7 +171,7 @@ body {
 .sm-visual {
   height: 100vh;
 }
-.sm-step div, .sm-visual div {
+.sm-step > div, .sm-visual > div {
   box-sizing: border-box;
 }
 .sm-step[sm-action*="release"] {
