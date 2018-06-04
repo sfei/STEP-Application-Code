@@ -101,6 +101,8 @@ function init(root, config) {
                 root.step.modules.legend.legendShow();
             }
         );
+        // ensure resizing of step map (as it doesn't when offscreen)
+        window.addEventListener('resize', function() { root.step.map.updateSize(); });
         // fade out loading
         var loadingDiv = document.querySelector("#storymap-loading");
         loadingDiv.innerHTML = "";
