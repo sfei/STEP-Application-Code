@@ -51,7 +51,7 @@ HTML;
     echo <<< HTML
     <link rel="stylesheet" href="build/summaryreport.css" />
     <script src="build/require.js"></script>
-    <script>require(["build/libs","build/step-app","build/sreport"],function(){require(["../build/step"]);});</script>
+    <script>require(["build/libs","build/step-app"],function(){require(["../build/sreport"]);});</script>
 HTML;
     include("analyticstracking.php");
 }
