@@ -23,7 +23,6 @@ HTML;
     echo <<< HTML
     <link rel="stylesheet" href="build/summaryreport.css" />
     <script src="build/require.js"></script>
-    <script>require(["build/libs","build/step-app"],function(){require(["init"]);});</script>
 HTML;
 }
 echo <<< HTML
