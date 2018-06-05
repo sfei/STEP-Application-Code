@@ -12,25 +12,18 @@ echo <<< HTML
   <head>
     <title>$station Summary Report</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
 HTML;
 if($ini["devmode"]) {
     echo <<< HTML
     <link rel="stylesheet" href="css/summaryreport.css" />
-    <script src="js/lib/require.js" data-main="js/init"></script>
 HTML;
 } else {
     echo <<< HTML
     <link rel="stylesheet" href="build/summaryreport.css" />
-    <script src="build/require.js"></script>
 HTML;
 }
 echo <<< HTML
-    <script>
-      var summaryReport = true;
-      var reportQuery = $jsonQuery;
-      var reportData = $jsonData;
-    </script>
+    <script>var summaryReport = true, reportQuery = $jsonQuery, reportData = $jsonData;</script>
   </head>
   <body style="overflow:scroll;">
     <div id="container">
@@ -43,14 +36,12 @@ echo <<< HTML
 HTML;
 if($ini["devmode"]) {
     echo <<< HTML
-    <link rel="stylesheet" href="css/summaryreport.css" />
     <script src="js/lib/require.js" data-main="js/init"></script>
 HTML;
 } else {
     echo <<< HTML
-    <link rel="stylesheet" href="build/summaryreport.css" />
     <script src="build/require.js"></script>
-    <script>require(["build/libs","build/step-app"],function(){require(["../build/sreport"]);});</script>
+    <script>require(["build/libs","build/step-app","build/sreport"],function(){require(["../build/step"]);});</script>
 HTML;
     include("analyticstracking.php");
 }
