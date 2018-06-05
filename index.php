@@ -141,7 +141,7 @@
     <script src="js/lib/require.js" data-main="js/init"></script>
     <?php } else { ?> 
     <script src="build/require.js"></script>
-    <script>require(["build/libs","build/step-app"],function(){require(["../build/step"]);});</script>
+    <script>require(["build/libs","build/step-app", "build/sreport"],function(){require(["../build/step"]);});</script>
     <?php include("analyticstracking.php"); ?>
     <?php } ?>
   </body>
