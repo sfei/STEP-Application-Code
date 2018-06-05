@@ -1,0 +1,6 @@
+<FilesMatch "storymap.php">
+  AuthType Basic
+  AuthName "Password Protected Area"
+  AuthUserFile /var/www/step.builds/secure/.htpasswd
+  Require valid-user
+</FilesMatch>
