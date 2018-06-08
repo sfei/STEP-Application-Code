@@ -47,10 +47,11 @@ require(['rconfig'], function(rconfig) {
 
 function init(root, config) {
     require([
+        'ie-is-special', 
         'domReady!', 
         'models/app-step', 
         'models/app-scene'
-    ], function(domReady, STEP, Scene) {
+    ], function(ieFixes, domReady, STEP, Scene) {
         // init STEP
         root.step = new STEP({mapserverUrl: config.mapserverUrl});
         root.step.init({
