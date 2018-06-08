@@ -18,9 +18,10 @@ function init(config) {
     require([
         'common', 
         'domReady', 
+        'ie-is-special', 
         'models/app-step', 
         'models/app-summary-report'
-    ], function(common, domReady, STEP, SummaryReport) {
+    ], function(common, domReady, ieFixes, STEP, SummaryReport) {
         // Internet Explorer versioning check (although jQuery alone would have thrown several exceptions by this point)
         if(window.browserType.isIE && window.browserType.ieVersion <= 9) {
             alert("This application is not compatible with Internet Explorer version 9 or below.");

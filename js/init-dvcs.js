@@ -8,9 +8,10 @@ function init() {
     require([
         'jquery', 
         'common', 
+        'ie-is-special', 
         'domReady', 
         'models/app-dv-compare-stations'
-    ], function(jquery, common, domReady, DVCompareStations) {
+    ], function(jquery, common, ieFixes, domReady, DVCompareStations) {
         domReady(function() {
             var params = window.parameters ? window.parameters : {};
             var dv = new DVCompareStations({

@@ -17,6 +17,7 @@ var required = [
         'd3', 
         'common', 
         "common.table", 
+        'ie-is-special', 
         'noUiSlider', 
         'OpenLayers', 
         'SimpleGraph', 
