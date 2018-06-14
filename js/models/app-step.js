@@ -144,11 +144,8 @@ define([
     STEP.prototype.init = function(options) {
         options = options || {};
         
-        // storymap mode
-        var storymapMode = options && options.mode === "storymap";
-        
         // add basemap control dynamically (easier to change the basemaps later without changing related code)
-        if(!storymapMode) {
+        if(!options.storymapMode) {
             this.addBasemapControl($("#base-layer-control-container"), {width: 220});
         }
         
@@ -176,19 +173,21 @@ define([
         this.modules.legend              = new Legend(this);
         this.modules.queryAndUI          = new QueryAndUI(this, options.defaultQuery);
         this.modules.stationDetails      = new StationDetails(this);
-        if(!storymapMode) {
+        if(!options.storymapMode) {
             this.modules.download        = Download;
             this.modules.mapInstructions = new MapInstructions(this);
         }
         
         // init functions
-        if(storymapMode) {
+        if(options.storymapMode) {
+            $("#controls-container").hide();
             this.mapInit(null, {interactions: ol.interaction.defaults({mouseWheelZoom:false})});
+            $(".ol-zoom").css("right", 4);
         } else {
             this.mapInit();
         }
         this.addCountyLayer();
-        if(!storymapMode) {
+        if(!options.storymapMode) {
             this.addWaterBoardLayer();
             this.addMPALayer();
         }
@@ -201,7 +200,7 @@ define([
         var self = this;
         var getVars = common.getUrlGetVars();
         
-        if(storymapMode) {
+        if(options.storymapMode) {
             var queryOptions = {
                 query: this.modules.queryAndUI.defaultQuery, 
                 selectThresholdGroup: getVars.tgroup, 
@@ -211,11 +210,25 @@ define([
                     self.modules.queryAndUI.updateSpeciesList(); // needed for station details (not fired automatically as UI not activated)
                     self.addClickInteractions();
                     if(self.enableHoverInteractions) self.addHoverInteractions();
+                    self.modules.queryAndUI.toggleNoDataDisplay(false, true);
                     common.closeModal();
                 }
             };
-            self.modules.queryAndUI.updateQuery(queryOptions);
-            
+            this.modules.queryAndUI.updateQuery(queryOptions);
+        } else if(options.skipInstructions) {
+            this.modules.queryAndUI.activate();
+            this.modules.queryAndUI.updateQuery({
+                query: this.modules.queryAndUI.defaultQuery, 
+                selectThresholdGroup: getVars.tgroup, 
+                firstRun: true // special option as very first query has to do some extra things
+            });
+            // enable these after some query is fired to load stations
+            this.addClickInteractions();
+            if(this.enableHoverInteractions) {
+                this.addHoverInteractions();
+            }
+            this.modules.queryAndUI.toggleNoDataDisplay(false, true);
+            this.modules.mapInstructions.bindControls($("#btn-map-instructions"));
         } else {
             this.modules.mapInstructions.begin(
                 {

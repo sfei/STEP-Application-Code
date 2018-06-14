@@ -135,6 +135,7 @@ define([
      * @param {string} options.flashMessage - Optional message to flash after completeing query.
      */
     QueryAndUI.prototype.updateQuery = function(options) {
+        if(!options) options = {};
         if(!options.query) {
             // if no query supplied, use from inputs
             var yearRange = this.yearRangeControl.get();

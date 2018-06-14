@@ -104,7 +104,7 @@ define([
         }
         
         this._resizeEnabler = function() {
-            console.log('enable');
+            self._log('enable');
             self.scroller.enable();
             self._activeResizer = false;
             self._activeRenabler = false;
