@@ -193,7 +193,7 @@ body {
 }
 .ol-zoom {
   left: 4px;
-  right: auto;
+  right: auto !important;
   top: 4px;
 }
 #legend-container {

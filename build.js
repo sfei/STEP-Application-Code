@@ -20,7 +20,8 @@ var required = [
         'ie-is-special', 
         'noUiSlider', 
         'OpenLayers', 
-        'SimpleGraph'
+        'scrollama', 
+        'intersection-observer'
     ],
     buildLibraries = true, 
     builds = {
@@ -31,6 +32,13 @@ var required = [
             baseUrl:        "js", 
             name:           "init-dvcs", 
             exclude:        libraries.concat(["rconfig"])
+        }, 
+        'storymap': {
+            mainConfigFile: "js/rconfig.js", 
+            out:            "build/storymap.js", 
+            baseUrl:        "js", 
+            name:           "init-storymap", 
+            exclude:        libraries.concat(["rconfig", "models/app-step"])
         }, 
         'step-init': {
             mainConfigFile: "js/rconfig.js", 
