@@ -191,7 +191,7 @@ define([
             this.addWaterBoardLayer();
             this.addMPALayer();
         }
-        this.initStationsLayer();
+        this.initStationsLayer(null, options.filterStations);
         this.modules.queryAndUI.updateStationsSelect();
         this.modules.queryAndUI.init();
         this.modules.legend.init($("#step-container"));
@@ -482,8 +482,9 @@ define([
      * @param {number} data[].value - The contaminant value for this station. (Optional)
      * @param {String} data[].advisoryName - Specific site advisory name, if it exists.
      * @param {String} data[].advisoryUrl - Link to specific site advisory page, if it exists.
+     * @param {Function} filterStations - Optional callback to filter stations.
      */
-    STEP.prototype.initStationsLayer = function(data) {
+    STEP.prototype.initStationsLayer = function(data, filterStations) {
         if(!data) {
             $.ajax({
                 async: false,
@@ -502,6 +503,7 @@ define([
             // create array of ol.Features from data (since it's not technically geographic)
             var featArray = new Array();
             for(var i = 0; i < data.length; i++) {
+                if(filterStations && !filterStations(data[i])) continue;
                 featArray.push(
                     new ol.Feature({
                         geometry: new ol.geom.Point(

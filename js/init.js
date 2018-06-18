@@ -47,6 +47,7 @@ function init(config) {
                 // preset default queries
                 var defaultQuery = null, 
                     storymapMode = false, 
+                    filterStations = null, 
                     skipInstructions = false;
                 if(params.sm || params.view) {
                     var view = params.sm || params.view;
@@ -61,12 +62,23 @@ function init(config) {
                             };
                             storymapMode = true;
                             break;
+                        case "oceanic":
+                            defaultQuery = {
+                                species: "highest", 
+                                contaminant: "Mercury"
+                            };
+                            storymapMode = true;
+                            filterStations = function(station) {
+                                return station.waterType.search(/coast/i) >= 0;
+                            };
+                            break;
                     }
                 }
                 window.step.init({
                     defaultQuery: defaultQuery, 
                     storymapMode: storymapMode, 
-                    skipInstructions: skipInstructions
+                    skipInstructions: skipInstructions, 
+                    filterStations: filterStations
                 });
             }
         });
