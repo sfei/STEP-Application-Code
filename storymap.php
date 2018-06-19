@@ -18,16 +18,6 @@
       <div id="narrative"></div>
       <div id="visual"></div>
     </div>
-    <div id="storymap-outro" class="flex-column">
-      <div class="flex-row">
-        <a href="http://www.sfei.org"><img src="images/SFEI.png" alt="SFEI" /></a>
-        <a href="http://www.ceden.org/"><img src="images/poweredbyceden.jpg" alt="CEDEN" /></a>
-        <a href="http://www.waterboards.ca.gov/water_issues/programs/swamp/"><img src="images/swamp.gif" alt="SWAMP" /></a>
-      </div>
-      <div style="min-width:30%;margin:auto;margin-top:6px;padding-top:6px;text-align:center;border-top:1px dashed #888;">
-        <strong>Photo Credits:</strong><br />Jay Davis, Shira Bezalel
-      </div>
-    </div>
     <div id="storymap-loading">Loading...</div>
     
     <?php if($ini["devmode"]) { ?> 

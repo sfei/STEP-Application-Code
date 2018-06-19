@@ -50,8 +50,8 @@ body {
   padding-right: calc(100% - 100vw + 15px);
 }
 #storymap-outro {
-  background: #000;
-  color: #fff;
+  margin-top: 25%;
+  border-top: 1px solid #8da9b9;
   font-size: 0.9em;
 }
 #storymap-outro img {
@@ -122,6 +122,14 @@ body {
     width: 100%;
     z-index: -1;
   }
+}
+
+.frame {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 200px;
+  height: 100vh;
+  position: relative;
 }
 
 .sm-page {

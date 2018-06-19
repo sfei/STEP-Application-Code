@@ -82,6 +82,7 @@ function init(root, config) {
             narrative:         "#narrative", 
             visuals:           "#visual", 
             debugMode:         false, 
+            offset:            0.15, 
             resizeHeightElems: ".sm-page, .sm-spacer, .sm-mobile-spacer"
         });
         // add actions
@@ -89,6 +90,21 @@ function init(root, config) {
             center: root.step.map.getView().getCenter(), 
             zoom: root.step.map.getView().getZoom()
         };
+        var changeFrame = function(frameNo) {
+            var isMap = frameNo === 4;
+            $(".frame").hide();
+            $("#frame-"+frameNo).show();
+            if(isMap) root.step.map.updateSize();
+        };
+        root.scene.addAction(
+            "swapFrame", 
+            function(elem) {
+                changeFrame(elem.getAttribute("next-frame"));
+            }, 
+            function(elem) {
+                changeFrame(parseInt(elem.getAttribute("next-frame"))-1);
+            }
+        );
         root.scene.addAction(
             "mapFunctionA", 
             function() {
@@ -105,6 +121,9 @@ function init(root, config) {
         );
         // ensure resizing of step map (as it doesn't when offscreen)
         window.addEventListener('resize', function() { root.step.map.updateSize(); });
+        // turn on first frame
+        $(".frame").hide();
+        $("#frame-1").show();
         // fade out loading
         var loadingDiv = document.querySelector("#storymap-loading");
         loadingDiv.innerHTML = "";
