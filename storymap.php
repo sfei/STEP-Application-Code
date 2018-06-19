@@ -14,9 +14,6 @@
     <?php } ?>
   </head>
   <body style="overflow-y:hidden;">
-    <div id="storymap-intro" class="sm-page flex-column">
-      <p style="margin-top:-5%;font-size:2.9em;font-weight:bold;text-align:center;text-shadow:2px 2px 3px #2a0e44;">Contaminants in California Sport Fish</p>
-    </div>
     <div id="storymap-container">
       <div id="narrative"></div>
       <div id="visual"></div>
@@ -27,9 +24,8 @@
         <a href="http://www.ceden.org/"><img src="images/poweredbyceden.jpg" alt="CEDEN" /></a>
         <a href="http://www.waterboards.ca.gov/water_issues/programs/swamp/"><img src="images/swamp.gif" alt="SWAMP" /></a>
       </div>
-      <div style="margin:auto;padding-top:12px;text-align:center;">
-        <strong>Photo Credits:</strong><br />
-        Shira Bezalel, Jay Davis
+      <div style="min-width:30%;margin:auto;margin-top:6px;padding-top:6px;text-align:center;border-top:1px dashed #888;">
+        <strong>Photo Credits:</strong><br />Jay Davis, Shira Bezalel
       </div>
     </div>
     <div id="storymap-loading">Loading...</div>

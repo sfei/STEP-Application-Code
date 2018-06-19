@@ -81,7 +81,7 @@ function init(root, config) {
             container:         "#storymap-container", 
             narrative:         "#narrative", 
             visuals:           "#visual", 
-            debugMode:         true, 
+            debugMode:         false, 
             resizeHeightElems: ".sm-page, .sm-spacer, .sm-mobile-spacer"
         });
         // add actions
