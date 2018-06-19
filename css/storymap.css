@@ -170,6 +170,7 @@ body {
 }
 .sm-visual {
   height: 100vh;
+  position: relative;
 }
 .sm-step > div, .sm-visual > div {
   box-sizing: border-box;
