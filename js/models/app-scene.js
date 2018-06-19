@@ -24,7 +24,7 @@ define([
             text: options.narrative, 
             graphic: options.visuals, 
             step: options.narrative + " .sm-step", 
-            offset: 0, 
+            offset: options.offset || 0, 
             progress: true, 
             threshold: 1
         });
@@ -193,7 +193,7 @@ define([
                     }
                     for(var i = 0; i < actions._call.length; ++i) {
                         var callbacks = self._customActions[actions._call[i]];
-                        if(callbacks && callbacks[0]) callbacks[0]();
+                        if(callbacks && callbacks[0]) callbacks[0](res.element);
                     }
                     // missteps common after resize
                     if(self._visualStep !== actions._step + (self._inTransition ? 1 : 0)) {
@@ -233,7 +233,7 @@ define([
                     }
                     for(var i = actions._call.length-1; i >= 0; --i) {
                         var callbacks = self._customActions[actions._call[i]];
-                        if(callbacks && callbacks[1]) callbacks[1]();
+                        if(callbacks && callbacks[1]) callbacks[1](res.element);
                     }
                     if(self._visualStep !== actions._step) {
                         self._log("step mismatch (up) " + self._visualStep + " != " + actions._step);
