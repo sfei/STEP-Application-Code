@@ -67,6 +67,10 @@ body {
   padding: 40px 10px 40px 20px;
 }
 
+.pad-transition {
+  padding-top: 20%;
+}
+
 #visual {
   width: calc(100% - 275px);
 }

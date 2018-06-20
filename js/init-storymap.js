@@ -82,7 +82,7 @@ function init(root, config) {
             narrative:         "#narrative", 
             visuals:           "#visual", 
             debugMode:         false, 
-            offset:            0.15, 
+            offset:            0, 
             resizeHeightElems: ".sm-page, .sm-spacer, .sm-mobile-spacer"
         });
         // add actions
