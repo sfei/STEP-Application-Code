@@ -8,21 +8,21 @@ require.config({
     baseUrl: "js", 
     paths: {
         // plugins for require js
-        domReady: "lib/require.domReady", 
+        domReady:                "lib/require.domReady", 
         // jquery and plugins for
         jquery:                  "//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min", 
         "jquery.ui":             "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min", 
         "jquery.ui.touch-punch": "lib/jquery.ui.touch-punch.min", 
         chosen:                  "lib/chosen.jquery.min", 
         // library shortcuts
-        d3:             "lib/d3.v4.4.1.min", 
-        common:         "lib/common/dist/common.min", 
-        "common.table": "lib/common/dist/common.table.min", 
-        noUiSlider:     "lib/nouislider.min", 
-        OpenLayers:     "lib/ol.4.6.5", //"lib/ol.4.5.6-debug", 
-        SimpleGraph:    "lib/d3-simplegraph/d3.simplegraph.min", 
+        d3:                      "lib/d3.v4.4.1.min", 
+        common:                  "lib/common/dist/common.min", 
+        "common.table":          "lib/common/dist/common.table.min", 
+        "intersection-observer": "lib/intersection-observer", 
+        noUiSlider:              "lib/nouislider.min", 
+        OpenLayers:              "lib/ol.4.6.5", //"lib/ol.4.5.6-debug", 
+        SimpleGraph:             "lib/d3-simplegraph/d3.simplegraph.min", 
         // other external libraries
-        scrollama:               "//unpkg.com/scrollama?", 
-        "intersection-observer": "//unpkg.com/intersection-observer?"
+        scrollama:               "//unpkg.com/scrollama?"
     }
 });

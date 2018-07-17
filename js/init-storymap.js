@@ -92,39 +92,34 @@ function init(root, config) {
         // change frame action
         var changeFrame = function(frameNo, reverse) {
             frameNo = parseInt(frameNo);
-            var isMap = frameNo === 4;
-            if(isMap) {
-                $(".frame").hide();
+            var prevFrame = $("#frame-"+(frameNo + (reverse ? 1 : -1)));
+            if(!prevFrame.length) {
                 $("#frame-"+frameNo).show();
-                root.step.map.updateSize();
-            } else if(frameNo === 1 && !reverse) {
-                $(".frame").hide();
-                $("#frame-"+frameNo).show();
-            } else {
-                var prevFrame = $("#frame-"+(frameNo + (reverse ? 1 : -1))).css({
-                                    'position': "absolute", 
-                                    'top': 0, 
-                                    'left': 0, 
-                                    'opacity': 1, 
-                                    'z-index': 99
-                                });
-                var nextFrame = $("#frame-"+frameNo).css({
-                                    'position': "absolute", 
-                                    'top': 0, 
-                                    'left': 0, 
-                                    'opacity': 0, 
-                                    'z-index': 90
-                                }).show();
-                var clear = {'opacity':'','z-index':'','position':'','top':'','left':''};
-                prevFrame.animate(
-                    {opacity: 0}, 300, 'swing', 
-                    function() { prevFrame.hide().css(clear); }
-                );
-                nextFrame.animate(
-                    {opacity: 1}, 300, 'swing', 
-                    function() { nextFrame.show().css(clear); }
-                );
+                return;
             }
+            prevFrame.css({
+                'position': "absolute", 
+                'top':      0, 
+                'left':     0, 
+                'opacity':  1, 
+                'z-index':  99
+            });
+            var nextFrame = $("#frame-"+frameNo).css({
+                                'position': "absolute", 
+                                'top': 0, 
+                                'left': 0, 
+                                'opacity': 0, 
+                                'z-index': 90
+                            }).show();
+            var clear = {'opacity':'','z-index':'','position':'','top':'','left':''};
+            prevFrame.animate(
+                {opacity: 0}, 300, 'swing', 
+                function() { prevFrame.hide().css(clear); }
+            );
+            nextFrame.animate(
+                {opacity: 1}, 300, 'swing', 
+                function() { nextFrame.show().css(clear); }
+            );
         };
         root.scene.addAction(
             "swapFrame", 
