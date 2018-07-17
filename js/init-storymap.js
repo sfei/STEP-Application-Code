@@ -99,10 +99,10 @@ function init(root, config) {
             }
             prevFrame.css({
                 'position': "absolute", 
-                'top': 0, 
-                'left': 0, 
-                'opacity': 1, 
-                'z-index': 99
+                'top':      0, 
+                'left':     0, 
+                'opacity':  1, 
+                'z-index':  99
             });
             var nextFrame = $("#frame-"+frameNo).css({
                                 'position': "absolute", 
