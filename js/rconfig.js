@@ -2,8 +2,8 @@ require.config({
     shim: {
         // jQuery/UI plugins
         //chosen:                   ["jquery"], // chosen was having problems optimizing so modified the source
-        "jquery.ui":              ["jquery"], 
-        "jquery.ui.touch-punch":  ["jquery.ui"]
+        "jquery.ui":             ["jquery"], 
+        "jquery.ui.touch-punch": ["jquery.ui"]
     }, 
     baseUrl: "js", 
     paths: {
@@ -21,8 +21,7 @@ require.config({
         "intersection-observer": "lib/intersection-observer", 
         noUiSlider:              "lib/nouislider.min", 
         OpenLayers:              "lib/ol.4.6.5", //"lib/ol.4.5.6-debug", 
-        SimpleGraph:             "lib/d3-simplegraph/d3.simplegraph.min", 
-        // other external libraries
-        scrollama:               "//unpkg.com/scrollama?"
+        scrollama:               "lib/scrollama", 
+        SimpleGraph:             "lib/d3-simplegraph/d3.simplegraph.min"
     }
 });
