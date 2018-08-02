@@ -207,7 +207,7 @@ define([
                     }
                 }
                 // google analytics
-                if(ga && !options.firstRun) {
+                if(typeof ga !== "undefined" && !options.firstRun) {
                     var queryString = (
                         options.query.species + " : " + 
                         options.query.contaminant + " : " + 

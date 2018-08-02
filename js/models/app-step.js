@@ -595,7 +595,7 @@ define([
      */
     STEP.prototype.openStationDetails = function(station) {
         // google analytics
-        if(ga) {
+        if(typeof ga !== "undefined") {
             ga("send", "event", "viewStation",  station.get("name"));
         }
         this.modules.stationDetails.open({
