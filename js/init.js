@@ -47,13 +47,15 @@ function init(config) {
                 // preset default queries
                 var defaultQuery = null, 
                     storymapMode = false, 
+                    customView = null, 
                     filterStations = null, 
                     skipInstructions = false;
                 if(params.sm || params.view) {
-                    var view = params.sm || params.view;
-                    switch(view.toLowerCase()) {
+                    var view = (params.sm || params.view).toLowerCase();
+                    switch(view) {
                         case "gm18":
                         case "geographic mystery":
+                            customView = view;
                             defaultQuery = {
                                 species: "Largemouth Bass", 
                                 contaminant: "Mercury", 
@@ -63,6 +65,7 @@ function init(config) {
                             storymapMode = true;
                             break;
                         case "oceanic":
+                            customView = view;
                             defaultQuery = {
                                 species: "highest", 
                                 contaminant: "Mercury"
@@ -72,6 +75,14 @@ function init(config) {
                                 return station.waterType.search(/coast/i) >= 0;
                             };
                             break;
+                    }
+                }
+                // google analytics
+                if(ga) {
+                    if(customView) {
+                        ga("send", "pageview", view);
+                    } else if(ga) {
+                        ga('send', 'pageview');
                     }
                 }
                 window.step.init({

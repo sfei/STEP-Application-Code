@@ -989,6 +989,16 @@ define([
                 self.reportWindow = common.newWindow(null, "summaryreport.php", "Summary Report", 750, 950, true);
                 // reset tab html but carry over the last report query
                 self.openTabReport(reportQuery);
+                // google analytics
+                if(ga) {
+                    var str = (
+                        reportQuery.station + " : " + 
+                        reportQuery.species + " : " + 
+                        reportQuery.contaminant + " : " + 
+                        reportQuery.startYear + "-" + reportQuery.endYear
+                    );
+                    ga("send", "event", "printReport", str);
+                }
             } else {
                 contentDiv.html(defaultErrorMessage + "(Report Query Error)");
             }
@@ -1040,9 +1050,19 @@ define([
                 "dvcs.php", 
                 "STEP Compare Stations", 
                 width, 
-                DVCompareStations.getPopupHeight(barHeight, this.parent.stations.data.lenght), 
+                DVCompareStations.getPopupHeight(barHeight, this.parent.stations.data.length), 
                 true
             );
+            // google analytics
+            if(ga) {
+                var str = (
+                    this.query.station + " : " + 
+                    this.query.species + " : " + 
+                    this.query.contaminant + " : " + 
+                    this.query.startYear + "-" + this.query.endYear
+                );
+                ga("send", "event", "compareStation", str);
+            }
         }
     };
     
