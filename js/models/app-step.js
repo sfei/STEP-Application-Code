@@ -594,6 +594,10 @@ define([
      * @param {ol.Feature} station - Feature object to option details on.
      */
     STEP.prototype.openStationDetails = function(station) {
+        // google analytics
+        if(ga) {
+            ga("send", "event", "viewStation",  station.get("name"));
+        }
         this.modules.stationDetails.open({
             query: this.modules.queryAndUI.lastQuery,
             station: station

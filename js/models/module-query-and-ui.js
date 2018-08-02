@@ -206,6 +206,15 @@ define([
                         updateMessage = "Filters updated to match query results.";
                     }
                 }
+                // google analytics
+                if(ga && !options.firstRun) {
+                    var queryString = (
+                        options.query.species + " : " + 
+                        options.query.contaminant + " : " + 
+                        options.query.startYear + "-" + options.endYear
+                    );
+                    ga("send", "event", "query", queryString);
+                }
             }, 
             error: function(e) {
                 updateMessage = "Error updating filters.";
