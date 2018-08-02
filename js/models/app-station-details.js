@@ -990,7 +990,7 @@ define([
                 // reset tab html but carry over the last report query
                 self.openTabReport(reportQuery);
                 // google analytics
-                if(ga) {
+                if(typeof ga !== "undefined") {
                     var str = (
                         reportQuery.station + " : " + 
                         reportQuery.species + " : " + 
@@ -1054,7 +1054,7 @@ define([
                 true
             );
             // google analytics
-            if(ga) {
+            if(typeof ga !== "undefined") {
                 var str = (
                     this.query.station + " : " + 
                     this.query.species + " : " + 

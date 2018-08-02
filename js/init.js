@@ -78,7 +78,7 @@ function init(config) {
                     }
                 }
                 // google analytics
-                if(ga) {
+                if(typeof ga !== "undefined") {
                     if(customView) {
                         ga("send", "pageview", view);
                     } else if(ga) {
