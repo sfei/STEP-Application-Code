@@ -991,7 +991,7 @@ define([
                 self.openTabReport(reportQuery);
                 // google analytics
                 if(typeof window.gtag !== "undefined") {
-                    window.gtag('event', 'print_report_'+reportQuery.station, {
+                    window.gtag('event', 'report: '+reportQuery.station, {
                         "event_category": "print_report", 
                         "event_label": (
                             reportQuery.species + " : " + 
@@ -1056,7 +1056,7 @@ define([
             );
             // google analytics
             if(typeof window.gtag !== "undefined") {
-                window.gtag('event', 'compare_'+this.query.station, {
+                window.gtag('event', 'compare: '+this.query.station, {
                     "event_category": "compare", 
                     "event_label": (
                         this.query.species + " : " + 

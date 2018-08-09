@@ -122,7 +122,7 @@ class StepQueries {
     public function getConfigOptions() {
         $ini = parse_ini_file($_SERVER["DOCUMENT_ROOT"]."/config.ini", true, INI_SCANNER_TYPED);
         return array(
-            'gaKey'        => $ini["gakey"], 
+            'gaKey'        => $ini["Config"]["gakey"], 
             'mapServerUrl' => $ini["MapServer"][$ini["MapServer"]["use_ms"]]
         );
     }

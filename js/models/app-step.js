@@ -598,7 +598,7 @@ define([
     STEP.prototype.openStationDetails = function(station) {
         // google analytics
         if(typeof window.gtag !== "undefined") {
-            window.gtag('event', station.get("name"), {"event_category": "view_station"});
+            window.gtag('event', "view: "+station.get("name"), {"event_category": "view_station"});
         }
         this.modules.stationDetails.open({
             query: this.modules.queryAndUI.lastQuery,

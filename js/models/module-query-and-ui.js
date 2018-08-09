@@ -208,7 +208,7 @@ define([
                 }
                 // google analytics
                 if(typeof window.gtag !== "undefined" && !options.firstRun) {
-                    window.gtag('event', 'query_'+options.query.species, {
+                    window.gtag('event', 'query: '+options.query.species, {
                         "event_category": "query", 
                         "event_label": (
                             options.query.contaminant + " " + 
