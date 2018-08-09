@@ -207,13 +207,14 @@ define([
                     }
                 }
                 // google analytics
-                if(typeof ga !== "undefined" && !options.firstRun) {
-                    var queryString = (
-                        options.query.species + " : " + 
-                        options.query.contaminant + " : " + 
-                        options.query.startYear + "-" + options.endYear
-                    );
-                    ga("send", "event", "query", queryString);
+                if(typeof window.gtag !== "undefined" && !options.firstRun) {
+                    window.gtag('event', 'query_'+options.query.species, {
+                        "event_category": "query", 
+                        "event_label": (
+                            options.query.contaminant + " " + 
+                            options.query.startYear + "-" + options.endYear
+                        )
+                    });
                 }
             }, 
             error: function(e) {

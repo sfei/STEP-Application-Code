@@ -3,3 +3,4 @@ node_modules/
 step_conns.php
 step_conns_dev.php
 config.ini
+nbproject/

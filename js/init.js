@@ -39,7 +39,10 @@ function init(config) {
             });
         }
         domReady(function() {
-            window.step = new STEP({mapserverUrl: config.mapserverUrl});
+            window.step = new STEP({
+                gaKey: config.gaKey ? config.gaKey : false, 
+                mapserverUrl: config.mapserverUrl
+            });
             if(typeof summaryReport !== "undefined" && summaryReport) {
                 // summary report mode
                 SummaryReport(window.step, reportQuery, reportData);
@@ -55,7 +58,7 @@ function init(config) {
                     switch(view) {
                         case "gm18":
                         case "geographic mystery":
-                            customView = view;
+                            customView = "gm18";
                             defaultQuery = {
                                 species: "Largemouth Bass", 
                                 contaminant: "Mercury", 
@@ -65,7 +68,7 @@ function init(config) {
                             storymapMode = true;
                             break;
                         case "oceanic":
-                            customView = view;
+                            customView = "oceanic";
                             defaultQuery = {
                                 species: "highest", 
                                 contaminant: "Mercury"
@@ -77,20 +80,24 @@ function init(config) {
                             break;
                     }
                 }
-                // google analytics
-                if(typeof ga !== "undefined") {
-                    if(customView) {
-                        ga("send", "pageview", view);
-                    } else if(ga) {
-                        ga('send', 'pageview');
-                    }
-                }
                 window.step.init({
                     defaultQuery: defaultQuery, 
                     storymapMode: storymapMode, 
                     skipInstructions: skipInstructions, 
                     filterStations: filterStations
                 });
+                // google analytics
+                if(typeof window.gtag !== "undefined" && config.gaKey) {
+                    var opts = {
+                        "page_title": "", 
+                        "page_path": "/"
+                    };
+                    if(customView) {
+                        opts["page_title"] += view;
+                        opts["page_path"] += "/" + view;
+                    }
+                    window.gtag('config', config.gaKey, opts);
+                }
             }
         });
     }, function(e) {

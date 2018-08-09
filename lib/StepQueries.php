@@ -121,7 +121,10 @@ class StepQueries {
      */
     public function getConfigOptions() {
         $ini = parse_ini_file($_SERVER["DOCUMENT_ROOT"]."/config.ini", true, INI_SCANNER_TYPED);
-        return array('mapServerUrl' => $ini["MapServer"][$ini["MapServer"]["use_ms"]]);
+        return array(
+            'gaKey'        => $ini["gakey"], 
+            'mapServerUrl' => $ini["MapServer"][$ini["MapServer"]["use_ms"]]
+        );
     }
 
     /** Get the default thresholds for contaminant.

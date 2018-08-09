@@ -131,6 +131,8 @@ define([
             queryAndUI:      null, // handles queries and ui elements
             stationDetails:  null  // handles the pop-up details
         };
+        // google analytics
+        this.gaKey = options.gaKey || false;
     };
 
     //************************************************************************************************************
@@ -595,8 +597,8 @@ define([
      */
     STEP.prototype.openStationDetails = function(station) {
         // google analytics
-        if(typeof ga !== "undefined") {
-            ga("send", "event", "viewStation",  station.get("name"));
+        if(typeof window.gtag !== "undefined") {
+            window.gtag('event', station.get("name"), {"event_category": "view_station"});
         }
         this.modules.stationDetails.open({
             query: this.modules.queryAndUI.lastQuery,
