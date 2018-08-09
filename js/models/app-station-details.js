@@ -990,14 +990,15 @@ define([
                 // reset tab html but carry over the last report query
                 self.openTabReport(reportQuery);
                 // google analytics
-                if(typeof ga !== "undefined") {
-                    var str = (
-                        reportQuery.station + " : " + 
-                        reportQuery.species + " : " + 
-                        reportQuery.contaminant + " : " + 
-                        reportQuery.startYear + "-" + reportQuery.endYear
-                    );
-                    ga("send", "event", "printReport", str);
+                if(typeof window.gtag !== "undefined") {
+                    window.gtag('event', 'print_report_'+reportQuery.station, {
+                        "event_category": "print_report", 
+                        "event_label": (
+                            reportQuery.species + " : " + 
+                            reportQuery.contaminant + " : " + 
+                            reportQuery.startYear + "-" + reportQuery.endYear
+                        )
+                    });
                 }
             } else {
                 contentDiv.html(defaultErrorMessage + "(Report Query Error)");
@@ -1054,14 +1055,15 @@ define([
                 true
             );
             // google analytics
-            if(typeof ga !== "undefined") {
-                var str = (
-                    this.query.station + " : " + 
-                    this.query.species + " : " + 
-                    this.query.contaminant + " : " + 
-                    this.query.startYear + "-" + this.query.endYear
-                );
-                ga("send", "event", "compareStation", str);
+            if(typeof window.gtag !== "undefined") {
+                window.gtag('event', 'compare_'+this.query.station, {
+                    "event_category": "compare", 
+                    "event_label": (
+                        this.query.species + " : " + 
+                        this.query.contaminant + " : " + 
+                        this.query.startYear + "-" + this.query.endYear
+                    )
+                });
             }
         }
     };
