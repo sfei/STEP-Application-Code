@@ -88,8 +88,8 @@ define(["d3", "jquery.ui", "common"], function(d3, jQueryUI, common) {
         // create svg shapes legend
         var svg = d3.select("#legend-symbols")
           .append("svg")
-            .attr("width", 350)
-            .attr("height", 30)
+            .attr("width", 230)
+            .attr("height", 50)
           .append("g")
             .attr("transform", "translate(5,0)");
         // circle (for lakes/reservoirs)
@@ -124,15 +124,15 @@ define(["d3", "jquery.ui", "common"], function(d3, jQueryUI, common) {
         svg.append("rect")
             .attr("width", 14)
             .attr("height", 14)
-            .attr("x", 240)
-            .attr("y", 9)
-            .attr("transform", "rotate(45,249,14)")
+            .attr("x", 86)
+            .attr("y", 38)
+            .attr("transform", "rotate(45,100,30)")
             .attr("stroke-width", 2.0)
             .attr("stroke", "black")
             .style("fill", "none");
         svg.append("text")
-            .attr("x", 264)
-            .attr("y", 15)
+            .attr("x", 102)
+            .attr("y", 37)
             .attr("dy", ".35em")
             .style("text-anchor", "start")
             .style("font-size", "12px")
@@ -445,7 +445,7 @@ define(["d3", "jquery.ui", "common"], function(d3, jQueryUI, common) {
             label += " " + threshold.units;
             row += "<div class='legend-table-cell legend-cell-color' style='background-color:" + threshold.color + ";'>&nbsp;</div>";
             row += "<div class='legend-table-cell legend-cell-value'>" + label + "</div>";
-            row += "<div class='legend-table-cell legend-cell-desc'><span>" + threshold.comments + "</span></div>";
+            //row += "<div class='legend-table-cell legend-cell-desc'><span>" + threshold.comments + "</span></div>";
             row += "</div>";
             table.append(row);
         }
