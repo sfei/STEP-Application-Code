@@ -207,6 +207,27 @@ input, select {
 }
 
 
+/* disclaimer */
+#disclaimer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 350px;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(255,255,255,0.7);
+  font-size: 0.9em;
+}
+#disclaimer ul {
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+}
+#disclaimer li {
+  margin-bottom: 0.4em;
+}
+
+
 /* controls related */
 #controls-container {
   position: absolute;

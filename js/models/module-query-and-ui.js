@@ -330,6 +330,8 @@ define([
             }
             this.controls[key].tabElement.on('click', this.toggleControl.bind(this, key));
         }
+        // show disclaimer
+        $("#disclaimer").css('visibility', 'visible');
         // add query controls event listeners
         $("#stations-select")
             .prop('disabled', false)

@@ -16,6 +16,15 @@
     <div id="step-container">
       <!-- the actual OpenLayers map -->
       <div id="map-view"></div>
+      <!-- disclaimer -->
+      <div id="disclaimer" style="visibility:hidden;">
+        Important Notes to Users:
+        <ul>
+          <li>This page draws data from the California Environmental Data Exchange Network (CEDEN). Some significant datasets are not included in CEDEN. Click here for a list of such datasets.</li>
+          <li>This page shows data for one contaminant at a time and does not provide an integrative assessment across contaminants. OEHHA fish advisories are the best source for integrative assessments.</li>
+          <li>The presentations on this page do not represent consumption advice. OEHHA fish advisories are the definitive source of consumption advice.</li>
+        </ul>
+      </div>
       <!-- layer/data controls -->
       <div id="controls-container" style="visibility:hidden;">
         <!-- <div id="controls-header">Safe-to-Eat Portal</div> -->
