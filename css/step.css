@@ -207,6 +207,27 @@ input, select {
 }
 
 
+/* disclaimer */
+#disclaimer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 350px;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(255,255,255,0.7);
+  font-size: 0.9em;
+}
+#disclaimer ul {
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+}
+#disclaimer li {
+  margin-bottom: 0.4em;
+}
+
+
 /* controls related */
 #controls-container {
   position: absolute;
@@ -540,7 +561,8 @@ img.attribution-logo {
   margin: 0 4px;
 }
 #legend-content {
-  width: 425px;
+  /*width: 425px;*/
+  width: 335px;
 }
 #legend-title {
   height: auto;
@@ -592,9 +614,10 @@ img.attribution-logo {
   border-radius: 4px;
 }
 .legend-cell-value {
-  width: 95px;
+  /*width: 95px;*/
+  width: 290px;
   margin-right: 10px;
-  text-align: right;
+  text-align: center;
 }
 .legend-cell-desc {
   display: table;
@@ -607,7 +630,8 @@ img.attribution-logo {
   line-height: 120%;
 }
 #legend-cell-no-data {
-  width: 380px;
+  /*width: 380px;*/
+  width: 290px;
   margin-top: -2px;
   padding-left: 5px;
   line-height: normal;
