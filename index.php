@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>STEP Portal</title>
+    <title>Safe To Eat Portal</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.7">
 <?php if($ini["devmode"]) { ?> 
@@ -18,9 +18,9 @@
       <div id="map-view"></div>
       <!-- disclaimer -->
       <div id="disclaimer" style="visibility:hidden;">
-        Important Notes to Users:
+        <h3>Important Notes to Users:</h3>
         <ul>
-          <li>This page draws data from the California Environmental Data Exchange Network (CEDEN). <strong>Some significant datasets are not included</strong> in CEDEN. <a href="https://lacsd.app.box.com/s/mi5nns771d8hyb4gv83meuk5vwd9u0xe" target="_blank" rel="noopener">Click here</a> for a list of such datasets.</li>
+          <li>This page draws data from the California Environmental Data Exchange Network (CEDEN). <strong>Some significant datasets are not included</strong> in CEDEN. <a href="moredata.html" target="_blank">Click here</a> for a list of such datasets.</li>
           <li>This page shows data for <strong>one contaminant at a time</strong> and does not provide an integrative assessment across contaminants. OEHHA fish advisories are the best source for integrative assessments.</li>
           <li>The presentations on this page do not represent consumption advice. OEHHA fish advisories are the definitive source of consumption advice.</li>
         </ul>
