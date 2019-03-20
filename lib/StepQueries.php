@@ -700,9 +700,9 @@ class StepQueries {
     }
 
     /** Get any and all existing records for the parameters provided.
-     * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}. In 
-    *         particular it needs the contaminant, the species (if highest/lowest, grabs all species), and start
-    *         and end years.
+    * @param array $params Associative array of query parameters. See {@link getQuery() getQuery()}. In 
+    *        particular it needs the contaminant, the species (if highest/lowest, grabs all species), and 
+    *        start and end years.
     * @return array Associative array of records. As this is function is really only used for preparing 
     *         records for download, the specifics of each column are not specified here. */
     public function getAllRecords($params) {
@@ -714,6 +714,10 @@ class StepQueries {
             . "@species='" . $params["species"] . "', "
             . "@startyr=" . $params["startYear"] . ", "
             . "@endyr=" . $params["endYear"];
+        // This is weird, but one of the queries (PCBs/all-species) is a lot of records and takes awhile to 
+        // query, but meanwhile something on the server thinks it's timed-out/unresponsive. Adding a blank 
+        // print before executing the query solves this somehow.
+        print("");
         $query = StepQueries::$dbconn->prepare($queryString);
         $query->execute();
         if($query->errorCode() != 0) {
