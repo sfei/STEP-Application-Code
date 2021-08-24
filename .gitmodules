@@ -1,6 +1,0 @@
-[submodule "js/lib/common"]
-	path = js/lib/common
-	url = https://siml@bitbucket.org/siml/web-common.git
-[submodule "js/lib/d3-simplegraph"]
-	path = js/lib/d3-simplegraph
-	url = https://siml@bitbucket.org/siml/d3-simplegraph.git

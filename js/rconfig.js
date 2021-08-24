@@ -16,12 +16,12 @@ require.config({
         chosen:                  "lib/chosen.jquery.min", 
         // library shortcuts
         d3:                      "lib/d3.v4.4.1.min", 
-        common:                  "lib/common/dist/common.min", 
-        "common.table":          "lib/common/dist/common.table.min", 
+        common:                  "lib/common.min", 
+        "common.table":          "lib/common.table.min", 
         "intersection-observer": "lib/intersection-observer", 
         noUiSlider:              "lib/nouislider.min", 
         OpenLayers:              "lib/ol.4.6.5", //"lib/ol.4.5.6-debug", 
         scrollama:               "lib/scrollama", 
-        SimpleGraph:             "lib/d3-simplegraph/d3.simplegraph.min"
+        SimpleGraph:             "lib/d3.simplegraph.min"
     }
 });
